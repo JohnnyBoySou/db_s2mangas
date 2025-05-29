@@ -1,0 +1,261 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Manga {
+  id           String             @id @default(uuid())
+  manga_uuid   String?           @unique // UUID do MangaDex
+  cover        String
+  status       String?
+  type         String?
+  releaseDate  DateTime?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  translations MangaTranslation[]
+  categories   Category[]         @relation("MangaCategories")
+  languages    Language[]         @relation("MangaLanguages")
+  collections  Collection[]       @relation("CollectionMangas")
+  libraryEntries LibraryEntry[]
+  chapters     Chapter[]
+
+  likes        Like[]
+  views        View[]
+  notifications Notification[]
+  comments     Comment[]
+}
+
+model MangaTranslation {
+  id          String   @id @default(uuid())
+  mangaId     String
+  language    String
+  name        String
+  description String?
+
+  manga       Manga    @relation(fields: [mangaId], references: [id])
+
+  @@unique([mangaId, language])  // Garante uma tradução por idioma
+}
+
+model Like {
+  id        String   @id @default(uuid())
+  userId    String
+  mangaId   String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+  manga     Manga    @relation(fields: [mangaId], references: [id])
+
+  @@unique([userId, mangaId])
+}
+
+model View {
+  id        String   @id @default(uuid())
+  userId    String
+  mangaId   String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+  manga     Manga    @relation(fields: [mangaId], references: [id])
+}
+
+model Category {
+  id    String   @id @default(uuid())
+  name  String   @unique
+
+  users User[]   @relation("UserCategories")
+  mangas Manga[] @relation("MangaCategories")
+}
+
+model Language {
+  id    String   @id @default(uuid())
+  code  String   @unique // Ex: "pt-br", "en-us"
+  name  String
+
+  users User[]   @relation("UserLanguages")
+  mangas Manga[] @relation("MangaLanguages")
+  chapters Chapter[]
+  
+}
+
+model User {
+  id        String    @id @default(uuid())
+  name      String
+  username  String    @unique
+  email     String    @unique
+  password  String
+  birthdate DateTime?
+  bio       String?
+  coins     Int       @default(0)
+  avatar    String?
+  cover     String?
+
+  languages Language[]  @relation("UserLanguages")
+  categories Category[] @relation("UserCategories") 
+
+  likes     Like[]
+  views     View[]
+  collectionLikes CollectionLike[]
+  collections Collection[]
+
+  libraryEntries LibraryEntry[]
+  notifications Notification[]
+  comments     Comment[]
+
+  resetToken     String? 
+  resetTokenExp  DateTime?
+
+  emailVerified      Boolean  @default(false)
+  emailVerificationCode    String?
+  emailVerificationExp     DateTime?
+
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+enum CollectionStatus {
+  PRIVATE
+  PUBLIC
+}
+
+model Collection {
+  id          String       @id @default(uuid())
+  userId      String
+  name        String
+  cover       String
+  description String?
+  status      CollectionStatus @default(PRIVATE)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  mangas Manga[] @relation("CollectionMangas")
+
+  user        User         @relation(fields: [userId], references: [id])
+  likes       CollectionLike[]
+}
+
+model CollectionLike {
+  id           String      @id @default(uuid())
+  userId       String
+  collectionId String
+  createdAt    DateTime    @default(now())
+
+  user         User        @relation(fields: [userId], references: [id])
+  collection   Collection  @relation(fields: [collectionId], references: [id])
+
+  @@unique([userId, collectionId])
+}
+
+model LibraryEntry {
+  id        String    @id @default(uuid())
+  userId    String
+  mangaId   String
+
+  // Flags para marcar o status na biblioteca do usuário
+  isRead     Boolean   @default(false)
+  isLiked    Boolean   @default(false)
+  isFollowed Boolean   @default(false)
+  isComplete Boolean   @default(false)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  user      User      @relation(fields: [userId], references: [id])
+  manga     Manga     @relation(fields: [mangaId], references: [id])
+
+  @@unique([userId, mangaId])
+}
+
+
+model Notification {
+  id          String    @id @default(uuid())
+  userId      String
+  mangaId     String?   // Opcional: pra saber qual mangá gerou a notificação
+  chapterId   String?   // Opcional: qual capítulo gerou a notificação
+  message     String
+  isRead      Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+
+  user        User      @relation(fields: [userId], references: [id])
+  manga       Manga?    @relation(fields: [mangaId], references: [id])
+  chapter     Chapter?  @relation(fields: [chapterId], references: [id], name: "ChapterNotifications")
+
+}
+
+model Chapter {
+  id           String    @id @default(uuid())
+  mangaId      String
+  languageId   String
+
+  title        String
+  volume       String?
+  chapter      String
+  externalUrl  String?
+  version      Int       @default(1)
+
+  publishAt    DateTime?
+  readableAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Relations
+  manga        Manga     @relation(fields: [mangaId], references: [id])
+  language     Language  @relation(fields: [languageId], references: [id])
+  pages   Page[]
+  notifications Notification[] @relation(name: "ChapterNotifications")
+
+}
+
+model Page {
+  id         String   @id @default(uuid())
+  chapterId  String
+  number     Int      // Número da página (ex: 1, 2, 3)
+  imageUrl   String   // Link da imagem da página
+
+  chapter    Chapter  @relation(fields: [chapterId], references: [id])
+
+  @@unique([chapterId, number]) // Garante páginas únicas por capítulo
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  message   String
+  userId    String
+  mangaId   String
+  parentId  String? // Para respostas
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id])
+  manga     Manga    @relation(fields: [mangaId], references: [id])
+  parent    Comment? @relation("CommentReplies", fields: [parentId], references: [id])
+  replies   Comment[] @relation("CommentReplies")
+
+  @@index([mangaId])
+  @@index([userId])
+}
+
+model Wallpaper {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  cover       String
+  price       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  images      WallpaperImage[]
+}
+
+model WallpaperImage {
+  id          String   @id @default(uuid())
+  wallpaperId String
+  imageUrl    String
+  createdAt   DateTime @default(now())
+
+  wallpaper   Wallpaper @relation(fields: [wallpaperId], references: [id])
+}
