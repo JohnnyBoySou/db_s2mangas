@@ -9,8 +9,8 @@ export const updateUserSchema = z.object({
     .optional()
     .transform((val) => (typeof val === "string" ? new Date(val) : val)),
   bio: z.string().max(500).optional().nullable(),
-  avatar: z.string().url().optional().nullable(),
-  cover: z.string().url().optional().nullable(),
+  avatar: z.string().url().optional(),
+  cover: z.string().url().optional(),
   categories: z.array(
     z.union([
       z.string().uuid(),

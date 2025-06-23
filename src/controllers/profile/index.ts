@@ -4,7 +4,12 @@ import * as profileHandler from '@/handlers/profile';
 export const getProfile: RequestHandler = async (req, res) => {
   try {
     const { username } = req.params;
-    const userId = req.user.id;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      res.status(401).json({ error: 'Usuário não autenticado' });
+      return;
+    }
 
     if (!username) {
       res.status(400).json({ error: 'Username é obrigatório' });
@@ -25,7 +30,12 @@ export const getProfile: RequestHandler = async (req, res) => {
 export const likeProfile: RequestHandler = async (req, res) => {
   try {
     const { username } = req.params;
-    const userId = req.user.id;
+    const userId = req.user?.id;
+    
+    if (!userId) {
+      res.status(401).json({ error: 'Usuário não autenticado' });
+      return;
+    }
 
     const like = await profileHandler.likeProfile(userId, username);
     res.status(201).json(like);
@@ -41,7 +51,13 @@ export const likeProfile: RequestHandler = async (req, res) => {
 export const unlikeProfile: RequestHandler = async (req, res) => {
   try {
     const { username } = req.params;
-    const userId = req.user.id;
+    const userId = req.user?.id;
+
+
+    if (!userId) {
+      res.status(401).json({ error: 'Usuário não autenticado' });
+      return;
+    }
 
     await profileHandler.unlikeProfile(userId, username);
     res.status(204).send();
@@ -57,8 +73,11 @@ export const unlikeProfile: RequestHandler = async (req, res) => {
 export const toggleFollowProfile: RequestHandler = async (req, res) => {
   try {
     const { username } = req.params;
-    const userId = req.user.id;
+    const userId = req.user?.id;
 
+    if (!userId) {
+      throw new Error('Usuário não autenticado');
+    }
     const result = await profileHandler.toggleFollowProfile(userId, username);
     res.status(200).json(result);
   } catch (error: any) {
@@ -73,8 +92,11 @@ export const toggleFollowProfile: RequestHandler = async (req, res) => {
 export const toggleLikeProfile: RequestHandler = async (req, res) => {
   try {
     const { username } = req.params;
-    const userId = req.user.id;
+    const userId = req.user?.id;
 
+    if (!userId || !username) {
+      throw new Error('Usuário não autenticado');
+    }
     const result = await profileHandler.toggleLikeProfile(userId, username);
     res.status(200).json(result);
   } catch (error: any) {
@@ -84,4 +106,4 @@ export const toggleLikeProfile: RequestHandler = async (req, res) => {
     }
     res.status(400).json({ error: error.message });
   }
-}; 
+};

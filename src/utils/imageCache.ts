@@ -381,8 +381,9 @@ export async function getImageCacheStats(): Promise<any> {
 }
 
 // Limpar cache de imagens antigas
-export async function cleanupOldImages(): Promise<void> {
- // maxAge: number = 86400 * 30
+export async function cleanupOldImages(maxAge?: number): Promise<void> {
+  const maxAgeSeconds = maxAge || 86400 * 30; // 30 dias por padrão
+  console.log(maxAgeSeconds)
   try {
     // Esta funcionalidade seria implementada no advancedCache
     // para limpar entradas baseadas na idade

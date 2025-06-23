@@ -16,12 +16,12 @@ cacheRouter.get('/monitoring', cacheController.getCacheMonitoring);
 
 // Gerenciamento de chaves
 cacheRouter.get('/keys', cacheController.listCacheKeys);
-cacheRouter.get('/keys/:key', cacheController.getCacheKey);
-cacheRouter.post('/keys', cacheController.setCacheKey);
+//cacheRouter.get('/keys/:key', cacheController.getCacheKey);
+//cacheRouter.post('/keys', cacheController.setCacheKey);
 
 // Invalidação de cache
-cacheRouter.post('/invalidate/tags', cacheController.clearCacheByTags);
-cacheRouter.delete('/prisma/:model', cacheController.clearPrismaModelCache);
+//cacheRouter.post('/invalidate/tags', cacheController.clearCacheByTags);
+//cacheRouter.delete('/prisma/:model', cacheController.clearPrismaModelCache);
 cacheRouter.delete('/all', cacheController.clearAllCache);
 
 // Pré-aquecimento
