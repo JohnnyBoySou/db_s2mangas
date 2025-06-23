@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { register, login, verifyEmailCode, updateMe, deleteMe, googleSignIn , getProfile} from '@/controllers/auth'
+import { register, login, verifyEmailCode, updateMe, deleteMe, getProfile} from '@/controllers/auth'
 import { forgotPassword, resetPassword, verifyResetCode, } from '@/controllers/auth/forgot_password'
 import { requireAuth } from '@/middlewares/auth'
 
@@ -8,7 +8,6 @@ const authRouter = Router()
 authRouter.post('/register', register)
 authRouter.post('/verify-email', verifyEmailCode)
 authRouter.post('/login', login)
-authRouter.post('/google', googleSignIn)
 authRouter.post('/forgot-password', forgotPassword);
 authRouter.post('/verify-code', verifyResetCode)
 authRouter.post('/reset-password', resetPassword);

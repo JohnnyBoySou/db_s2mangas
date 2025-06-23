@@ -8,7 +8,7 @@
 import * as advancedCache from '@/utils/advancedCache';
 import { processAndCacheImage, getCachedImage, getImageCacheStats, cleanupOldImages } from '@/utils/imageCache';
 import { createCachedPrismaClient, invalidatePrismaModel, prismaCacheStats } from '@/utils/prismaCache';
-import { purgeCDNCache } from '@/config/cdn';
+//import { purgeCDNCache } from '@/config/cdn';
 import { logger } from '@/utils/logger';
 
 // Inicializar cliente Prisma
@@ -234,7 +234,7 @@ export async function exemploCDNIntegration() {
   ];
   
   try {
-    await purgeCDNCache(pathsToPurge);
+    //await purgeCDNCache(pathsToPurge);
     logger.info('CDN purge concluído para:', pathsToPurge);
   } catch (error) {
     logger.error('Erro no CDN purge:', error);
