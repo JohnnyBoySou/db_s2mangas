@@ -1,17 +1,8 @@
 import prisma from "@/prisma/client";
 import { createMangaSchema, updateMangaSchema } from "@/schemas/mangaSchemas";
-import { handleZodError } from "@/utils/zodError";
-import { getPaginationParams } from '@/utils/pagination';
 import axios from 'axios';
 import fs from 'fs/promises';
 import path from 'path';
-
-// Interface para a requisição com usuário
-interface RequestWithUser {
-    user?: {
-        id: string;
-    };
-}
 
 const getTranslatedManga = (manga: any, language: string) => {
   const translation = manga.translations.find((t: any) => t.language === language);
@@ -497,6 +488,7 @@ export const importMangaFromFile = async (filename: string) => {
     try {
         await fs.access(filePath);
     } catch (error) {
+        console.log(error)
         throw new Error('Arquivo não encontrado');
     }
 

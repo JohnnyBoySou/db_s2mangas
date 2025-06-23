@@ -7,11 +7,6 @@ import { z } from 'zod';
 
 const toggleTypeSchema = z.enum(['progress', 'complete', 'favorite', 'following']);
 
-const toggleSchema = z.object({
-    mangaId: z.string().uuid(),
-    type: z.enum(['progress', 'complete', 'favorite', 'following'])
-});
-
 export const upsertLibraryEntry: RequestHandler = async (req, res) => {
   const userId = (req as any).user?.id;
   try {

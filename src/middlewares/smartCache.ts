@@ -10,8 +10,8 @@ interface SmartCacheConfig {
   varyBy?: string[]; // Parâmetros que afetam o cache
   compression?: boolean;
   l2Cache?: boolean;
-  skipIf?: (req: Request) => boolean;
-  keyGenerator?: (req: Request) => string;
+  skipIf?: () => boolean;
+  keyGenerator?: () => string;
   invalidateOn?: string[];
 }
 

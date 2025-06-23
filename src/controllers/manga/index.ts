@@ -77,7 +77,7 @@ export const remove: RequestHandler = async (req, res) => {
 
 export const category: RequestHandler = async (req, res) => {
     const { category } = req.query;
-    const { skip, take, page } = getPaginationParams(req);
+    const { take, page } = getPaginationParams(req);
   
     if (!category || typeof category !== 'string') {
         res.status(400).json({ error: 'Parâmetro "category" é obrigatório.' });

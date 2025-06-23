@@ -5,7 +5,7 @@ import authRouter from '@/routes/auth/index'
 import { MangaRouter, AdminMangaRouter } from '@/routes/manga/index';
 import { AdminUsersRouter } from './routes/users';
 import { cacheRouter } from './routes/cache';
-import { staticCacheMiddleware, imageOptimizationMiddleware } from './config/cdn';
+//import { staticCacheMiddleware, imageOptimizationMiddleware } from './config/cdn';
 import { warmupCache } from './middlewares/smartCache';
 import { logger } from './utils/logger';
 
@@ -66,8 +66,8 @@ app.use('/admin/file', AdminFileRouter)
 app.use('/cache', cacheRouter)
 
 // Middlewares de cache e CDN
-app.use('/static', staticCacheMiddleware());
-app.use('/images', imageOptimizationMiddleware());
+//app.use('/static', staticCacheMiddleware());
+//app.use('/images', imageOptimizationMiddleware());
 
 // Configurar o proxy para a API do MangaDex
 //app.use('/api/mangadx', mangaDexProxy);

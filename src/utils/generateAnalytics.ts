@@ -135,7 +135,7 @@ export async function generateAnalytics(): Promise<AnalyticsReport> {
       },
       mangas: {
         total: totalMangas,
-        mostViewed: mostViewedMangas.map((manga, index) => ({
+        mostViewed: mostViewedMangas.map((manga, ) => ({
           id: manga.id,
           title: manga.translations[0]?.title || 'Sem título',
           views: Math.floor(Math.random() * 1000) + 100 // Simulado

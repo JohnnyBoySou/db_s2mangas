@@ -113,6 +113,7 @@ function generateImageKey(imageId: string, resolution: string, format: string): 
 }
 
 // Detectar formato da imagem
+/*
 async function detectImageFormat(buffer: Buffer): Promise<string> {
   try {
     const metadata = await sharp(buffer).metadata();
@@ -122,6 +123,7 @@ async function detectImageFormat(buffer: Buffer): Promise<string> {
     return 'jpeg';
   }
 }
+*/
 
 // Otimizar imagem para resolução específica
 async function optimizeImage(
@@ -379,7 +381,8 @@ export async function getImageCacheStats(): Promise<any> {
 }
 
 // Limpar cache de imagens antigas
-export async function cleanupOldImages(maxAge: number = 86400 * 30): Promise<void> {
+export async function cleanupOldImages(): Promise<void> {
+ // maxAge: number = 86400 * 30
   try {
     // Esta funcionalidade seria implementada no advancedCache
     // para limpar entradas baseadas na idade

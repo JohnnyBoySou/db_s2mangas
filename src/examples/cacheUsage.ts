@@ -54,8 +54,8 @@ export async function exemploImageCache() {
   const imageBuffer = Buffer.from('fake-image-data');
   
   // Processar e cachear em diferentes resoluções
-  const resolutions = ['thumbnail', 'small', 'medium', 'large'];
-  const formats = ['webp', 'jpeg', 'avif'];
+  // const resolutions = ['thumbnail', 'small', 'medium', 'large'];
+  // const formats = ['webp', 'jpeg', 'avif'];
   
   // Processar imagem para diferentes tipos
   try {

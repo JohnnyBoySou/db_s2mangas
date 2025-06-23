@@ -4,11 +4,11 @@ import jwt from 'jsonwebtoken';
 import emailAdapter from '@/config/nodemailer';
 import { generateUsername } from '@/utils/generate';
 import { RegisterBody, LoginBody } from '@/types/auth';
-import { OAuth2Client } from 'google-auth-library';
+//import { OAuth2Client } from 'google-auth-library';
 
 const JWT_SECRET = process.env.JWT_SECRET;
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+//const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+//const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 
 export const register = async (data: RegisterBody) => {
     const { name, email, password, avatar, cover, categories, languages } = data;
@@ -199,9 +199,7 @@ export const login = async (data: LoginBody) => {
 
     if (!JWT_SECRET) throw new Error("JWT_SECRET is not defined");
     const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: "15d" });
-
-    const { password: _, ...userWithoutPassword } = user;
-    return { token, user: userWithoutPassword };
+    return { token, user };
 };
 
 export const getProfile = async (userId: string) => {
@@ -327,6 +325,7 @@ export const deleteMe = async (userId: string) => {
     return { message: "Conta deletada com sucesso" };
 };
 
+/*
 export const googleSignIn = async (token: string) => {
     if (!GOOGLE_CLIENT_ID) throw new Error("GOOGLE_CLIENT_ID não configurado");
     
@@ -374,10 +373,11 @@ export const googleSignIn = async (token: string) => {
         if (!JWT_SECRET) throw new Error("JWT_SECRET não configurado");
         const jwtToken = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: "15d" });
 
-        const { password: _, ...userWithoutPassword } = user;
+        const { password, ...userWithoutPassword } = user;
         return { token: jwtToken, user: userWithoutPassword };
     } catch (error) {
         console.error('Erro na autenticação Google:', error);
         throw new Error("Falha na autenticação com Google");
     }
 };
+*/

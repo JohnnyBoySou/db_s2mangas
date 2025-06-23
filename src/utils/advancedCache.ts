@@ -241,7 +241,7 @@ export async function get(key: string, params?: any): Promise<any | null> {
   const cacheKey = generateCacheKey(key, params);
   
   // Tentar L1 primeiro
-  let data = await getL1Cache(cacheKey);
+  const data = await getL1Cache(cacheKey);
   if (data) return data;
 
   // Tentar L2
@@ -306,6 +306,7 @@ export async function cleanupExpiredEntries(): Promise<void> {
           cleanedCount++;
         }
       } catch (error) {
+        console.log(error)
         // Entrada corrompida, remover
         await redis.del(key);
         cleanedCount++;
