@@ -3,9 +3,9 @@ import { prismaMock } from '../../../test/mocks/prisma';
 import {
   create,
   list,
-  get,
-  update,
-  remove,
+  //get,
+  //update,
+  //remove,
   listPublic,
   checkInCollections,
   toggleCollection
