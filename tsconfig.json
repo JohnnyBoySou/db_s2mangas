@@ -19,7 +19,7 @@
       "@/services/*": ["services/*"],
       "@/types/*": ["types/*"],
       "@/schemas/*": ["schemas/*"],
-      "@/prisma/*": ["../prisma/*"]
+      "@/prisma/*": ["prisma/*"]
     },
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
