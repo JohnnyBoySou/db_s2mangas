@@ -27,6 +27,7 @@
     "logs": "tail -f logs/app.log"
   },
   "prisma": {
+    "schema": "src/prisma/schema.prisma",
     "seed": "ts-node prisma/seed.ts"
   },
   "keywords": [],
