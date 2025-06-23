@@ -1,33 +1,12 @@
 {
   "compilerOptions": {
-
-    /* Projetos */
-    // "incremental": true,                              /* Salvar arquivos .tsbuildinfo para permitir compilação incremental dos projetos. */
-    // "composite": true,                                /* Habilita restrições que permitem que um projeto TypeScript seja usado com referências de projeto. */
-    // "tsBuildInfoFile": "./.tsbuildinfo",              /* Especifica o caminho para o arquivo de compilação incremental .tsbuildinfo. */
-    // "disableSourceOfProjectReferenceRedirect": true,  /* Desabilita a preferência por arquivos fonte em vez de arquivos de declaração ao referenciar projetos compostos. */
-    // "disableSolutionSearching": true,                 /* Impede a verificação de múltiplos projetos referenciados ao editar. */
-    // "disableReferencedProjectLoad": true,             /* Reduz o número de projetos carregados automaticamente pelo TypeScript. */
-
-    /* Linguagem e Ambiente */
-    "target": "ES2016",                                  /* Define a versão da linguagem JavaScript para a saída e inclui declarações de biblioteca compatíveis. */
-    // "lib": [],                                        /* Especifica um conjunto de arquivos de declaração de biblioteca que descrevem o ambiente de runtime. */
-    // "jsx": "preserve",                                /* Especifica qual código JSX é gerado. */
-    // "experimentalDecorators": true,                   /* Habilita suporte experimental a decoradores legados. */
-    // "emitDecoratorMetadata": true,                    /* Emite metadados de tipo de design para declarações decoradas. */
-    // "jsxFactory": "",                                 /* Define a função usada para compilar JSX, ex.: 'React.createElement'. */
-    // "jsxFragmentFactory": "",                         /* Define o fragmento JSX usado, como 'React.Fragment'. */
-    // "jsxImportSource": "",                            /* Especifica o módulo que fornece funções de fábrica JSX para o modo 'react-jsx'. */
-    // "noLib": true,                                    /* Desativa a inclusão de quaisquer arquivos de biblioteca, incluindo lib.d.ts padrão. */
-    // "useDefineForClassFields": true,                  /* Emite campos de classe compatíveis com o padrão ECMAScript. */
-    // "moduleDetection": "auto",                        /* Controla o método de detecção de arquivos de módulo. */
-
-    /* Módulos */
-    "module": "commonjs",                                /* Especifica o tipo de código de módulo gerado. */
-    "rootDir": ".",                                  /* Define a pasta raiz dos arquivos fonte. */
-    "moduleResolution": "node",                          /* Define como o TypeScript resolve os módulos. */
-    "baseUrl": "./src",                                  /* Define o diretório base para resolver nomes de módulos não relativos. */
-    "paths": {                                           /* Mapeia apelidos para caminhos relativos. */
+    "target": "ES2016",
+    "module": "commonjs",
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "moduleResolution": "node",
+    "baseUrl": "./src",
+    "paths": {
       "@/*": ["*"],
       "@/controllers/*": ["controllers/*"],
       "@/models/*": ["models/*"],
@@ -40,12 +19,14 @@
       "@/services/*": ["services/*"],
       "@/types/*": ["types/*"],
       "@/schemas/*": ["schemas/*"],
-      "@/prisma/*": ["../prisma/*"]                      /* Mapeia importações do Prisma que estão fora da pasta `src`. */
+      "@/prisma/*": ["../prisma/*"]
     },
-    "esModuleInterop": true,                             /* Facilita importações de módulos CommonJS. */
+    "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "forceConsistentCasingInFileNames": true,            /* Garante consistência na capitalização de nomes de arquivos. */
-    "strict": true,                                      /* Ativa todas as verificações estritas de tipo. */
-    "skipLibCheck": true                                 /* Ignora verificação de tipo em arquivos .d.ts. */
-  }
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
 }
