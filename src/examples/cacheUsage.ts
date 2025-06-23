@@ -109,7 +109,7 @@ export async function exemploPrismaCache() {
       }
     });
     
-    logger.info('Manga encontrado:', manga?.title);
+    logger.info('Manga encontrado:', manga);
     
     // Segunda query - deve vir do cache
     const mangaCached = await prisma.manga.findUnique({
@@ -123,7 +123,7 @@ export async function exemploPrismaCache() {
       }
     });
     
-    logger.info('Manga do cache:', mangaCached?.title);
+    logger.info('Manga do cache:', mangaCached);
     
     // Obter estatísticas
     const stats = prismaCacheStats();
