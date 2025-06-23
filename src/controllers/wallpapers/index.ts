@@ -1,127 +1,114 @@
-import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import type { RequestHandler } from "express";
 import { handleZodError } from '@/utils/zodError';
-import { z } from 'zod';
+import * as wallpaperHandlers from '@/handlers/wallpapers';
 
-const prisma = new PrismaClient();
-
-const wallpaperImageSchema = z.object({
-  imageUrl: z.string().url('URL da imagem inválida')
-});
-
-const createWallpaperSchema = z.object({
-  name: z.string().min(1, 'Nome é obrigatório'),
-  description: z.string().optional(),
-  cover: z.string().url('URL da capa inválida'),
-  price: z.number().int().min(0, 'Preço deve ser maior ou igual a 0'),
-  images: z.array(wallpaperImageSchema).min(1, 'Pelo menos uma imagem é necessária')
-});
-
-const updateWallpaperSchema = createWallpaperSchema.partial();
-
-export const getWallpapers = async (req: Request, res: Response) => {
+export const getWallpapers: RequestHandler = async (req, res) => {
   try {
-    const wallpapers = await prisma.wallpaper.findMany({
-      include: {
-        images: true
-      }
-    });
+    const result = await wallpaperHandlers.getWallpapers(req);
+    res.json(result);
+  } catch (error) {
+    console.error("Erro ao buscar wallpapers no controller:", error);
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+    }
+    res.status(500).json({ error: 'Erro interno ao buscar wallpapers' });
+  }
+};
 
-    return res.json(wallpapers);
+export const getWallpaperById: RequestHandler = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const wallpaper = await wallpaperHandlers.getWallpaperById(id, req);
+    res.json(wallpaper);
+  } catch (error) {
+    if (error instanceof Error && error.message === 'Wallpaper não encontrado') {
+      res.status(404).json({ error: error.message });
+    }
+    handleZodError(error, res);
+  }
+};
+
+export const createWallpaper: RequestHandler = async (req, res) => {
+  try {
+    const wallpaper = await wallpaperHandlers.createWallpaper(req.body);
+    res.status(201).json(wallpaper);
+  } catch (error) {
+    console.log(error)
+    handleZodError(error, res);
+  }
+};
+
+export const updateWallpaper: RequestHandler = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const wallpaper = await wallpaperHandlers.updateWallpaper(id, req.body);
+    res.json(wallpaper);
   } catch (error) {
     handleZodError(error, res);
   }
 };
 
-export const getWallpaperById = async (req: Request, res: Response) => {
+export const deleteWallpaper: RequestHandler = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const wallpaper = await prisma.wallpaper.findUnique({
-      where: { id },
-      include: {
-        images: true
-      }
-    });
+    await wallpaperHandlers.deleteWallpaper(id);
+    res.status(204).send();
+  } catch (error) {
+    console.log(error)
+    handleZodError(error, res);
+  }
+};
 
-    if (!wallpaper) {
-      return res.status(404).json({ error: 'Wallpaper não encontrado' });
+export const importWallpapers: RequestHandler = async (req, res) => {
+  try {
+    const result = await wallpaperHandlers.importFromJson();
+    res.json(result);
+  } catch (error) {
+    console.error('Erro ao importar wallpapers:', error);
+    res.status(500).json({ error: 'Erro ao importar wallpapers' });
+  }
+};
+
+export const toggleWallpaperImage: RequestHandler = async (req, res) => {
+  const { id } = req.params;
+  const { image } = req.body;
+
+  if (!image) {
+    res.status(400).json({ error: 'URL da imagem é obrigatória' });
+  }
+
+  try {
+    const result = await wallpaperHandlers.toggleWallpaperImage(id, image);
+    res.json(result);
+  } catch (error) {
+    if (error instanceof Error && error.message === 'Wallpaper não encontrado') {
+      res.status(404).json({ error: error.message });
+    }
+    handleZodError(error, res);
+  }
+};
+
+export const importPinterestWallpaper: RequestHandler = async (req, res) => {
+  try {
+    const { pinterestUrl } = req.body;
+
+    if (!pinterestUrl) {
+      res.status(400).json({
+        success: false,
+        message: 'URL do Pinterest é obrigatória'
+      });
     }
 
-    return res.json(wallpaper);
-  } catch (error) {
-    handleZodError(error, res);
-  }
-};
-
-export const createWallpaper = async (req: Request, res: Response) => {
-  try {
-    const data = createWallpaperSchema.parse(req.body);
-
-    const wallpaper = await prisma.wallpaper.create({
-      data: {
-        name: data.name,
-        description: data.description,
-        cover: data.cover,
-        price: data.price,
-        images: {
-          create: data.images.map(image => ({
-            imageUrl: image.imageUrl
-          }))
-        }
-      },
-      include: {
-        images: true
-      }
+    const result = await wallpaperHandlers.importFromPinterest(pinterestUrl);
+    res.status(200).json(result);
+  } catch (error: any) {
+    console.error('Erro no controller importPinterestWallpaper:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message ?? 'Erro ao importar wallpaper do Pinterest'
     });
-
-    return res.status(201).json(wallpaper);
-  } catch (error) {
-    handleZodError(error, res);
-  }
-};
-
-export const updateWallpaper = async (req: Request, res: Response) => {
-  const { id } = req.params;
-
-  try {
-    const data = updateWallpaperSchema.parse(req.body);
-
-    const wallpaper = await prisma.wallpaper.update({
-      where: { id },
-      data: {
-        name: data.name,
-        description: data.description,
-        cover: data.cover,
-        price: data.price,
-        images: data.images ? {
-          deleteMany: {},
-          create: data.images.map(image => ({
-            imageUrl: image.imageUrl
-          }))
-        } : undefined
-      },
-      include: {
-        images: true
-      }
-    });
-
-    return res.json(wallpaper);
-  } catch (error) {
-    handleZodError(error, res);
-  }
-};
-
-export const deleteWallpaper = async (req: Request, res: Response) => {
-  const { id } = req.params;
-
-  try {
-    await prisma.wallpaper.delete({
-      where: { id }
-    });
-
-    return res.status(204).send();
-  } catch (error) {
-    handleZodError(error, res);
   }
 };

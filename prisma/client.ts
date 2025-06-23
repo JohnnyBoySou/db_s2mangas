@@ -41,6 +41,5 @@ async function testConnection() {
 }
 
 testConnection()
-//await using db = await testConnection()
 
 export default prisma

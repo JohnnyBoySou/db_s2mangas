@@ -4,7 +4,9 @@ export type RegisterBody = {
     password: string;
     avatar: string;
     cover: string;
-  };
+    categories: Array<{ name: string }>;
+    languages: string[];
+};
   
 export type LoginBody = {
     email: string;

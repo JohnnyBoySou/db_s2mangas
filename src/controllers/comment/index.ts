@@ -1,169 +1,120 @@
-import { RequestHandler, Request, Response } from 'express';
-import prisma from '@/prisma/client';
-import { z } from 'zod';
+import { RequestHandler } from 'express';
 import { handleZodError } from '@/utils/zodError';
 import { getPaginationParams } from '@/utils/pagination';
+import {
+    createComment,
+    listComments,
+    updateComment,
+    deleteComment,
+} from '@/handlers/comment';
+import { commentSchema, commentIdSchema } from '@/schemas/commentSchemas';
 
-const createCommentSchema = z.object({
-    message: z.string().min(1),
-    mangaId: z.string(),
-    parentId: z.string().optional().nullable(),
-});
+export const create: RequestHandler = async (req, res) => {
+    const parsed = commentSchema.safeParse(req.body);
+    if (!parsed.success) {
+        res.status(400).json(parsed.error);
+        return;
+    }
 
-export const createComment: RequestHandler = async (req: Request, res: Response) => {
     const userId = (req as any).user?.id;
-    const body = createCommentSchema.safeParse(req.body);
-
     if (!userId) {
-        res.status(401).json({ error: 'Não autenticado.' })
-        return
-            ;
-    }
-    if (!body.success) {
-        handleZodError(body.error, res);
-        return
+        res.status(401).json({ error: "Não autorizado" });
+        return;
     }
 
     try {
-        const comment = await prisma.comment.create({
-            data: {
-                message: body.data.message,
-                mangaId: body.data.mangaId,
-                parentId: body.data.parentId,
-                userId,
-            },
+        const comment = await createComment({
+            userId,
+            ...parsed.data
         });
-
         res.status(201).json(comment);
-        return
     } catch (err) {
         handleZodError(err, res);
-        return
     }
 };
 
-export const listCommentsByManga: RequestHandler = async (req, res) => {
+export const list: RequestHandler = async (req, res) => {
     const { mangaId } = req.params;
-    const { skip, take, page } = getPaginationParams(req);
-  
-    try {
-      const [comments, total] = await Promise.all([
-        prisma.comment.findMany({
-          where: {
-            mangaId,
-            parentId: null,
-          },
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                avatar: true,
-              },
-            },
-            replies: {
-              include: {
-                user: {
-                  select: {
-                    id: true,
-                    name: true,
-                    avatar: true,
-                  },
-                },
-              },
-            },
-          },
-          orderBy: {
-            createdAt: 'desc',
-          },
-          skip,
-          take,
-        }),
-        prisma.comment.count({
-          where: {
-            mangaId,
-            parentId: null,
-          },
-        }),
-      ]);
-  
-      const totalPages = Math.ceil(total / take);
-  
-      res.status(200).json({
-        data: comments,
-        pagination: {
-          total,
-          page,
-          limit: take,
-          totalPages,
-          next: page < totalPages,
-          prev: page > 1,
-        },
-      });
-    } catch (err) {
-      handleZodError(err, res);
-    }
-  };
-
-export const updateComment: RequestHandler = async (req: Request, res: Response) => {
-    const userId = (req as any).user?.id;
-    const { id } = req.params;
-    const { message } = req.body;
-
-    if (!message || message.trim() === '') {
-        res.status(400).json({ error: 'Mensagem não pode estar vazia.' });
-        return 
+    if (!mangaId) {
+        res.status(400).json({ error: "ID do mangá é obrigatório" });
+        return;
     }
 
+    const { page, take } = getPaginationParams(req);
+
     try {
-        const comment = await prisma.comment.findUnique({
-            where: { id },
-        });
-
-        if (!comment) {
-            res.status(404).json({ error: 'Comentário não encontrado.' });
-            return 
-        }
-
-        if (comment.userId !== userId) {
-            res.status(403).json({ error: 'Você só pode editar seu próprio comentário.' });
-            return 
-        }
-
-        const updated = await prisma.comment.update({
-            where: { id },
-            data: { message },
-        });
-
-        res.json(updated);
+        const result = await listComments(mangaId, page, take);
+        res.status(200).json(result);
     } catch (err) {
         handleZodError(err, res);
     }
 };
 
-export const deleteComment: RequestHandler = async (req: Request, res: Response) => {
+export const update: RequestHandler = async (req, res) => {
+    const parsed = commentIdSchema.safeParse(req.params);
+    if (!parsed.success) {
+        res.status(400).json(parsed.error);
+        return;
+    }
+
+    const contentSchema = commentSchema.pick({ content: true });
+    const contentParsed = contentSchema.safeParse(req.body);
+    if (!contentParsed.success) {
+        res.status(400).json(contentParsed.error);
+        return;
+    }
+
     const userId = (req as any).user?.id;
-    const { id } = req.params;
+    if (!userId) {
+        res.status(401).json({ error: "Não autorizado" });
+        return;
+    }
 
     try {
-        const comment = await prisma.comment.findUnique({
-            where: { id },
-        });
-
-        if (!comment) {
-            res.status(404).json({ error: 'Comentário não encontrado.' });
-            return 
-        }
-
-        if (comment.userId !== userId) {
-            res.status(403).json({ error: 'Você só pode excluir seu próprio comentário.' });
-            return 
-        }
-
-        await prisma.comment.delete({ where: { id } });
-
-        res.status(204).send(); // No Content
+        const comment = await updateComment(parsed.data.id, userId, contentParsed.data.content);
+        res.json(comment);
     } catch (err) {
+        if (err instanceof Error) {
+            if (err.message === 'Comentário não encontrado.') {
+                res.status(404).json({ error: err.message });
+                return;
+            }
+            if (err.message === 'Você não tem permissão para editar este comentário.') {
+                res.status(403).json({ error: err.message });
+                return;
+            }
+        }
+        handleZodError(err, res);
+    }
+};
+
+export const remove: RequestHandler = async (req, res) => {
+    const parsed = commentIdSchema.safeParse(req.params);
+    if (!parsed.success) {
+        res.status(400).json(parsed.error);
+        return;
+    }
+
+    const userId = (req as any).user?.id;
+    if (!userId) {
+        res.status(401).json({ error: "Não autorizado" });
+        return;
+    }
+
+    try {
+        await deleteComment(parsed.data.id, userId);
+        res.status(204).send();
+    } catch (err) {
+        if (err instanceof Error) {
+            if (err.message === 'Comentário não encontrado.') {
+                res.status(404).json({ error: err.message });
+                return;
+            }
+            if (err.message === 'Você não tem permissão para deletar este comentário.') {
+                res.status(403).json({ error: err.message });
+                return;
+            }
+        }
         handleZodError(err, res);
     }
 };

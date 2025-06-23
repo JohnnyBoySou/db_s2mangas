@@ -1,18 +1,14 @@
 // routes/comment.ts
 import { Router } from 'express';
-import {
-  createComment,
-  listCommentsByManga,
-  updateComment,
-  deleteComment,
-} from '@/controllers/comment';
-import { requireAuth } from '@/middlewares/authMiddleware';
+import { create, list, update, remove } from '@/controllers/comment';
+import { requireAuth } from '@/middlewares/auth';
 
 const commentRouter = Router();
 
-commentRouter.post('/', requireAuth, createComment);
-commentRouter.get('/:mangaId', requireAuth,listCommentsByManga);
-commentRouter.patch('/:id', requireAuth, updateComment);
-commentRouter.delete('/:id', requireAuth, deleteComment);
+commentRouter.post('/', requireAuth, create);
+commentRouter.get('/:mangaId', requireAuth, list);
+commentRouter.put('/:id', requireAuth, update);
+commentRouter.delete('/:id', requireAuth, remove);
 
 export default commentRouter;
+ 

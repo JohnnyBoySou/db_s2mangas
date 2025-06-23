@@ -1,19 +1,30 @@
-import { Router, RequestHandler } from "express";
+import { Router } from 'express';
 import {
   getWallpapers,
   getWallpaperById,
   createWallpaper,
   updateWallpaper,
-  deleteWallpaper
+  deleteWallpaper,
+  importWallpapers,
+  toggleWallpaperImage,
+  importPinterestWallpaper
 } from "@/controllers/wallpapers";
-import { requireAuth } from "@/middlewares/authMiddleware";
+import { requireAdmin, requireAuth } from "@/middlewares/auth";
 
-const wallpaperRouter = Router();
+const WallpaperRouter = Router();
+const AdminWallpaperRouter = Router();
 
-wallpaperRouter.get("/", getWallpapers as RequestHandler);
-wallpaperRouter.get("/:id", getWallpaperById as RequestHandler);
-wallpaperRouter.post("/", requireAuth, createWallpaper as RequestHandler);
-wallpaperRouter.put("/:id", requireAuth, updateWallpaper as RequestHandler);
-wallpaperRouter.delete("/:id", requireAuth, deleteWallpaper as RequestHandler);
+WallpaperRouter.get("/", requireAuth, getWallpapers);
+WallpaperRouter.get("/:id", requireAuth, getWallpaperById);
 
-export default wallpaperRouter;
+AdminWallpaperRouter.get("/:id", requireAuth, requireAdmin, getWallpaperById);
+AdminWallpaperRouter.get("/", requireAuth, requireAdmin,getWallpapers);
+AdminWallpaperRouter.post("/", requireAuth, requireAdmin, createWallpaper);
+AdminWallpaperRouter.put("/:id", requireAuth, requireAdmin, updateWallpaper );
+AdminWallpaperRouter.delete("/:id", requireAuth, requireAdmin,  deleteWallpaper );
+AdminWallpaperRouter.post("/:id/toggle", requireAuth, requireAdmin, toggleWallpaperImage );
+
+AdminWallpaperRouter.post("/import", requireAuth, importWallpapers );
+AdminWallpaperRouter.post("/import-pinterest", requireAuth, importPinterestWallpaper );
+
+export { WallpaperRouter, AdminWallpaperRouter };

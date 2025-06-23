@@ -1,19 +1,25 @@
 import { Router } from "express";
-import { create, list, get, update, remove, category, covers, importFromFile, chapters, pages} from "@/controllers/manga";
-import { importFromExternalApi } from "@/controllers/manga/import";
-import { requireAuth } from "@/middlewares/authMiddleware";
+import { create, list, get, update, remove, category, covers, importFromMangaDex, importFromFile, chapters, pages, clearMangaTable, similar } from "@/controllers/manga";
+import { requireAuth, requireAdmin } from "@/middlewares/auth";
+import { smartCacheMiddleware, cacheInvalidationMiddleware, imageCacheMiddleware } from "@/middlewares/smartCache";
 
-const mangaRouter = Router();
-mangaRouter.get("/", list);
-mangaRouter.get('/category', requireAuth, category)
-mangaRouter.get("/:id", get);
-mangaRouter.post("/", requireAuth, create);
-mangaRouter.put("/:id", requireAuth, update);
-mangaRouter.delete("/:id", requireAuth, remove);
-mangaRouter.post('/import', requireAuth, importFromExternalApi);
-mangaRouter.get("/:mangaid", requireAuth, covers)
-mangaRouter.post('/import_json/file/:filename', requireAuth, importFromFile);
-mangaRouter.get("/:id/chapters", chapters);
-mangaRouter.get("/chapters/:chapterID/pages", pages);
+const MangaRouter = Router();
+const AdminMangaRouter = Router();
 
-export default mangaRouter;
+MangaRouter.get("/:id/covers", requireAuth, imageCacheMiddleware(['thumbnail', 'small', 'medium']), covers);
+MangaRouter.get('/category', requireAuth, smartCacheMiddleware('categories'), category);
+MangaRouter.get("/:id", requireAuth, smartCacheMiddleware('manga'), get);
+MangaRouter.get("/chapters/:chapterID/pages", requireAuth, smartCacheMiddleware('chapter'), pages);
+MangaRouter.get("/:id/chapters", requireAuth, smartCacheMiddleware('manga', { varyBy: ['id', 'lg'] }), chapters);
+MangaRouter.get("/:id/similar", requireAuth, smartCacheMiddleware('discover', { ttl: 1800 }), similar);
+
+//ADMIN
+AdminMangaRouter.get("/", requireAuth, requireAdmin, smartCacheMiddleware('manga'), list);
+AdminMangaRouter.post("/", requireAuth, requireAdmin, cacheInvalidationMiddleware(['manga', 'discover']), create);
+AdminMangaRouter.put("/:id", requireAuth, requireAdmin, cacheInvalidationMiddleware(['manga', 'discover']), update);
+AdminMangaRouter.delete("/:id", requireAuth, requireAdmin, cacheInvalidationMiddleware(['manga', 'discover', 'images']), remove);
+AdminMangaRouter.delete("/clear", requireAuth, requireAdmin, cacheInvalidationMiddleware(['manga', 'discover', 'images']), clearMangaTable);
+AdminMangaRouter.post('/import', requireAuth, importFromMangaDex);
+AdminMangaRouter.post('/import_json/file/:filename', requireAuth, importFromFile);
+
+export { AdminMangaRouter, MangaRouter }

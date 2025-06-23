@@ -1,0 +1,1344 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2024-03-19T12:00:00.000Z",
+  "__export_source": "insomnia.desktop.app:v2024.1.0",
+  "resources": [
+    {
+      "_id": "req_root",
+      "parentId": "wrk_s2mangas",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}",
+      "name": "Root",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "wrk_s2mangas",
+      "parentId": null,
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "name": "S2Mangas API",
+      "description": "",
+      "scope": "collection",
+      "_type": "workspace"
+    },
+    {
+      "_id": "env_base",
+      "parentId": "wrk_s2mangas",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "name": "Base Environment",
+      "data": {
+        "base_url": "http://localhost:3000/api"
+      },
+      "dataPropertyOrder": {
+        "&": ["base_url"]
+      },
+      "color": null,
+      "isPrivate": false,
+      "metaSortKey": 1710849600000,
+      "_type": "environment"
+    },
+    {
+      "_id": "fld_auth",
+      "parentId": "wrk_s2mangas",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "name": "Auth",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 1710849600000,
+      "_type": "request_group"
+    },
+    {
+      "_id": "req_register",
+      "parentId": "fld_auth",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/auth/register",
+      "name": "Register",
+      "description": "",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n\t\"name\": \"João Silva\",\n\t\"email\": \"joao@email.com\",\n\t\"password\": \"123456\",\n\t\"avatar\": \"https://example.com/avatar.jpg\",\n\t\"cover\": \"https://example.com/cover.jpg\",\n\t\"categories\": [\n\t\t{ \"name\": \"Ação\" },\n\t\t{ \"name\": \"Aventura\" }\n\t],\n\t\"languages\": [\"pt-BR\", \"en-US\"]\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "req_login",
+      "parentId": "fld_auth",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/auth/login",
+      "name": "Login",
+      "description": "",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n\t\"email\": \"joao@email.com\",\n\t\"password\": \"123456\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "fld_manga",
+      "parentId": "wrk_s2mangas",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "name": "Manga",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 1710849600000,
+      "_type": "request_group"
+    },
+    {
+      "_id": "req_search_manga",
+      "parentId": "fld_manga",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/search/manga",
+      "name": "Search Manga",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [
+        {
+          "name": "name",
+          "value": "One Piece",
+          "description": ""
+        },
+        {
+          "name": "categories",
+          "value": "Ação,Aventura",
+          "description": ""
+        },
+        {
+          "name": "status",
+          "value": "Em andamento",
+          "description": ""
+        },
+        {
+          "name": "type",
+          "value": "Manga",
+          "description": ""
+        },
+        {
+          "name": "languages",
+          "value": "pt-BR,en-US",
+          "description": ""
+        },
+        {
+          "name": "orderBy",
+          "value": "most_viewed",
+          "description": ""
+        },
+        {
+          "name": "page",
+          "value": "1",
+          "description": ""
+        },
+        {
+          "name": "limit",
+          "value": "10",
+          "description": ""
+        }
+      ],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "fld_library",
+      "parentId": "wrk_s2mangas",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "name": "Library",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 1710849600000,
+      "_type": "request_group"
+    },
+    {
+      "_id": "req_add_to_library",
+      "parentId": "fld_library",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/library",
+      "name": "Add to Library",
+      "description": "",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n\t\"mangaId\": \"manga_id\",\n\t\"status\": \"reading\",\n\t\"lastReadChapter\": 1,\n\t\"lastReadAt\": \"2024-03-19T12:00:00.000Z\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "fld_discover",
+      "parentId": "wrk_s2mangas",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "name": "Discover",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 1710849600000,
+      "_type": "request_group"
+    },
+    {
+      "_id": "req_discover",
+      "parentId": "fld_discover",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/discover",
+      "name": "Get Discover",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [
+        {
+          "name": "section",
+          "value": "trending",
+          "description": ""
+        },
+        {
+          "name": "language",
+          "value": "pt-BR",
+          "description": ""
+        },
+        {
+          "name": "categories",
+          "value": "Ação,Aventura",
+          "description": ""
+        },
+        {
+          "name": "limit",
+          "value": "10",
+          "description": ""
+        }
+      ],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "fld_wallpapers",
+      "parentId": "wrk_s2mangas",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "name": "Wallpapers",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 1710849600000,
+      "_type": "request_group"
+    },
+    {
+      "_id": "req_search_wallpapers",
+      "parentId": "fld_wallpapers",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/wallpapers",
+      "name": "Search Wallpapers",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [
+        {
+          "name": "title",
+          "value": "One Piece",
+          "description": ""
+        },
+        {
+          "name": "tags",
+          "value": "anime,manga",
+          "description": ""
+        },
+        {
+          "name": "width",
+          "value": "1920",
+          "description": ""
+        },
+        {
+          "name": "height",
+          "value": "1080",
+          "description": ""
+        },
+        {
+          "name": "orderBy",
+          "value": "most_downloaded",
+          "description": ""
+        },
+        {
+          "name": "page",
+          "value": "1",
+          "description": ""
+        },
+        {
+          "name": "limit",
+          "value": "20",
+          "description": ""
+        }
+      ],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "fld_notifications",
+      "parentId": "wrk_s2mangas",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "name": "Notifications",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 1710849600000,
+      "_type": "request_group"
+    },
+    {
+      "_id": "req_get_notifications",
+      "parentId": "fld_notifications",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/notifications",
+      "name": "Get Notifications",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [
+        {
+          "name": "type",
+          "value": "new_chapter",
+          "description": ""
+        },
+        {
+          "name": "isRead",
+          "value": "false",
+          "description": ""
+        },
+        {
+          "name": "page",
+          "value": "1",
+          "description": ""
+        },
+        {
+          "name": "limit",
+          "value": "20",
+          "description": ""
+        }
+      ],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "fld_analytics",
+      "parentId": "wrk_s2mangas",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "name": "Analytics",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 1710849600000,
+      "_type": "request_group"
+    },
+    {
+      "_id": "req_get_analytics",
+      "parentId": "fld_analytics",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/analytics",
+      "name": "Get Analytics",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [
+        {
+          "name": "startDate",
+          "value": "2024-02-19",
+          "description": ""
+        },
+        {
+          "name": "endDate",
+          "value": "2024-03-19",
+          "description": ""
+        },
+        {
+          "name": "type",
+          "value": "views",
+          "description": ""
+        },
+        {
+          "name": "period",
+          "value": "daily",
+          "description": ""
+        },
+        {
+          "name": "limit",
+          "value": "10",
+          "description": ""
+        }
+      ],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "fld_comments",
+      "parentId": "wrk_s2mangas",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "name": "Comments",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 1710849600000,
+      "_type": "request_group"
+    },
+    {
+      "_id": "req_create_comment",
+      "parentId": "fld_comments",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/comments",
+      "name": "Create Comment",
+      "description": "",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n\t\"content\": \"Ótimo mangá!\",\n\t\"mangaId\": \"manga_id\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "req_get_comments",
+      "parentId": "fld_comments",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/comments",
+      "name": "Get Comments",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [
+        {
+          "name": "mangaId",
+          "value": "manga_id",
+          "description": ""
+        },
+        {
+          "name": "page",
+          "value": "1",
+          "description": ""
+        },
+        {
+          "name": "limit",
+          "value": "20",
+          "description": ""
+        }
+      ],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "fld_collections",
+      "parentId": "wrk_s2mangas",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "name": "Collections",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 1710849600000,
+      "_type": "request_group"
+    },
+    {
+      "_id": "req_create_collection",
+      "parentId": "fld_collections",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/collections",
+      "name": "Create Collection",
+      "description": "",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n\t\"name\": \"Meus Favoritos\",\n\t\"description\": \"Coleção dos meus mangás favoritos\",\n\t\"isPublic\": true\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "req_add_to_collection",
+      "parentId": "fld_collections",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/collections/:collectionId/mangas",
+      "name": "Add to Collection",
+      "description": "",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n\t\"mangaId\": \"manga_id\"\n}"
+      },
+      "parameters": [
+        {
+          "name": "collectionId",
+          "value": "collection_id",
+          "description": ""
+        }
+      ],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "fld_chapters",
+      "parentId": "wrk_s2mangas",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "name": "Chapters",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 1710849600000,
+      "_type": "request_group"
+    },
+    {
+      "_id": "req_get_chapters",
+      "parentId": "fld_chapters",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/mangas/:mangaId/chapters",
+      "name": "Get Chapters",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [
+        {
+          "name": "mangaId",
+          "value": "manga_id",
+          "description": ""
+        },
+        {
+          "name": "lang",
+          "value": "pt-BR",
+          "description": ""
+        },
+        {
+          "name": "order",
+          "value": "asc",
+          "description": ""
+        },
+        {
+          "name": "page",
+          "value": "1",
+          "description": ""
+        },
+        {
+          "name": "limit",
+          "value": "20",
+          "description": ""
+        }
+      ],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "req_get_chapter_pages",
+      "parentId": "fld_chapters",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/chapters/:chapterId/pages",
+      "name": "Get Chapter Pages",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [
+        {
+          "name": "chapterId",
+          "value": "chapter_id",
+          "description": ""
+        }
+      ],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "fld_user",
+      "parentId": "wrk_s2mangas",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "name": "User",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 1710849600000,
+      "_type": "request_group"
+    },
+    {
+      "_id": "req_update_user",
+      "parentId": "fld_user",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/user",
+      "name": "Update User",
+      "description": "",
+      "method": "PUT",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n\t\"name\": \"João Silva Atualizado\",\n\t\"email\": \"joao.novo@email.com\",\n\t\"password\": \"nova_senha\",\n\t\"avatar\": \"https://example.com/novo_avatar.jpg\",\n\t\"cover\": \"https://example.com/nova_cover.jpg\",\n\t\"categories\": [\n\t\t{ \"name\": \"Ação\" },\n\t\t{ \"name\": \"Aventura\" },\n\t\t{ \"name\": \"Comédia\" }\n\t],\n\t\"languages\": [\"pt-BR\", \"en-US\", \"es-ES\"]\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "req_get_user_profile",
+      "parentId": "fld_user",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/user/profile",
+      "name": "Get User Profile",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "req_get_user_stats",
+      "parentId": "fld_user",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/user/stats",
+      "name": "Get User Stats",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "fld_likes",
+      "parentId": "wrk_s2mangas",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "name": "Likes",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 1710849600000,
+      "_type": "request_group"
+    },
+    {
+      "_id": "req_toggle_like",
+      "parentId": "fld_likes",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/likes",
+      "name": "Toggle Like",
+      "description": "",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n\t\"mangaId\": \"manga_id\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "req_get_likes",
+      "parentId": "fld_likes",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/likes",
+      "name": "Get Likes",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [
+        {
+          "name": "page",
+          "value": "1",
+          "description": ""
+        },
+        {
+          "name": "limit",
+          "value": "20",
+          "description": ""
+        }
+      ],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "fld_views",
+      "parentId": "wrk_s2mangas",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "name": "Views",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 1710849600000,
+      "_type": "request_group"
+    },
+    {
+      "_id": "req_add_view",
+      "parentId": "fld_views",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/views",
+      "name": "Add View",
+      "description": "",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n\t\"mangaId\": \"manga_id\",\n\t\"chapterId\": \"chapter_id\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "req_get_views",
+      "parentId": "fld_views",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/views",
+      "name": "Get Views",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [
+        {
+          "name": "mangaId",
+          "value": "manga_id",
+          "description": ""
+        },
+        {
+          "name": "startDate",
+          "value": "2024-03-01",
+          "description": ""
+        },
+        {
+          "name": "endDate",
+          "value": "2024-03-19",
+          "description": ""
+        }
+      ],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "fld_categories",
+      "parentId": "wrk_s2mangas",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "name": "Categories",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 1710849600000,
+      "_type": "request_group"
+    },
+    {
+      "_id": "req_get_categories",
+      "parentId": "fld_categories",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/categories",
+      "name": "Get Categories",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [
+        {
+          "name": "search",
+          "value": "ação",
+          "description": ""
+        },
+        {
+          "name": "page",
+          "value": "1",
+          "description": ""
+        },
+        {
+          "name": "limit",
+          "value": "20",
+          "description": ""
+        }
+      ],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "fld_languages",
+      "parentId": "wrk_s2mangas",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "name": "Languages",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 1710849600000,
+      "_type": "request_group"
+    },
+    {
+      "_id": "req_get_languages",
+      "parentId": "fld_languages",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/languages",
+      "name": "Get Languages",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "fld_search",
+      "parentId": "wrk_s2mangas",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "name": "Search",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 1710849600000,
+      "_type": "request_group"
+    },
+    {
+      "_id": "req_search_advanced",
+      "parentId": "fld_search",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/search/advanced",
+      "name": "Advanced Search",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [
+        {
+          "name": "query",
+          "value": "One Piece",
+          "description": ""
+        },
+        {
+          "name": "categories",
+          "value": "Ação,Aventura",
+          "description": ""
+        },
+        {
+          "name": "status",
+          "value": "Em andamento",
+          "description": ""
+        },
+        {
+          "name": "type",
+          "value": "Manga",
+          "description": ""
+        },
+        {
+          "name": "languages",
+          "value": "pt-BR,en-US",
+          "description": ""
+        },
+        {
+          "name": "orderBy",
+          "value": "most_viewed",
+          "description": ""
+        },
+        {
+          "name": "page",
+          "value": "1",
+          "description": ""
+        },
+        {
+          "name": "limit",
+          "value": "20",
+          "description": ""
+        }
+      ],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "req_search_suggestions",
+      "parentId": "fld_search",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/search/suggestions",
+      "name": "Search Suggestions",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [
+        {
+          "name": "query",
+          "value": "One",
+          "description": ""
+        },
+        {
+          "name": "limit",
+          "value": "5",
+          "description": ""
+        }
+      ],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "fld_reports",
+      "parentId": "wrk_s2mangas",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "name": "Reports",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 1710849600000,
+      "_type": "request_group"
+    },
+    {
+      "_id": "req_create_report",
+      "parentId": "fld_reports",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/reports",
+      "name": "Create Report",
+      "description": "",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n\t\"type\": \"manga\",\n\t\"targetId\": \"manga_id\",\n\t\"reason\": \"Conteúdo impróprio\",\n\t\"description\": \"Detalhes do problema...\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "req_get_reports",
+      "parentId": "fld_reports",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/reports",
+      "name": "Get Reports",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [
+        {
+          "name": "type",
+          "value": "manga",
+          "description": ""
+        },
+        {
+          "name": "status",
+          "value": "pending",
+          "description": ""
+        },
+        {
+          "name": "page",
+          "value": "1",
+          "description": ""
+        },
+        {
+          "name": "limit",
+          "value": "20",
+          "description": ""
+        }
+      ],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "fld_system",
+      "parentId": "wrk_s2mangas",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "name": "System",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 1710849600000,
+      "_type": "request_group"
+    },
+    {
+      "_id": "req_get_system_stats",
+      "parentId": "fld_system",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/system/stats",
+      "name": "Get System Stats",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "req_get_system_logs",
+      "parentId": "fld_system",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/system/logs",
+      "name": "Get System Logs",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [
+        {
+          "name": "level",
+          "value": "error",
+          "description": ""
+        },
+        {
+          "name": "startDate",
+          "value": "2024-03-01",
+          "description": ""
+        },
+        {
+          "name": "endDate",
+          "value": "2024-03-19",
+          "description": ""
+        },
+        {
+          "name": "page",
+          "value": "1",
+          "description": ""
+        },
+        {
+          "name": "limit",
+          "value": "50",
+          "description": ""
+        }
+      ],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "fld_settings",
+      "parentId": "wrk_s2mangas",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "name": "Settings",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 1710849600000,
+      "_type": "request_group"
+    },
+    {
+      "_id": "req_get_settings",
+      "parentId": "fld_settings",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/settings",
+      "name": "Get Settings",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "req_update_settings",
+      "parentId": "fld_settings",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/settings",
+      "name": "Update Settings",
+      "description": "",
+      "method": "PUT",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n\t\"theme\": \"dark\",\n\t\"language\": \"pt-BR\",\n\t\"notifications\": {\n\t\t\"newChapter\": true,\n\t\t\"mangaUpdate\": true,\n\t\t\"commentReply\": true,\n\t\t\"like\": true,\n\t\t\"system\": true\n\t},\n\t\"readingPreferences\": {\n\t\t\"defaultView\": \"vertical\",\n\t\t\"autoNextChapter\": true,\n\t\t\"showProgress\": true\n\t}\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "fld_health",
+      "parentId": "wrk_s2mangas",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "name": "Health",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 1710849600000,
+      "_type": "request_group"
+    },
+    {
+      "_id": "req_health_check",
+      "parentId": "fld_health",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/health",
+      "name": "Health Check",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "req_health_metrics",
+      "parentId": "fld_health",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/health/metrics",
+      "name": "Health Metrics",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    }
+  ]
+} 

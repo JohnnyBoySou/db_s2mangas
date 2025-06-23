@@ -31,6 +31,8 @@
       "@/*": ["*"],
       "@/controllers/*": ["controllers/*"],
       "@/models/*": ["models/*"],
+      "@/handlers/*": ["handlers/*"],
+      "@/interfaces/*": ["interfaces/*"],
       "@/middlewares/*": ["middlewares/*"],
       "@/config/*": ["config/*"],
       "@/utils/*": ["utils/*"],

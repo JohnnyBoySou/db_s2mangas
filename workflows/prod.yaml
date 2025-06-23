@@ -1,21 +1,73 @@
-name: Continuos Integration
+name: CI/CD Pipeline
 
 on: 
+  push:
+    branches:
+      - master
+      - develop
   pull_request:
     branches:
-      ['master']
+      - master
+      - develop
 
 jobs:
-  continuos-integration:
+  build:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v3
-      - name: Using Node.js
+    
+      - name: Setup Node.js
         uses: actions/setup-node@v2
         with: 
           node-version: 20.x
-      - name: run install, build and test
-        run: |
-          npm install
-          npm run dev
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build
+        run: CI=false npm run build
+
+  test-dev:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop'
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with: 
+          node-version: 20.x
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run development build
+        run: CI=false npm run build:dev
+        env:
+          NODE_ENV: development
+          DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
+
+  deploy-prod:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with: 
+          node-version: 20.x
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run production build
+        run: CI=false npm run build:prod
+        env:
+          NODE_ENV: production
+          DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
