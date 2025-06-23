@@ -8,6 +8,7 @@ export default {
     }
   },
   moduleNameMapper: {
+    '^@/prisma/client$': '<rootDir>/prisma/client',
     '^@/(.*)$': '<rootDir>/src/$1'
   },
   moduleDirectories: ['node_modules', 'src'],

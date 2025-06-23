@@ -1,4 +1,4 @@
-import { RequestHandler } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import {
     createCollectionSchema,
     updateCollectionSchema,
@@ -17,6 +17,8 @@ import {
     toggleMangaInCollection
 } from '@/handlers/collection';
 
+type RequestHandler = (req: Request, res: Response, next?: NextFunction) => Promise<void>;
+
 export const create: RequestHandler = async (req, res) => {
     const parsed = createCollectionSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -26,7 +28,7 @@ export const create: RequestHandler = async (req, res) => {
 
     const userId = (req as any).user?.id;
     if (!userId) {
-        res.status(401).json({ error: "Não autorizado" });
+        res.status(401).json({ error: "Unauthorized" });
         return;
     }
 
@@ -45,7 +47,7 @@ export const create: RequestHandler = async (req, res) => {
 export const list: RequestHandler = async (req, res) => {
     const userId = (req as any).user?.id;
     if (!userId) {
-        res.status(401).json({ error: "Não autorizado" });
+        res.status(401).json({ error: "Unauthorized" });
         return;
     }
 
@@ -68,13 +70,17 @@ export const get: RequestHandler = async (req, res) => {
 
     const userId = (req as any).user?.id;
     if (!userId) {
-        res.status(401).json({ error: "Não autorizado" });
+        res.status(401).json({ error: "Unauthorized" });
         return;
     }
 
     try {
         const language = req.query.lg as string || 'pt-BR';
         const collection = await getCollection(parsed.data.id, userId, language);
+        if (!collection) {
+            res.status(404).json({ error: 'Coleção não encontrada.' });
+            return;
+        }
         res.json(collection);
     } catch (err) {
         if (err instanceof Error) {
@@ -101,12 +107,16 @@ export const update: RequestHandler = async (req, res) => {
     const { id, ...data } = parsed.data;
     const userId = (req as any).user?.id;
     if (!userId) {
-        res.status(401).json({ error: "Não autorizado" });
+        res.status(401).json({ error: "Unauthorized" });
         return;
     }
 
     try {
         const collection = await updateCollection(id, userId, data);
+        if (!collection) {
+            res.status(404).json({ error: 'Coleção não encontrada.' });
+            return;
+        }
         res.json(collection);
     } catch (err) {
         if (err instanceof Error) {
@@ -132,7 +142,7 @@ export const remove: RequestHandler = async (req, res) => {
 
     const userId = (req as any).user?.id;
     if (!userId) {
-        res.status(401).json({ error: "Não autorizado" });
+        res.status(401).json({ error: "Unauthorized" });
         return;
     }
 
@@ -169,7 +179,7 @@ export const checkInCollections: RequestHandler = async (req, res) => {
     const { mangaId } = req.params;
     const userId = (req as any).user?.id;
     if (!userId) {
-        res.status(401).json({ error: "Não autorizado" });
+        res.status(401).json({ error: "Unauthorized" });
         return;
     }
 
@@ -187,7 +197,7 @@ export const toggleCollection: RequestHandler = async (req, res) => {
     const { id, mangaId } = req.params;
     const userId = (req as any).user?.id;
     if (!userId) {
-        res.status(401).json({ error: "Não autorizado" });
+        res.status(401).json({ error: "Unauthorized" });
         return;
     }
 
