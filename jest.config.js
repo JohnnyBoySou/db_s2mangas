@@ -1,14 +1,21 @@
-module.exports = {
+export default {
   preset: 'ts-jest',
   testEnvironment: 'node',
+  extensionsToTreatAsEsm: ['.ts'],
+  globals: {
+    'ts-jest': {
+      useESM: true
+    }
+  },
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1'
   },
   moduleDirectories: ['node_modules', 'src'],
   roots: ['<rootDir>/src'],
   transform: {
-    '^.+\\.tsx?$': ['ts-jest', {
-      tsconfig: 'tsconfig.json'
+    '^.+\.tsx?$': ['ts-jest', {
+      tsconfig: 'tsconfig.json',
+      useESM: true
     }]
   },
   collectCoverageFrom: [
@@ -25,4 +32,4 @@ module.exports = {
     }
   },
   setupFilesAfterEnv: ['<rootDir>/src/test/setup.ts']
-}; 
+};
