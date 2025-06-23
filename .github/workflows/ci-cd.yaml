@@ -79,6 +79,16 @@ jobs:
       - name: Build application
         run: npm run build
       
+      - name: Check if dist folder exists
+        run: |
+          if [ -d "dist" ]; then
+            echo "✅ dist folder created successfully"
+            ls -la dist/
+          else
+            echo "❌ dist folder not found"
+            exit 1
+          fi
+      
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
