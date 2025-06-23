@@ -2,11 +2,6 @@ export default {
   preset: 'ts-jest',
   testEnvironment: 'node',
   extensionsToTreatAsEsm: ['.ts'],
-  globals: {
-    'ts-jest': {
-      useESM: true
-    }
-  },
   moduleNameMapper: {
     '^@/prisma/client$': '<rootDir>/prisma/client',
     '^@/(.*)$': '<rootDir>/src/$1'
