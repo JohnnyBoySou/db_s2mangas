@@ -7,8 +7,8 @@ WORKDIR /usr/src/app
 # Copia arquivos de dependências
 COPY package*.json ./
 
-# Instala dependências
-RUN npm install --production
+# Instala dependências com flag para resolver conflitos
+RUN npm install --production --legacy-peer-deps
 
 # Copia o restante da aplicação
 COPY . .
