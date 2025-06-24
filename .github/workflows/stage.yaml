@@ -1,4 +1,4 @@
-name: Development Solution Back-end
+name: Deploy to VPS with Docker
 
 on:
   workflow_dispatch:
@@ -7,291 +7,48 @@ on:
         type: choice
         description: Ambiente
         options:
-          - nebula
-          - orion
-          - aquila
-          - cosmos
-
-run-name: Development Solution  Back-end - ${{ inputs.environment }}
-
-env:
-  REGION: 'us-east1'
-  RUNTIME: 'nodejs20'
-  VERSION: "${{ inputs.environment }}-${{ github.event.sender.id }}"
-  GCP_ARTIFACT_REPO_PATH: ${{ vars.GCP_ARTIFACT_REPO_PATH }}
-  IMAGE_NAME_SOLUTION: ${{ vars.IMAGE_NAME_SOLUTION }}
-
-defaults:
-  run:
-    working-directory: server
+          - production
+          - staging
+  push:
+    branches: [develop]
 
 jobs:
-  build:
-    outputs:
-      image_url: ${{ steps.build_image.outputs.image_url }}
+  deploy:
     runs-on: ubuntu-latest
-    environment: dev
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
-
-      - name: Configure Docker to use the gcloud command-line tool as a credential helper
-        run: gcloud auth configure-docker us-docker.pkg.dev
-
-      - name: 'Set up Cloud SDK'
-        uses: 'google-github-actions/setup-gcloud@v2'
-
-      - name: Copy .npmrc
-        run: gsutil cp gs://clinicorp-files-build/.npmrc .npmrc
-
-      - name: Auth Google Artifact
-        run: npx google-artifactregistry-auth .npmrc
-
-      - name: Custom .dockignore
-        run: |
-          echo "node_modules" > .dockerignore
-          echo "public" >> .dockerignore
-          echo "functions" >> .dockerignore
-
-      - name: Build and push Docker image
-        id: build-and-push
-        uses: docker/build-push-action@v6
-        with:
-          context: ./server
-          push: true
-          tags: |
-            ${{ env.GCP_ARTIFACT_REPO_PATH }}/${{ env.IMAGE_NAME_SOLUTION }}:latest
-            ${{ env.GCP_ARTIFACT_REPO_PATH }}/${{ env.IMAGE_NAME_SOLUTION }}:${{ env.VERSION }}
-
-      - name: Set Output Image URL
-        id: build_image
-        run: echo "image_url=${{ env.GCP_ARTIFACT_REPO_PATH }}/${{ env.IMAGE_NAME_SOLUTION }}:${{ env.VERSION }}" >> $GITHUB_OUTPUT
-
-  solution:
-    needs: build
-    runs-on: ubuntu-latest
-    env:
-      api_gateway_url: https://dev.api.clinicorp.com
-      gcloud_project: development-cc
-      otel_collector_url: http://dev.collector.clinicorp.tech:4317
-      idoc_url_prefix: https://api.radiomemory.com.br/idoc-dev
-      concurrency: ${{ matrix.service == 'etr' && '1' || matrix.service == 'solution' && '30' || '80' }}
-
-    strategy:
-      matrix:
-        service: [solution]
-    concurrency:
-      group: ${{ matrix.service }}-deploy-${{ github.actor_id }}
-      cancel-in-progress: true
-    environment:
-      name: dev
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.7.0
         with:
-          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+          ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
 
-      - name: 'Set up Cloud SDK'
-        uses: 'google-github-actions/setup-gcloud@v2'
-
-      - name: Deploy Cloud solution
+      - name: Add VPS to known hosts
         run: |
-          echo "Deploying solution"
-          gcloud run deploy ${{ env.VERSION }}-${{ matrix.service }} \
-            --image=${{ needs.build.outputs.image_url }} \
-            --timeout=300 \
-            --concurrency=80 \
-            --min-instances=0 \
-            --max-instances=1000 \
-            --memory=1Gi \
-            --cpu=1 \
-            --region=us-east1 \
-            --cpu-throttling \
-            --vpc-connector=memcached \
-            --no-cpu-boost \
-            --allow-unauthenticated \
-            --set-env-vars=CLINICORP_DR_CASH_NETWORK_ID=5362,\
-          CLINICORP_DIGITAL_CERTIFICATE_URL=${{ env.api_gateway_url }}/digital-certificate,\
-          CLINICORP_GCLOUD_PROJECT=${{ env.gcloud_project }},\
-          OTEL_COLLECTOR_URL=${{ env.otel_collector_url }},\
-          OTEL_LOG_EXPORTER=OTEL_EXPORTER,\
-          NODE_OPTIONS="-r ./observability",\
-          REAL_TIME_EVENTS=momento,\
-          CLINICORP_DRF_URL=${{ env.api_gateway_url }}/drf,\
-          CLINICORP_BACKUP_QUEUE_HANDLER_URL=https://us-central1-${{ env.gcloud_project }}.cloudfunctions.net/solution_backup_data,\
-          CLINICORP_IMAGE2DOC_GET_EXAM=https://central-api.image2doc.com.br/exams/,\
-          CLINICORP_QUEUE_REPLICATION_UNITS_CONFIG=replication-units-config,\
-          CLINICORP_REGISTER_ERROR_URL_TARGET=https://us-central1-${{ env.gcloud_project }}.cloudfunctions.net/error_reporting,\
-          CLINICORP_QUEUE_PLANCONTROL_CREATE_PAYMENT_TREATMENTOPERATION=plancontrol-create-payment-treatmentoperation,\
-          CLINICORP_BACKUP_GPC_PROJECT=${{ env.gcloud_project }},\
-          CLINICORP_QUEUE_EXECUTE_PAYMENT_LINK=execute-payment-link,\
-          CLINICORP_CS_API_URL=https://${{env.VERSION}}-dot-subscription-dot-${{ env.gcloud_project }}.uc.r.appspot.com/api/v1,\
-          CLINICORP_HOLDER_DOCUMENTS_ROUTE=https://${{env.VERSION}}-${{ env.gcloud_project }}.uc.r.appspot.com/fintech/holder_documents/,\
-          CLINICORP_DEVELOPMENT_URL=https://${{env.VERSION}}-solution-920701239550.us-east1.run.app/,\
-          CLINICORP_ETM_INSERT_EVENT_URL=${{ env.api_gateway_url }}/etm/insert/event/,\
-          CLINICORP_ETM_EXECUTE_ORCHESTRATED_TASK_SYNC_URL=${{ env.api_gateway_url }}/etm/execute/task_orchestrated_sync/,\
-          CLINICORP_IDOC_WEBHOOK_UNSUBSCRIBE=${{ env.idoc_url_prefix }}/events/unsubscribe,\
-          CLINICORP_IDOC_WEBHOOK_SUBSCRIBE=${{ env.idoc_url_prefix }}/events/subscribe,\
-          CLINICORP_QUEUE_AUTO_RECONCILE_PAYMENT=auto-reconcile-payment,\
-          CLINICORP_MODEL_DERIVATIVES=/api/crud/model-derivatives.js,\
-          CLINICORP_TASK_QUEUE_LOCATION=us-east1,\
-          CLINICORP_QUEUE_EXECUTE_UPDATE_INSTALLMENT=execute-update-installment,\
-          CLINICORP_DATA_EXPORT_SHEET=https://data-export-920701239550.us-east1.run.app,\
-          CLINICORP_REPORT_DATABASE_SEARCH_URL=https://us-central1-${{ env.gcloud_project }}.cloudfunctions.net/report_database/query/,\
-          CLINICORP_IDOC_DOC_PAC=${{ env.idoc_url_prefix }}/pac,\
-          CLINICORP_IDOC_DOC_PAC_DOCS=${{ env.idoc_url_prefix }}/pac/docs/,\
-          CLINICORP_IDOC_START_PATIENT_SESSION=${{ env.idoc_url_prefix }}/pac/start-session,\
-          CLINICORP_IDOC_START_DOC_SESSION=${{ env.idoc_url_prefix }}/pac/open/,\
-          CLINICORP_PROJECT_EVENTS=GCP_PUBSUB,\
-          CLINICORP_IMAGE2DOC_GET_PATIENT_BY_ID=https://central-api.image2doc.com.br/professional/patient/,\
-          CLINICORP_PREFIX_CF_URL=https://us-central1-${{ env.gcloud_project }}.cloudfunctions.net/,\
-          CLINICORP_IDOC_DOC_PAC_LINK=${{ env.idoc_url_prefix }}/pac/link/,\
-          CLINICORP_DOCUMENT_PICTURE_ROUTE=https://${{env.VERSION}}-${{ env.gcloud_project }}.uc.r.appspot.com/fintech/document_picture/,\
-          CLINICORP_TASK_QUEUE_MODEL=cloud-tasks,\
-          CLINICORP_PREFIX_FUNCTION_1PAY=https://us-east1-${{ env.gcloud_project }}.cloudfunctions.net/,\
-          CLINICORP_FOCUS_URL_DEV=https://homologacao.focusnfe.com.br/,\
-          CLINICORP_SPC_URL_CHECK_TEST=https://treina.spc.org.br/spc/remoting/ws/insumo/chequelojistaWebService?wsdl,\
-          CLINICORP_BACKUP=true,\
-          CLINICORP_IDOC_WEBHOOK_CONFIRM_SUBSCRIBE=${{ env.idoc_url_prefix }}/events/subscribe/confirm,\
-          CLINICORP_ONLINE_SCHEDULING_LINK=https://agenda.link/,\
-          CLINICORP_TEST_SAUDE_SERVICE_PAYMENT_PARTNER_URL=https://sandbox.evoluservices.com,\
-          CLINICORP_REPORT_DATABASE_DELETE_URL=https://us-central1-${{ env.gcloud_project }}.cloudfunctions.net/report_database/delete/,\
-          CLINICORP_BACKUP_PUBSUB_TOPIC=PRD-BACKUP,\
-          CLINICORP_IMAGE2DOC_LOGIN=https://central-api.image2doc.com.br/auth/professional/login,\
-          CLINICORP_CLINI_AI_URL=https://${{ env.VERSION }}-clini-ai-920701239550.us-east1.run.app,\
-          CLINICORP_TEST_SAUDE_SERVICE_PAYMENT_WEBHOOK=https://us-east1-${{ env.gcloud_project }}.cloudfunctions.net/saudeservice_webhook_log,\
-          CLINICORP_BACKUP_GC_PROJECT=${{ env.gcloud_project }},\
-          CLINICORP_REPORT_DATABASE=false,\
-          CLINICORP_SAUDE_SERVICE_PAYMENT_PARTNER_USER=clinicorp,\
-          CLINICORP_SHORTCODE_ONE_WAY=29414,\
-          CLINICORP_ETM_EXECUTE_EVENT_URL=${{ env.api_gateway_url }}/etm/execute/task/,\
-          CLINICORP_BACKUP_QUEUE_NAME=backup,\
-          CLINICORP_REACT_APP_ONBOARDING_PHONE=554796627839,\
-          CLINICORP_GENERATE_CODE_FILE_PATH=/config/json/generate-code.json,\
-          CLINICORP_BACKUP_GCLOUD_PROJECT=${{ env.gcloud_project }},\
-          CLINICORP_TASKS_MESSAGING_PROJECT_ID=${{ env.gcloud_project }},\
-          CLINICORP_PROJECT_PRODUCT_MONITORING=${{ env.gcloud_project }},\
-          CLINICORP_SUBSCRIPTION_URL=https://${{env.VERSION}}-dot-subscription-dot-${{ env.gcloud_project }}.uc.r.appspot.com,\
-          CLINICORP_SELFIE_ROUTE=https://${{env.VERSION}}-${{ env.gcloud_project }}.uc.r.appspot.com/fintech/selfie/,\
-          CLINICORP_SERVICEDESK_URL=https://${{ env.VERSION }}-servicedesk-920701239550.us-east1.run.app,\
-          CLINICORP_PREFIX_SOLUTION_CF_URL=https://${{ env.VERSION }}-solution-920701239550.us-east1.run.app/api/cloud-functions/,\
-          CLINICORP_INTERNAL_MICROSERVICE_HOST=https://${{ env.VERSION }}-solution-920701239550.us-east1.run.app/api/cloud-functions/,\
-          CLINICORP_INTERNAL_MICROSERVICE_HOST_US_EAST1=https://${{ env.VERSION }}-solution-920701239550.us-east1.run.app/api/cloud-functions/,\
-          CLINICORP_IDOC_AUTH_URL=${{ env.idoc_url_prefix }}/auth,\
-          CLINICORP_SPC_URL_CHECK=https://servicos.spc.org.br/spc/remoting/ws/insumo/chequelojistaWebService?wsdl,\
-          CLINICORP_TASK_HANDLER_URL=https://${{ env.VERSION }}-solution-920701239550.us-east1.run.app/api/cloud-functions/task_handler,\
-          CLINICORP_QUEUE_GENERIC_QUEUE=generic-queue,\
-          CLINICORP_CHAT_MEDIA_BUCKET=development-chat-media,\
-          CLINICORP_SPC_URL_REGISTRO=https://servicos.spc.org.br/spc/remoting/ws/insumo/spc/spcWebService?wsdl,\
-          CLINICORP_TWILIO_SENDER=43933007191,\
-          CLINICORP_QUEUE_RUN_UNTIL_DONE=run-until-done,\
-          CLINICORP_SPC_URL=https://servicos.spc.org.br/spc/remoting/ws/consulta/consultaWebService?wsdl,\
-          CLINICORP_URL_PATIENT_DEBT=https://southamerica-east1-${{ env.gcloud_project }}.cloudfunctions.net/solution-cloudfunction-patient-debt,\
-          CLINICORP_QUEUE_SCHEDULED_JOBS=scheduled-jobs,\
-          CLINICORP_PAYMENT_PARTNER_URL=https://${{ env.VERSION }}-fintech-920701239550.us-east1.run.app,\
-          CLINICORP_META_WABA_SECONDARY_ID=186849581186297,\
-          CLINICORP_API_GATEWAY=${{ env.api_gateway_url }},\
-          CLINICORP_ONLINE_SCHEDULING_CLOUDIA=https://${{env.VERSION}}-${{ env.gcloud_project }}.uc.r.appspot.com/?/cloudia_register/,\
-          CLINICORP_ETM_INSERT_TASK_URL=${{ env.api_gateway_url }}/etm/insert/task/,\
-          CLINICORP_QUEUE_CANCEL_PAYMENT=cancel-payment,\
-          CLINICORP_ENABLE_DATASTORE_LOG_USAGE=true,\
-          CLINICORP_DR_CASH_AUTH_URL=https://drcash-auth-cogn-test.auth.us-east-1.amazoncognito.com/oauth2/token,\
-          CLINICORP_BASE_URL_DR_CASH=https://12uc08kwrk.execute-api.us-east-1.amazonaws.com/prod/api/v1,\
-          CLINICORP_REGISTER_ERROR_TOPIC_TARGET=ERROR_REPORTING,\
-          CLINICORP_SAUDE_SERVICE_PAYMENT_WEBHOOK=https://us-east1-${{ env.gcloud_project }}.cloudfunctions.net/saudeservice_webhook_log,\
-          CLINICORP_REPORT_DATABASE_SAVE_URL=https://us-central1-${{ env.gcloud_project }}.cloudfunctions.net/report_database/save/,\
-          CLINICORP_IMAGE2DOC_WEBHOOK=https://central-api.image2doc.com.br/professional/webhook,\
-          CLINICORP_CLINICORP_URL=https://${{ env.VERSION }}-solution-920701239550.us-east1.run.app/rest/v1/,\
-          CLINICORP_META_WABA_ID=102220596001694,\
-          CLINICORP_SHORTCODE_TWO_WAY=29302,\
-          CLINICORP_QUEUE_CLINIDESK_LOG=clinidesk-log,\
-          CLINICORP_WEBHOOK_ENV=PRD,\
-          CLINICORP_MICROSERVICE_SMARTBOARD=https://${{ env.VERSION }}-solution-920701239550.us-east1.run.app/api/cloud-functions/smartboard,\
-          CLINICORP_DATABASE_MODEL=datastore-bigquery,\
-          CLINICORP_BIGQUERY_CHECK_TABLE_URL=/api/admin/check_big_query_table/,\
-          CLINICORP_CS_API_USER_NAME=solution,\
-          CLINICORP_QUEUE_FINANCIAL_DEBT_REMOVE=financial-debt-remove,\
-          CLINICORP_IMAGE2DOC_GET_ALL_PATIENTS=https://central-api.image2doc.com.br/professional/my-patients,\
-          CLINICORP_QUEUE_GENERIC_UPDATE=generic-update,\
-          CLINICORP_META_PHONE_ID=102553959301027,\
-          CLINICORP_SPC_URL_TEST=https://treina.spc.org.br/spc/remoting/ws/consulta/consultaWebService?wsdl,\
-          CLINICORP_NODE_ENV=production,\
-          CLINICORP_ENVIRONMENT=development,\
-          CLINICORP_SECURITY_MICROSERVICE_URL=${{ env.api_gateway_url }}/security,\
-          CLINICORP_DATA_BACKEND=datastore,\
-          CLINICORP_MOMENTO_TOPIC=solution-dev,\
-          CLINICORP_SPC_URL_REGISTRO_TEST=https://treina.spc.org.br/spc/remoting/ws/insumo/spc/spcWebService?wsdl,\
-          CLINICORP_TWILIO_WEBHOOK=https://api.twilio.com/2010-04-01/Accounts/AC65e67580d55e5bde648db27e2f00be07/SMS/Messages/,\
-          CLINICORP_BLOG_EVENT_TARGET=https://blog.googleclouddatastore.com/updates \
-            --set-secrets=CLINICORP_CS_API_USER_PASSWORD=CS_API_USER_PASSWORD:latest,\
-          SOLUTION_MOMENTO_API_KEY_PUB=SOLUTION_MOMENTO_API_KEY_PUB:latest,\
-          CLINICORP_META_API_TOKEN=META_API_TOKEN:latest,\
-          CLINICORP_TOOL_STATUS=TOOL_STATUS:latest,\
-          CLINICORP_MEMCACHE_URL=MEMCACHED_URL:latest,\
-          CLINICORP_MEMCACHED_URL=MEMCACHED_URL:latest,\
-          CLINICORP_LOCK_MEMCACHE_URL=MEMCACHED_URL:latest,\
-          CLINICORP_LOCK_MEMCACHED_URL=MEMCACHED_URL:latest,\
-          CLINICORP_SPC_ASSOCIATE_CODE_TEST=SPC_ASSOCIATE_CODE_TEST:latest,\
-          CLINICORP_PUB_NUB_PUBC=PUB_NUB_PUBC:latest,\
-          CLINICORP_EVENT_ORCHESTRATION=EVENT_ORCHESTRATION:latest,\
-          CLINICORP_KEY_CHECK_ENDPOINTS=KEY_CHECK_ENDPOINTS:latest,\
-          CLINICORP_TWILIO_SID=TWILIO_SID:latest,\
-          CLINICORP_IDOC_ERP_TOKEN=IDOC_ERP_TOKEN:latest,\
-          CLINICORP_PAYMENT_PARTNER_ID=PAYMENT_PARTNER_ID:latest,\
-          CLINICORP_TASK=TASK:latest,\
-          CLINICORP_MEMORY_DB_KINDS=MEMORY_DB_KINDS:latest,\
-          CLINICORP_SPC_USER=SPC_USER:latest,\
-          CLINICORP_PUB_NUB_SUBC=PUB_NUB_SUBC:latest,\
-          CLINICORP_TWILIO_PASS=TWILIO_PASS:latest,\
-          CLINICORP_FOCUS_TOKEN_DEV=FOCUS_TOKEN_DEV:latest,\
-          CLINICORP_EXPIRE_KIND_DAYS=EXPIRE_KIND_DAYS:latest,\
-          CLINICORP_SPC_CODIGO_CONSULTA=SPC_CODIGO_CONSULTA:latest,\
-          CLINICORP_SPC_PWD=SPC_PWD:latest,\
-          CLINICORP_EVENT=EVENT:latest,\
-          CLINICORP_JWT_PRIVATE_KEY=JWT_PRIVATE_KEY:latest,\
-          CLINICORP_FOCUS_TOKEN=FOCUS_TOKEN:latest,\
-          CLINICORP_ALERT_PROBLEM_TOOL=ALERT_PROBLEM_TOOL:latest,\
-          CLINICORP_SAUDE_SERVICE_PAYMENT_PARTNER_USERPWD=SAUDE_SERVICE_PAYMENT_PARTNER_USERPWD:latest,\
-          CLINICORP_PAYMENT_PARTNER_ID_DEMO=PAYMENT_PARTNER_ID_DEMO:latest,\
-          CLINICORP_DR_CASH_CLIENT_SECRET=DR_CASH_CLIENT_SECRET:latest,\
-          CLINICORP_TOKEN_HTML_TO_PDF_PRD=TOKEN_HTML_TO_PDF_PRD:latest,\
-          CLINICORP_SPC_PWD_TEST=SPC_PWD_TEST:latest,\
-          CLINICORP_MAILGUN_API_KEY=MAIL_GUN_API_KEY:latest,\
-          CLINICORP_NOTIFICATION_KEY=NOTIFICATION_KEY:latest,\
-          CLINICORP_DR_CASH_CLIENT_ID=DR_CASH_CLIENT_ID:latest,\
-          CLINICORP_TEST_SAUDE_SERVICE_PAYMENT_PARTNER_USER=TEST_SAUDE_SERVICE_PAYMENT_PARTNER_USER:latest,\
-          CLINICORP_SPC_USER_TEST=SPC_USER_TEST:latest,\
-          CLINICORP_JWT_PUBLIC_KEY=JWT_PUBLIC_KEY:latest,\
-          CLINICORP_LIST_PATIENT_PROXY_KEY=LIST_PATIENT_PROXY_KEY:latest,\
-          CLINICORP_SID=SID:latest,\
-          CLINICORP_SPC_CODIGO_CONSULTA_TEST=SPC_CODIGO_CONSULTA_TEST:latest,\
-          CLINICORP_FIREBASE_CONFIG=FIREBASE_CONFIG:latest,\
-          CLINICORP_NOTIFICATION_APPNOTIFICATION_APP_KEY_KEY=NOTIFICATION_APP_KEY:latest,\
-          CLINICORP_INTERNAL_MICROSERVICE_KEY=INTERNAL_MICROSERVICE_KEY:latest,\
-          CLINICORP_TOKEN_1PAY=TOKEN_1PAY:latest,\
-          CLINICORP_EVENT_DISPATCH_ORCHESTRATION=EVENT_DISPATCH_ORCHESTRATION:latest,\
-          CLINICORP_SUBSCRIPTION_API_KEY=SUBSCRIPTION_API_KEY:latest,\
-          CLINICORP_DEV_CS_KEY=DEV_CS_KEY:latest,\
-          CLINICORP_AUTH_TOKEN=AUTH_TOKEN:latest,\
-          CLINICORP_SECURITY_MICROSERVICE_KEY=SECURITY_MICROSERVICE_KEY:latest,\
-          CLINICORP_SPC_ASSOCIATE_CODE=SPC_ASSOCIATE_CODE:latest,\
-          CLINICORP_TEST_SAUDE_SERVICE_PAYMENT_PARTNER_USERPWD=TEST_SAUDE_SERVICE_PAYMENT_PARTNER_USERPWD:latest,\
-          CLINICORP_CYPRESS_UUID_PRD=CYPRESS_UUID_PRD:latest,\
-          CLINICORP_CYPRESS_FIREBASE_CONFIG=CYPRESS_FIREBASE_CONFIG:latest,\
-          CLINICORP_REGISTER_ERROR_TOKEN_URL_TARGET=REGISTER_ERROR_TOKEN_URL_TARGET:latest,\
-          CLINICORP_NATIVE_NOTIFICATION=NATIVE_NOTIFICATION:latest,\
-          CLINICORP_CYPRESS_USER_UID=CYPRESS_USER_UID:latest
+          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Update Summary
+      - name: Deploy to VPS with Docker
         run: |
-          echo ":rocket: Service URL:" >> $GITHUB_STEP_SUMMARY
-          gcloud run services describe ${{ env.VERSION }}-${{ matrix.service }}  --region ${{ env.REGION }} --format='value(status.url)' >> $GITHUB_STEP_SUMMARY
+          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
+            set -e
+
+            DEPLOY_DIR="/var/www/${{ github.event.repository.name }}"
+
+            echo "📁 Checking repository..."
+            if [ ! -d "$DEPLOY_DIR" ]; then
+              sudo mkdir -p $DEPLOY_DIR
+              cd $DEPLOY_DIR
+              sudo git clone https://github.com/${{ github.repository }} .
+            else
+              cd $DEPLOY_DIR
+              sudo git pull
+            fi
+
+            echo "🐳 Deploying with Docker Compose..."
+            sudo docker-compose down
+            sudo docker-compose up --build -d
+
+            echo "✅ Deployment completed!"
+          EOF
