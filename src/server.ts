@@ -1,7 +1,6 @@
 import express from 'express'
 import cors from 'cors'
 import authRouter from '@/routes/auth/index'
-
 import { MangaRouter, AdminMangaRouter } from '@/routes/manga/index';
 import { AdminUsersRouter } from './routes/users';
 import { cacheRouter } from './routes/cache';
