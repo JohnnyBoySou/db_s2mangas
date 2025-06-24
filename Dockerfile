@@ -19,7 +19,7 @@ RUN npx prisma generate
 RUN npm run build
 
 # Stage 2: Production
-FROM node:18-alpine
+FROM node:18
 
 WORKDIR /usr/src/app
 
