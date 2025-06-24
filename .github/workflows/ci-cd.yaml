@@ -10,10 +10,51 @@ env:
   NODE_VERSION: '20.x'
 
 jobs:
+  # Job de análise de segurança com Horusec
+  security:
+    name: Security Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Necessário para análise completa do histórico
+      
+      - name: Run Horusec Security Analysis
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/ZupIT/horusec/master/deployments/scripts/install.sh | bash -s latest
+          horusec start -p . --output-format="json" --json-output-file="horusec-report.json"
+        continue-on-error: true
+      
+      - name: Upload Horusec Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: horusec-security-report
+          path: horusec-report.json
+          retention-days: 30
+      
+      - name: Display Security Summary
+        if: always()
+        run: |
+          if [ -f "horusec-report.json" ]; then
+            echo "🔍 Análise de segurança concluída!"
+            echo "📊 Relatório salvo em horusec-report.json"
+            # Exibir resumo básico se o jq estiver disponível
+            if command -v jq &> /dev/null; then
+              echo "📈 Resumo das vulnerabilidades encontradas:"
+              jq '.analysisVulnerabilities | length' horusec-report.json 2>/dev/null || echo "Não foi possível processar o resumo"
+            fi
+          else
+            echo "⚠️ Relatório de segurança não foi gerado"
+          fi
+
   # Job de validação (lint, type-check, tests)
   validate:
     name: Validate Code
     runs-on: ubuntu-latest
+    needs: security  # Executa após a análise de segurança
     
     strategy:
       matrix:
