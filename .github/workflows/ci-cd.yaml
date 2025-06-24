@@ -79,7 +79,7 @@ jobs:
       - name: Build application
         run: npm run build
       
-      - name: Check if dist folder exists
+      - name: Checar se dist existe
         run: |
           if [ -d "dist" ]; then
             echo "✅ dist folder created successfully"
