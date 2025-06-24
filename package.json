@@ -1,7 +1,6 @@
 {
   "name": "db_s2mangas",
   "version": "1.0.0",
-  "type": "module",
   "main": "server.ts",
   "scripts": {
     "test": "jest --passWithNoTests",
