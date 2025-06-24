@@ -3,10 +3,12 @@ import { handleZodError } from '@/utils/zodError';
 import * as searchHandlers from '@/handlers/search/index';
 import { advancedSearchSchema } from '@/schemas/searchSchemas';
 import { MANGA_TYPE } from '@/constants/search';
-import countries from 'i18n-iso-countries';
+// Removidas as linhas:
+// import countries from 'i18n-iso-countries';
+// import ptJson from 'i18n-iso-countries/langs/pt.json' assert { type: 'json' };
 
-countries.registerLocale(require('i18n-iso-countries/langs/pt.json'));
-
+// Removida a linha:
+// countries.registerLocale(ptJson);
 
 export const searchManga: RequestHandler = async (req, res) => {
     const {
