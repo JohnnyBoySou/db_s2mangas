@@ -5,7 +5,6 @@ import authRouter from '@/routes/auth/index'
 import { MangaRouter, AdminMangaRouter } from '@/routes/manga/index';
 import { AdminUsersRouter } from './routes/users';
 import { cacheRouter } from './routes/cache';
-//import { staticCacheMiddleware, imageOptimizationMiddleware } from './config/cdn';
 import { warmupCache } from './middlewares/smartCache';
 import { logger } from './utils/logger';
 
