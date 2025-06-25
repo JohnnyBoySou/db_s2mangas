@@ -31,24 +31,25 @@ jobs:
 
       - name: Deploy to VPS with Docker
         run: |
-          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
+          REPO_NAME=$(basename ${{ github.repository }})
+          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "
             set -e
 
-            DEPLOY_DIR="/var/www/${{ github.event.repository.name }}"
+            DEPLOY_DIR=/var/www/$REPO_NAME
 
-            echo "📁 Checking repository..."
-            if [ ! -d "$DEPLOY_DIR" ]; then
-              sudo mkdir -p $DEPLOY_DIR
-              cd $DEPLOY_DIR
+            echo '📁 Checking repository...'
+            if [ ! -d \"\$DEPLOY_DIR\" ]; then
+              sudo mkdir -p \$DEPLOY_DIR
+              cd \$DEPLOY_DIR
               sudo git clone git@github.com:${{ github.repository }} .
             else
-              cd $DEPLOY_DIR
+              cd \$DEPLOY_DIR
               sudo git pull
             fi
 
-            echo "🐳 Deploying with Docker Compose..."
+            echo '🐳 Deploying with Docker Compose...'
             sudo docker-compose down
             sudo docker-compose up --build -d
 
-            echo "✅ Deployment completed!"
-          EOF
+            echo '✅ Deployment completed!'
+          "
