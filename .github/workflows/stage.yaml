@@ -52,6 +52,7 @@ jobs:
               cd \$DEPLOY_DIR
               sudo git remote set-url origin $GIT_REPO
               sudo GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git pull
+
             fi
 
             echo "🐳 Deploying with Docker Compose..."
