@@ -2,10 +2,10 @@ export type RegisterBody = {
     name: string;
     email: string;
     password: string;
-    avatar: string;
-    cover: string;
-    categories: Array<{ name: string }>;
-    languages: string[];
+    avatar?: string;
+    cover?: string;
+    categories?: Array<{ name: string }>;
+    languages?: string[];
 };
   
 export type LoginBody = {

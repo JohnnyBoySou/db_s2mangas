@@ -11,7 +11,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 //const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 
 export const register = async (data: RegisterBody) => {
-    const { name, email, password, avatar, cover, categories, languages } = data;
+    const { name, email, password, avatar, cover } = data;
     const normalizedEmail = email.toLowerCase();
 
     const existingEmail = await prisma.user.findUnique({ where: { email: normalizedEmail } });
@@ -21,6 +21,7 @@ export const register = async (data: RegisterBody) => {
     }
 
     // Criar categorias se não existirem
+    /*
     const categoryConnections = await Promise.all(categories.map(async cat => {
         try {
             const existingCategory = await prisma.category.findUnique({
@@ -48,8 +49,9 @@ export const register = async (data: RegisterBody) => {
             throw error;
         }
     }));
-
+*/
     // Criar idiomas se não existirem
+    /*
     const languageConnections = await Promise.all(languages.map(async lang => {
         try {
             const existingLanguage = await prisma.language.findUnique({
@@ -77,7 +79,7 @@ export const register = async (data: RegisterBody) => {
             throw error;
         }
     }));
-
+*/
     const generatedUsername = generateUsername(name);
     let finalUsername = generatedUsername;
 
@@ -102,12 +104,6 @@ export const register = async (data: RegisterBody) => {
             emailVerificationCode: verificationCode,
             emailVerificationExp: codeExp,
             emailVerified: false,
-            languages: {
-                connect: languageConnections
-            },
-            categories: {
-                connect: categoryConnections
-            }
         },
     });
 

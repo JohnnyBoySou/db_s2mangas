@@ -1,11 +1,10 @@
 import type { RequestHandler } from "express";
-import { loginSchema, registerSchema } from "@/schemas/authSchemas";
+import { loginSchema, registerSchema } from "@/validators/auth";
 import { handleZodError } from "@/utils/zodError";
 import { updateUserSchema } from "@/schemas/updateSchemas";
 import * as authHandlers from "@/handlers/auth";
 
 type VerifyEmailBody = { email: string; code: string };
-//type GoogleSignInBody = { token: string };
 
 // ✅ Criação de usuário
 export const register: RequestHandler = async (req, res) => {
@@ -14,6 +13,7 @@ export const register: RequestHandler = async (req, res) => {
         const result = await authHandlers.register(data);
         res.status(201).json(result);
     } catch (error: unknown) {
+        console.log(error)
         handleZodError(error, res);
     }
 };

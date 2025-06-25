@@ -1,7 +1,7 @@
 import express from 'express'
 import cors from 'cors'
-import authRouter from '@/routes/auth/index'
-import { MangaRouter, AdminMangaRouter } from '@/routes/manga/index';
+import { AuthRouter } from '@/routes/auth'
+import { MangaRouter, AdminMangaRouter } from '@/routes/manga';
 import { AdminUsersRouter } from './routes/users';
 import { cacheRouter } from './routes/cache';
 import { warmupCache } from './middlewares/smartCache';
@@ -35,7 +35,7 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }))
 
-app.use('/auth', authRouter)
+app.use('/auth', AuthRouter)
 app.use('/manga/', MangaRouter)
 app.use('/categories', CategoriesRouter)
 app.use('/collection', collectionRouter)
