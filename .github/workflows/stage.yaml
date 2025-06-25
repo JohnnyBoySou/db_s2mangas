@@ -9,6 +9,10 @@ on:
         options:
           - production
           - staging
+      branch:
+        description: 'Branch to deploy'
+        required: true
+        default: 'develop'
   push:
     branches: [develop]
 
@@ -19,6 +23,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch || 'develop' }}
 
       - name: Setup SSH Agent
         uses: webfactory/ssh-agent@v0.7.0
@@ -37,6 +43,7 @@ jobs:
         run: |
           REPO_NAME=$(basename ${{ github.repository }})
           GIT_REPO="git@github.com:${{ github.repository }}"
+          BRANCH="${{ github.event.inputs.branch || 'develop' }}"
 
           ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << EOF
             set -e
@@ -45,19 +52,65 @@ jobs:
 
             echo "📁 Checking repository..."
             if [ ! -d "\$DEPLOY_DIR" ]; then
+              echo "🆕 Creating new deployment directory..."
               sudo mkdir -p \$DEPLOY_DIR
+              sudo chown \$(whoami):\$(whoami) \$DEPLOY_DIR
               cd \$DEPLOY_DIR
-              sudo GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git clone $GIT_REPO .
+              GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git clone $GIT_REPO .
+              git checkout $BRANCH
             else
+              echo "🔄 Updating existing repository..."
               cd \$DEPLOY_DIR
-              sudo git remote set-url origin $GIT_REPO
-              sudo GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git pull
+              git remote set-url origin $GIT_REPO
+              GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git fetch origin
+              git checkout $BRANCH
+              git pull origin $BRANCH
+            fi
 
+            echo "📋 Checking if .env.prod exists..."
+            if [ ! -f ".env.prod" ]; then
+              echo "⚠️  Warning: .env.prod not found. Creating from template..."
+              if [ -f ".env.example" ]; then
+                cp .env.example .env.prod
+                echo "📝 Please configure .env.prod with production values"
+              fi
             fi
 
             echo "🐳 Deploying with Docker Compose..."
-            sudo docker-compose down
-            sudo docker-compose up --build -d
-
-            echo "✅ Deployment completed!"
+            # Stop containers gracefully
+            if [ -f "docker-compose.yaml" ]; then
+              sudo docker-compose down --remove-orphans
+              sudo docker-compose up --build -d
+              
+              echo "⏳ Waiting for services to start..."
+              sleep 10
+              
+              echo "🔍 Checking container status..."
+              sudo docker-compose ps
+              
+              echo "✅ Deployment completed!"
+            else
+              echo "❌ docker-compose.yaml not found!"
+              exit 1
+            fi
+          EOF
+      - name: Verify Deployment
+        run: |
+          echo "🔍 Verifying deployment..."
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << EOF
+            cd /var/www/$(basename ${{ github.repository }})
+            
+            echo "📊 Container status:"
+            sudo docker-compose ps
+            
+            echo "📝 Recent logs:"
+            sudo docker-compose logs --tail=20 api
+            
+            # Test if API is responding (adjust port if needed)
+            echo "🌐 Testing API health..."
+            if curl -f http://localhost:3000/health 2>/dev/null; then
+              echo "✅ API is responding"
+            else
+              echo "⚠️  API health check failed"
+            fi
           EOF
