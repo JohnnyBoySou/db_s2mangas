@@ -36,25 +36,27 @@ jobs:
       - name: Deploy to VPS with Docker
         run: |
           REPO_NAME=$(basename ${{ github.repository }})
-          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << EOF
+          GIT_REPO="git@github.com:${{ github.repository }}"
+
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << EOF
             set -e
 
             DEPLOY_DIR=/var/www/$REPO_NAME
 
-            echo '📁 Checking repository...'
+            echo "📁 Checking repository..."
             if [ ! -d "\$DEPLOY_DIR" ]; then
               sudo mkdir -p \$DEPLOY_DIR
               cd \$DEPLOY_DIR
-              sudo GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git clone git@github.com:${{ github.repository }} .
+              sudo GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git clone $GIT_REPO .
             else
               cd \$DEPLOY_DIR
-              sudo git remote set-url origin git@github.com:${{ github.repository }}
+              sudo git remote set-url origin $GIT_REPO
               sudo GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git pull
             fi
 
-            echo '🐳 Deploying with Docker Compose...'
+            echo "🐳 Deploying with Docker Compose..."
             sudo docker-compose down
             sudo docker-compose up --build -d
 
-            echo '✅ Deployment completed!'
+            echo "✅ Deployment completed!"
           EOF
