@@ -3,3 +3,5 @@ export const CDN_CONFIG = {
   baseUrl: '',
   regions: []
 };
+
+
