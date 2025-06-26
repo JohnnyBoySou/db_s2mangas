@@ -99,7 +99,7 @@ app.get('/health', (req, res) => {
 app.get('/', (req, res) => {
   res.status(200).json({
     message: 'S2Mangas API is running!',
-    version: '1.0.0',
+    version: require('../package.json').version,
     endpoints: {
       health: '/health',
       auth: '/auth',
