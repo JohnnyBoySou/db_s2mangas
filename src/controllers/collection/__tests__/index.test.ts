@@ -331,13 +331,13 @@ describe('Collection Controller', () => {
         }
       };
 
-      mockReq.params = { mangaId: 'manga-123' };
+      mockReq.params = { mangaId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' };
       mockReq.query = { page: '1', limit: '10' };
       checkMangaInCollections.mockResolvedValue(mockResult);
 
       await checkInCollections(mockReq as Request, mockRes as Response, mockNext);
 
-      expect(checkMangaInCollections).toHaveBeenCalledWith('manga-123', 'user-123', 1, 10);
+      expect(checkMangaInCollections).toHaveBeenCalledWith('a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'user-123', 1, 10);
       expect(mockStatus).toHaveBeenCalledWith(200);
       expect(mockJson).toHaveBeenCalledWith(mockResult);
     });
@@ -348,18 +348,18 @@ describe('Collection Controller', () => {
       const mockResult = {
         collection: {
           id: 'collection-123',
-          mangas: [{ id: 'manga-123' }],
+          mangas: [{ id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' }],
           _count: { likes: 0, mangas: 1 }
         },
         action: 'added'
       };
 
-      mockReq.params = { id: 'collection-123', mangaId: 'manga-123' };
+      mockReq.params = { id: 'collection-123', mangaId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' };
       toggleMangaInCollection.mockResolvedValue(mockResult);
 
       await toggleCollection(mockReq as Request, mockRes as Response, mockNext);
 
-      expect(toggleMangaInCollection).toHaveBeenCalledWith('collection-123', 'manga-123', 'user-123');
+      expect(toggleMangaInCollection).toHaveBeenCalledWith('collection-123', 'a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'user-123');
       expect(mockStatus).toHaveBeenCalledWith(200);
       expect(mockJson).toHaveBeenCalledWith(mockResult);
     });
@@ -374,19 +374,19 @@ describe('Collection Controller', () => {
         action: 'removed'
       };
 
-      mockReq.params = { id: 'collection-123', mangaId: 'manga-123' };
+      mockReq.params = { id: 'collection-123', mangaId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' };
       toggleMangaInCollection.mockResolvedValue(mockResult);
 
       await toggleCollection(mockReq as Request, mockRes as Response, mockNext);
 
-      expect(toggleMangaInCollection).toHaveBeenCalledWith('collection-123', 'manga-123', 'user-123');
+      expect(toggleMangaInCollection).toHaveBeenCalledWith('collection-123', 'a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'user-123');
       expect(mockStatus).toHaveBeenCalledWith(200);
       expect(mockJson).toHaveBeenCalledWith(mockResult);
     });
 
     it('should return 401 if user is not authenticated', async () => {
       mockReq.user = undefined;
-      mockReq.params = { id: 'collection-123', mangaId: 'manga-123' };
+      mockReq.params = { id: 'collection-123', mangaId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' };
 
       await toggleCollection(mockReq as Request, mockRes as Response, mockNext);
 
@@ -395,7 +395,7 @@ describe('Collection Controller', () => {
     });
 
     it('should return 404 if collection not found', async () => {
-      mockReq.params = { id: 'non-existent', mangaId: 'manga-123' };
+      mockReq.params = { id: 'non-existent', mangaId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' };
       toggleMangaInCollection.mockRejectedValue(new Error('Coleção não encontrada'));
 
       await toggleCollection(mockReq as Request, mockRes as Response, mockNext);
@@ -405,7 +405,7 @@ describe('Collection Controller', () => {
     });
 
     it('should return 403 if user is not the collection owner', async () => {
-      mockReq.params = { id: 'collection-123', mangaId: 'manga-123' };
+      mockReq.params = { id: 'collection-123', mangaId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' };
       toggleMangaInCollection.mockRejectedValue(new Error('Você não tem permissão para modificar esta coleção'));
 
       await toggleCollection(mockReq as Request, mockRes as Response, mockNext);

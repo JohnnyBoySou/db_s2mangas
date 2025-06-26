@@ -10,4 +10,4 @@ export const advancedSearchSchema = z.object({
     orderBy: z.enum([MANGA_ORDER.MOST_VIEWED, MANGA_ORDER.MOST_LIKED, MANGA_ORDER.MOST_RECENT]).default(MANGA_ORDER.MOST_RECENT),
     page: z.string().transform(val => parseInt(val, 10)).default('1'),
     limit: z.string().transform(val => parseInt(val, 10)).default('10'),
-}); 
+});

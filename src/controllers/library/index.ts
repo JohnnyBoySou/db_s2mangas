@@ -64,7 +64,6 @@ export const listLibrary: RequestHandler = async (req, res) => {
 export const toggleLibraryEntry: RequestHandler = async (req, res) => {
     const userId = (req as any).user?.id;
 
-    console.log("iniciou o toggle")
     const { mangaId, type } = req.params;
 
     try {

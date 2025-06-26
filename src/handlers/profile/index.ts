@@ -1,4 +1,5 @@
 import prisma from '@/prisma/client';
+import { createFollowNotification } from '@/handlers/notifications';
 
 export const getProfileData = async (username: string, authenticatedUserId: string) => {
 
@@ -173,12 +174,30 @@ export const followProfile = async (userId: string, targetUsername: string) => {
     throw new Error('Você já segue este perfil');
   }
 
-  return prisma.profileFollow.create({
+  // Buscar dados do usuário que está seguindo para a notificação
+  const follower = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { name: true, username: true }
+  });
+
+  const follow = await prisma.profileFollow.create({
     data: {
       userId,
       targetId: target.id
     }
   });
+
+  // Criar notificação para o usuário que foi seguido
+  if (follower) {
+    try {
+      await createFollowNotification(userId, target.id, follower.name || follower.username);
+    } catch (error) {
+      console.error('Erro ao criar notificação de follow:', error);
+      // Não falha a operação de follow se a notificação falhar
+    }
+  }
+
+  return follow;
 };
 
 export const unfollowProfile = async (userId: string, targetUsername: string) => {
@@ -248,12 +267,29 @@ export const toggleFollowProfile = async (userId: string, targetUsername: string
     return { followed: false };
   } else {
     // Se não segue, adiciona o follow
+    // Buscar dados do usuário que está seguindo para a notificação
+    const follower = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { name: true, username: true }
+    });
+
     await prisma.profileFollow.create({
       data: {
         userId,
         targetId: target.id
       }
     });
+
+    // Criar notificação para o usuário que foi seguido
+    if (follower) {
+      try {
+        await createFollowNotification(userId, target.id, follower.name || follower.username);
+      } catch (error) {
+        console.error('Erro ao criar notificação de follow:', error);
+        // Não falha a operação de follow se a notificação falhar
+      }
+    }
+
     return { followed: true };
   }
 };
@@ -301,4 +337,4 @@ export const toggleLikeProfile = async (userId: string, targetUsername: string) 
     });
     return { liked: true };
   }
-}; 
+};

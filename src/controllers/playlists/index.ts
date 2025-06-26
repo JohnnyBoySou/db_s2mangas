@@ -56,4 +56,4 @@ export const deletePlaylist: RequestHandler = async (req, res, ) => {
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
-}; 
+};

@@ -1,5 +1,5 @@
-import { ZodError } from 'zod'
 import { Response } from 'express'
+import { ZodError } from 'zod'
 
 export function handleZodError(error: unknown, res: Response) {
   // Se for um erro do Zod
