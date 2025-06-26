@@ -3,7 +3,7 @@ import cors from 'cors'
 import { AuthRouter } from '@/routes/auth'
 import { MangaRouter, AdminMangaRouter } from '@/routes/manga';
 import { AdminUsersRouter } from './routes/users';
-import { cacheRouter } from './routes/cache';
+//import { cacheRouter } from './routes/cache';
 import { warmupCache } from './middlewares/smartCache';
 import { logger } from './utils/logger';
 
@@ -61,7 +61,7 @@ app.use('/admin/categories', AdminCategoriesRouter)
 app.use('/admin/notifications', AdminNotificationsRouter)
 app.use('/admin/playlists', AdminPlaylistRouter)
 app.use('/admin/file', AdminFileRouter)
-app.use('/cache', cacheRouter)
+//app.use('/cache', cacheRouter)
 
 // Middlewares de cache e CDN
 //app.use('/static', staticCacheMiddleware());
