@@ -5,10 +5,9 @@ process.env.SMTP_USER = 'test@example.com';
 
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import nodemailer from 'nodemailer';
-import { generateUsername } from '@/utils/generate';
+import { generateUsername } from '../../../utils/generate';
+import emailAdapter from '../../../config/nodemailer';
 import { register, verifyEmailCode, login, getProfile, updateMe, deleteMe } from '../index';
-import emailAdapter from '@/config/nodemailer';
 
 // Mock das dependências
 jest.mock('bcrypt');

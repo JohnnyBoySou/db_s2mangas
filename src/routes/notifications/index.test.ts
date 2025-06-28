@@ -2,7 +2,7 @@ import { jest } from '@jest/globals';
 import request from 'supertest';
 import express from 'express';
 import { NotificationsRouter, AdminNotificationsRouter } from './index';
-import * as notificationHandlers from '@/handlers/notifications';
+import * as notificationHandlers from '../../handlers/notifications';
 
 // Mock dos handlers
 jest.mock('@/handlers/notifications', () => ({
