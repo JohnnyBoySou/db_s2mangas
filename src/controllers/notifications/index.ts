@@ -10,24 +10,6 @@ const createNotificationSchema = z.object({
   type: z.string()
 });
 
-// Listar notificações do usuário autenticado
-export const listNotifications: RequestHandler = async (req, res) => {
-  const { take, page } = getPaginationParams(req);
-  const userId = req.user?.id;
-
-  if (!userId) {
-    res.status(401).json({ error: 'Usuário não autenticado' });
-    return;
-  }
-
-  try {
-    const result = await notificationHandlers.listUserNotifications(userId, page, take);
-    res.json(result);
-  } catch (err) {
-    handleZodError(err, res);
-  }
-};
-
 // Listar todas as notificações (apenas admin)
 export const listAllNotifications: RequestHandler = async (req, res) => {
   const { take, page } = getPaginationParams(req);
@@ -64,41 +46,6 @@ export const deleteNotification: RequestHandler = async (req, res) => {
   }
 };
 
-// Marcar notificação como lida
-export const markAsRead: RequestHandler = async (req, res) => {
-  const { id } = req.params;
-  const userId = req.user?.id;
-
-  if (!userId) {
-    res.status(401).json({ error: 'Usuário não autenticado' });
-    return;
-  }
-
-  try {
-    await notificationHandlers.markAsRead(id, userId);
-    res.json({ message: 'Notificação marcada como lida' });
-  } catch (err) {
-    handleZodError(err, res);
-  }
-};
-
-// Marcar todas as notificações como lidas
-export const markAllAsRead: RequestHandler = async (req, res) => {
-  const userId = req.user?.id;
-
-  if (!userId) {
-    res.status(401).json({ error: 'Usuário não autenticado' });
-    return;
-  }
-
-  try {
-    await notificationHandlers.markAllAsRead(userId);
-    res.json({ message: 'Todas as notificações foram marcadas como lidas' });
-  } catch (err) {
-    handleZodError(err, res);
-  }
-};
-
 // Buscar uma única notificação
 export const getNotification: RequestHandler = async (req, res) => {
   const { notificationId } = req.params;
@@ -114,29 +61,3 @@ export const getNotification: RequestHandler = async (req, res) => {
     handleZodError(err, res);
   }
 };
-
-/*
-// Marcar notificação como lida
-export const markAsRead: RequestHandler = async (req, res) => {
-  const userId = (req as any).user?.id;
-  const { notificationId } = req.params;
-
-  try {
-    const notification = await notificationHandlers.markAsRead(notificationId, userId);
-    res.json(notification);
-  } catch (err) {
-    handleZodError(err, res);
-  }
-};
-
-// Marcar todas as notificações como lidas
-export const markAllAsRead: RequestHandler = async (req, res) => {
-  const userId = (req as any).user?.id;
-
-  try {
-    const result = await notificationHandlers.markAllAsRead(userId);
-    res.json(result);
-  } catch (err) {
-    handleZodError(err, res);
-  }
-};*/
