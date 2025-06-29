@@ -1,0 +1,1 @@
+-- Esta migration foi esvaziada pois os campos userId, isRead e o relacionamento com User foram removidos do modelo Notification.
