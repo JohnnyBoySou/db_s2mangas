@@ -26,6 +26,7 @@ model Manga {
   categories     Category[]         @relation("MangaCategories")
   languages      Language[]         @relation("MangaLanguages")
   reviews        Review[]
+  listItems      MangaListItem[]
 }
 
 model MangaTranslation {
@@ -109,6 +110,7 @@ model User {
   reviews               Review[]
   reviewVotes           ReviewVote[]
   notifications         Notification[]
+  mangaListLikes        MangaListLike[]
 }
 
 model Collection {
@@ -321,4 +323,51 @@ model ReviewVote {
   user      User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, reviewId])
+}
+
+model MangaList {
+  id          String           @id @default(uuid())
+  name        String
+  cover       String
+  mood        String
+  description String?
+  status      MangaListStatus  @default(PRIVATE)
+  isDefault   Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  items       MangaListItem[]
+  likes       MangaListLike[]
+
+  @@index([status])
+}
+
+model MangaListItem {
+  id         String    @id @default(uuid())
+  listId     String
+  mangaId    String
+  order      Int       @default(0)
+  note       String?
+  addedAt    DateTime  @default(now())
+  list       MangaList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  manga      Manga     @relation(fields: [mangaId], references: [id])
+
+  @@unique([listId, mangaId])
+  @@index([listId, order])
+}
+
+model MangaListLike {
+  id        String    @id @default(uuid())
+  userId    String
+  listId    String
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id])
+  list      MangaList @relation(fields: [listId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, listId])
+}
+
+enum MangaListStatus {
+  PRIVATE
+  PUBLIC
+  UNLISTED
 }

@@ -1,27 +1,29 @@
 import express from 'express'
 import cors from 'cors'
 import { AuthRouter } from '@/routes/auth'
-import { MangaRouter, AdminMangaRouter } from '@/routes/manga';
-import { AdminUsersRouter } from './routes/users';
+import { AdminUsersRouter } from '@/routes/users';
 //import { cacheRouter } from './routes/cache';
-import { warmupCache } from './middlewares/smartCache';
-import { logger } from './utils/logger';
+import { warmupCache } from '@/middlewares/smartCache';
+import { logger } from '@/utils/logger';
 
 import collectionRouter from '@/routes/collection';
+import CoinsRouter from '@/routes/coins';
+import ReviewRouter from '@/routes/review';
 import discoverRouter from '@/routes/discover';
 import libraryRouter from '@/routes/library';
 import searchRouter from '@/routes/search';
 import commentRouter from '@/routes/comment';
 import chaptersRouter from '@/routes/chapters';
+import { MangaRouter, AdminMangaRouter } from '@/routes/manga';
 import { NotificationsRouter, AdminNotificationsRouter } from '@/routes/notifications';
 import { WallpaperRouter, AdminWallpaperRouter} from '@/routes/wallpapers';
-import { AdminCategoriesRouter, CategoriesRouter } from '@/routes/categories';
-import AdminAnalyticsRouter from '@/routes/analytics';
-import { AdminPlaylistRouter, PlaylistRouter } from '@/routes/playlists';
+import { CategoriesRouter, AdminCategoriesRouter } from '@/routes/categories';
+import { MangaListRouter, AdminMangaListRouter } from '@/routes/mangaList'; 
+import { PlaylistRouter, AdminPlaylistRouter } from '@/routes/playlists';
 import { FileRouter, AdminFileRouter } from '@/routes/files';
 import { ProfileRouter } from '@/routes/profile';
-import CoinsRouter from './routes/coins';
-import ReviewRouter from './routes/review'; 
+
+import AdminAnalyticsRouter from '@/routes/analytics';
 
 const app = express()
 
@@ -52,8 +54,11 @@ app.use('/uploads', express.static('uploads'));
 app.use('/profile', ProfileRouter)
 app.use('/coins', CoinsRouter)
 app.use('/review', ReviewRouter)
+app.use('/mangalist', MangaListRouter)
+
 //ADMIN
 app.use('/admin/analytics', AdminAnalyticsRouter)
+app.use('/admin/mangalist', AdminMangaListRouter)
 app.use('/admin/users', AdminUsersRouter )
 app.use('/admin/mangas', AdminMangaRouter )
 app.use('/admin/wallpapers', AdminWallpaperRouter )

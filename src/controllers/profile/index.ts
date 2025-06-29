@@ -188,3 +188,82 @@ export const listProfiles: RequestHandler = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+// Adicionar novos schemas de validação após os existentes
+const followersSchema = z.object({
+  userId: z.string().uuid('ID do usuário inválido'),
+  page: z.string().optional().transform(val => val ? parseInt(val) : 1),
+  limit: z.string().optional().transform(val => val ? Math.min(parseInt(val) || 10, 50) : 10)
+});
+
+const followingSchema = z.object({
+  userId: z.string().uuid('ID do usuário inválido'),
+  page: z.string().optional().transform(val => val ? parseInt(val) : 1),
+  limit: z.string().optional().transform(val => val ? Math.min(parseInt(val) || 10, 50) : 10)
+});
+
+export const getFollowers: RequestHandler = async (req, res) => {
+  try {
+    const validatedParams = followersSchema.parse({
+      userId: req.params.userId,
+      page: req.query.page as string,
+      limit: req.query.limit as string
+    });
+    const authenticatedUserId = req.user?.id;
+
+    const result = await profileHandler.getFollowers({
+      userId: validatedParams.userId,
+      page: validatedParams.page,
+      limit: validatedParams.limit,
+      authenticatedUserId
+    });
+
+    res.json(result);
+  } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ 
+        error: 'Dados inválidos', 
+        details: error.errors.map(e => e.message)
+      });
+      return;
+    }
+    if (error.message === 'Usuário não encontrado') {
+      res.status(404).json({ error: error.message });
+      return;
+    }
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const getFollowing: RequestHandler = async (req, res) => {
+  try {
+    const validatedParams = followingSchema.parse({
+      userId: req.params.userId,
+      page: req.query.page as string,
+      limit: req.query.limit as string
+    });
+    const authenticatedUserId = req.user?.id;
+
+    const result = await profileHandler.getFollowing({
+      userId: validatedParams.userId,
+      page: validatedParams.page,
+      limit: validatedParams.limit,
+      authenticatedUserId
+    });
+
+    res.json(result);
+  } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ 
+        error: 'Dados inválidos', 
+        details: error.errors.map(e => e.message)
+      });
+      return;
+    }
+    if (error.message === 'Usuário não encontrado') {
+      res.status(404).json({ error: error.message });
+      return;
+    }
+    res.status(500).json({ error: error.message });
+  }
+};

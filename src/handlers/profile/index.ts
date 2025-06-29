@@ -14,6 +14,20 @@ interface SimilarProfilesParams {
   limit?: number;
 }
 
+interface FollowersParams {
+  userId: string;
+  page?: number;
+  limit?: number;
+  authenticatedUserId?: string;
+}
+
+interface FollowingParams {
+  userId: string;
+  page?: number;
+  limit?: number;
+  authenticatedUserId?: string;
+}
+
 export const getProfileData = async (username: string, authenticatedUserId: string) => {
 
   const profile = await prisma.user.findUnique({
@@ -658,6 +672,220 @@ export const listProfiles = async (page = 1, limit = 10) => {
 
   return {
     profiles: profilesWithLikes,
+    total,
+    totalPages: Math.ceil(total / limit),
+    currentPage: page
+  };
+};
+
+export const getFollowers = async ({
+  userId,
+  page = 1,
+  limit = 10,
+  authenticatedUserId
+}: FollowersParams) => {
+  const skip = (page - 1) * limit;
+
+  // Verificar se o usuário existe
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true }
+  });
+
+  if (!user) {
+    throw new Error('Usuário não encontrado');
+  }
+
+  const [followers, total] = await Promise.all([
+    prisma.profileFollow.findMany({
+      where: { targetId: userId },
+      select: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+            avatar: true,
+            bio: true,
+            createdAt: true,
+            _count: {
+              select: {
+                profileLikedBy: true,
+                followers: true,
+                following: true,
+                libraryEntries: true
+              }
+            }
+          }
+        },
+        createdAt: true
+      },
+      skip,
+      take: limit,
+      orderBy: { createdAt: 'desc' }
+    }),
+    prisma.profileFollow.count({
+      where: { targetId: userId }
+    })
+  ]);
+
+  const followerProfiles = followers.map(f => f.user);
+
+  // Se há usuário autenticado, verificar relacionamentos
+  let followersWithRelationships = followerProfiles;
+  if (authenticatedUserId) {
+    const followerIds = followerProfiles.map(p => p.id);
+    
+    const [followings, likes] = await Promise.all([
+      prisma.profileFollow.findMany({
+        where: {
+          userId: authenticatedUserId,
+          targetId: { in: followerIds }
+        },
+        select: { targetId: true }
+      }),
+      prisma.profileLike.findMany({
+        where: {
+          userId: authenticatedUserId,
+          targetId: { in: followerIds }
+        },
+        select: { targetId: true }
+      })
+    ]);
+
+    const followingSet = new Set(followings.map(f => f.targetId));
+    const likedSet = new Set(likes.map(l => l.targetId));
+
+    followersWithRelationships = followerProfiles.map(profile => ({
+      ...profile,
+      _count: {
+        ...profile._count,
+        likes: profile._count.profileLikedBy
+      },
+      isFollowing: followingSet.has(profile.id),
+      isLiked: likedSet.has(profile.id)
+    }));
+  } else {
+    followersWithRelationships = followerProfiles.map(profile => ({
+      ...profile,
+      _count: {
+        ...profile._count,
+        likes: profile._count.profileLikedBy
+      },
+      isFollowing: false,
+      isLiked: false
+    }));
+  }
+
+  return {
+    followers: followersWithRelationships,
+    total,
+    totalPages: Math.ceil(total / limit),
+    currentPage: page
+  };
+};
+
+export const getFollowing = async ({
+  userId,
+  page = 1,
+  limit = 10,
+  authenticatedUserId
+}: FollowingParams) => {
+  const skip = (page - 1) * limit;
+
+  // Verificar se o usuário existe
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true }
+  });
+
+  if (!user) {
+    throw new Error('Usuário não encontrado');
+  }
+
+  const [following, total] = await Promise.all([
+    prisma.profileFollow.findMany({
+      where: { userId },
+      select: {
+        target: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+            avatar: true,
+            bio: true,
+            createdAt: true,
+            _count: {
+              select: {
+                profileLikedBy: true,
+                followers: true,
+                following: true,
+                libraryEntries: true
+              }
+            }
+          }
+        },
+        createdAt: true
+      },
+      skip,
+      take: limit,
+      orderBy: { createdAt: 'desc' }
+    }),
+    prisma.profileFollow.count({
+      where: { userId }
+    })
+  ]);
+
+  const followingProfiles = following.map(f => f.target);
+
+  // Se há usuário autenticado, verificar relacionamentos
+  let followingWithRelationships = followingProfiles;
+  if (authenticatedUserId) {
+    const followingIds = followingProfiles.map(p => p.id);
+    
+    const [userFollowings, likes] = await Promise.all([
+      prisma.profileFollow.findMany({
+        where: {
+          userId: authenticatedUserId,
+          targetId: { in: followingIds }
+        },
+        select: { targetId: true }
+      }),
+      prisma.profileLike.findMany({
+        where: {
+          userId: authenticatedUserId,
+          targetId: { in: followingIds }
+        },
+        select: { targetId: true }
+      })
+    ]);
+
+    const userFollowingSet = new Set(userFollowings.map(f => f.targetId));
+    const likedSet = new Set(likes.map(l => l.targetId));
+
+    followingWithRelationships = followingProfiles.map(profile => ({
+      ...profile,
+      _count: {
+        ...profile._count,
+        likes: profile._count.profileLikedBy
+      },
+      isFollowing: userFollowingSet.has(profile.id),
+      isLiked: likedSet.has(profile.id)
+    }));
+  } else {
+    followingWithRelationships = followingProfiles.map(profile => ({
+      ...profile,
+      _count: {
+        ...profile._count,
+        likes: profile._count.profileLikedBy
+      },
+      isFollowing: false,
+      isLiked: false
+    }));
+  }
+
+  return {
+    following: followingWithRelationships,
     total,
     totalPages: Math.ceil(total / limit),
     currentPage: page
