@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificação de Email - S2Mangás</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #6366f1;
+            margin-bottom: 10px;
+        }
+        .title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 20px;
+        }
+        .greeting {
+            font-size: 18px;
+            color: #374151;
+            margin-bottom: 20px;
+        }
+        .message {
+            font-size: 16px;
+            color: #6b7280;
+            margin-bottom: 30px;
+        }
+        .verification-code {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 30px 0;
+        }
+        .code {
+            font-size: 36px;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 4px;
+            margin: 10px 0;
+        }
+        .code-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+        .expiry-info {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            color: #92400e;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            text-align: center;
+            color: #6b7280;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #6366f1;
+            text-decoration: none;
+        }
+        .security-note {
+            background: #fef2f2;
+            border: 1px solid #fca5a5;
+            color: #dc2626;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            .code {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">S2Mangás</div>
+            <div class="title">Verificação de Email</div>
+        </div>
+        
+        <div class="greeting">
+            Olá, <strong>{{userName}}</strong>!
+        </div>
+        
+        <div class="message">
+            Bem-vindo ao S2Mangás! Para completar seu cadastro, precisamos verificar seu endereço de email.
+        </div>
+        
+        <div class="verification-code">
+            <div class="code-label">Seu código de verificação é:</div>
+            <div class="code">{{verificationCode}}</div>
+        </div>
+        
+        <div class="expiry-info">
+            <strong>⏰ Importante:</strong> Este código é válido por apenas 10 minutos.
+        </div>
+        
+        <div class="message">
+            Insira este código no aplicativo para ativar sua conta e começar a explorar o mundo dos mangás!
+        </div>
+        
+        <div class="security-note">
+            <strong>🔒 Segurança:</strong> Nunca compartilhe este código com outras pessoas. Nossa equipe nunca solicitará este código por telefone ou email.
+        </div>
+        
+        <div class="footer">
+            <p>Se você não criou uma conta no S2Mangás, pode ignorar este email.</p>
+            <p>Precisa de ajuda? <a href="mailto:suporte@s2mangas.com">Entre em contato conosco</a></p>
+            <p>&copy; 2024 S2Mangás. Todos os direitos reservados.</p>
+        </div>
+    </div>
+</body>
+</html> 

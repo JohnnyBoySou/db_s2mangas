@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getRecent, getMostViewed, getMostLiked, getFeed, getIA } from "@/controllers/discover";
+import { getRecent, getMostViewed, getMostLiked, getFeed, getIA } from "@/controllers/discover/DiscoverController";
 import { requireAuth } from "@/middlewares/auth";
 import { smartCacheMiddleware } from "@/middlewares/smartCache";
 

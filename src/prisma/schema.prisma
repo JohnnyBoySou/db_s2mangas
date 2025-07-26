@@ -20,13 +20,13 @@ model Manga {
   comments       Comment[]
   libraryEntries LibraryEntry[]
   likes          Like[]
+  listItems      MangaListItem[]
   translations   MangaTranslation[]
+  reviews        Review[]
   views          View[]
   collections    Collection[]       @relation("CollectionMangas")
   categories     Category[]         @relation("MangaCategories")
   languages      Language[]         @relation("MangaLanguages")
-  reviews        Review[]
-  listItems      MangaListItem[]
 }
 
 model MangaTranslation {
@@ -100,16 +100,16 @@ model User {
   comments              Comment[]
   libraryEntries        LibraryEntry[]
   likes                 Like[]
+  mangaListLikes        MangaListLike[]
+  following             ProfileFollow[]  @relation("UserFollowing")
+  followers             ProfileFollow[]  @relation("UserFollowers")
+  profileLikedBy        ProfileLike[]    @relation("ProfileLikedBy")
+  profileLikes          ProfileLike[]    @relation("ProfileLikes")
+  reviews               Review[]
+  reviewVotes           ReviewVote[]
   views                 View[]
   categories            Category[]       @relation("UserCategories")
   languages             Language[]       @relation("UserLanguages")
-  profileLikes          ProfileLike[]    @relation("ProfileLikes")
-  profileLikedBy        ProfileLike[]    @relation("ProfileLikedBy")
-  followers             ProfileFollow[]  @relation("UserFollowers")
-  following             ProfileFollow[]  @relation("UserFollowing")
-  reviews               Review[]
-  reviewVotes           ReviewVote[]
-  mangaListLikes        MangaListLike[]
 }
 
 model Collection {
@@ -155,12 +155,12 @@ model LibraryEntry {
 
 model Notification {
   id        String   @id @default(uuid())
-  title     String
   message   String
+  createdAt DateTime @default(now())
+  title     String
+  updatedAt DateTime @updatedAt
   type      String
   data      Json?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 
   @@index([createdAt])
 }
@@ -208,11 +208,6 @@ model Comment {
 
   @@index([mangaId])
   @@index([userId])
-}
-
-enum CollectionStatus {
-  PRIVATE
-  PUBLIC
 }
 
 model Wallpaper {
@@ -265,8 +260,8 @@ model ProfileLike {
   userId    String
   targetId  String
   createdAt DateTime @default(now())
-  user      User     @relation("ProfileLikes", fields: [userId], references: [id])
   target    User     @relation("ProfileLikedBy", fields: [targetId], references: [id])
+  user      User     @relation("ProfileLikes", fields: [userId], references: [id])
 
   @@unique([userId, targetId])
 }
@@ -276,8 +271,8 @@ model ProfileFollow {
   userId    String
   targetId  String
   createdAt DateTime @default(now())
-  user      User     @relation("UserFollowers", fields: [userId], references: [id])
   target    User     @relation("UserFollowing", fields: [targetId], references: [id])
+  user      User     @relation("UserFollowers", fields: [userId], references: [id])
 
   @@unique([userId, targetId])
 }
@@ -286,7 +281,6 @@ model Review {
   id            String       @id @default(uuid())
   userId        String
   mangaId       String
-  title         String? // Campo opcional
   rating        Int          @db.SmallInt
   content       String
   art           Int          @db.SmallInt
@@ -297,12 +291,13 @@ model Review {
   emotion       Int          @db.SmallInt
   originality   Int          @db.SmallInt
   dialogues     Int          @db.SmallInt
-  upvotes       Int          @default(0)
-  downvotes     Int          @default(0)
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
-  user          User         @relation(fields: [userId], references: [id])
+  title         String?
+  downvotes     Int          @default(0)
+  upvotes       Int          @default(0)
   manga         Manga        @relation(fields: [mangaId], references: [id])
+  user          User         @relation(fields: [userId], references: [id])
   votes         ReviewVote[]
 
   @@unique([userId, mangaId])
@@ -321,15 +316,15 @@ model ReviewVote {
 }
 
 model MangaList {
-  id          String           @id @default(uuid())
+  id          String          @id @default(uuid())
   name        String
   cover       String
   mood        String
   description String?
-  status      MangaListStatus  @default(PRIVATE)
-  isDefault   Boolean          @default(false)
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  status      MangaListStatus @default(PRIVATE)
+  isDefault   Boolean         @default(false)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
   items       MangaListItem[]
   likes       MangaListLike[]
 
@@ -337,14 +332,14 @@ model MangaList {
 }
 
 model MangaListItem {
-  id         String    @id @default(uuid())
-  listId     String
-  mangaId    String
-  order      Int       @default(0)
-  note       String?
-  addedAt    DateTime  @default(now())
-  list       MangaList @relation(fields: [listId], references: [id], onDelete: Cascade)
-  manga      Manga     @relation(fields: [mangaId], references: [id])
+  id      String    @id @default(uuid())
+  listId  String
+  mangaId String
+  order   Int       @default(0)
+  note    String?
+  addedAt DateTime  @default(now())
+  list    MangaList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  manga   Manga     @relation(fields: [mangaId], references: [id])
 
   @@unique([listId, mangaId])
   @@index([listId, order])
@@ -355,10 +350,15 @@ model MangaListLike {
   userId    String
   listId    String
   createdAt DateTime  @default(now())
-  user      User      @relation(fields: [userId], references: [id])
   list      MangaList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id])
 
   @@unique([userId, listId])
+}
+
+enum CollectionStatus {
+  PRIVATE
+  PUBLIC
 }
 
 enum MangaListStatus {

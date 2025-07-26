@@ -1,6 +1,5 @@
 import express from 'express'
 import cors from 'cors'
-import { AuthRouter } from '@/routes/auth'
 import { AdminUsersRouter } from '@/routes/users';
 //import { cacheRouter } from './routes/cache';
 import { warmupCache } from '@/middlewares/smartCache';
@@ -9,19 +8,27 @@ import { logger } from '@/utils/logger';
 import collectionRouter from '@/routes/collection';
 import CoinsRouter from '@/routes/coins';
 import ReviewRouter from '@/routes/review';
-import discoverRouter from '@/routes/discover';
+
+import { DiscoverRouter } from '@/modules/discover/routes/DiscoverRouter';
+import { PlaylistRouter, AdminPlaylistRouter } from '@/modules/playlists/routes/PlaylistRouter';
+import { AuthRouter } from '@/modules/auth/routes/AuthRouter'
+import { ForgotPasswordRouter } from '@/modules/auth/routes/ForgotPasswordRouter';
+import { AdminMangaListRouter } from '@/modules/mangalist/routes/AdminMangaListRouter';
+import { MangaListRouter } from '@/modules/mangalist/routes/MangaListRouter';
+
 import libraryRouter from '@/routes/library';
 import searchRouter from '@/routes/search';
 import commentRouter from '@/routes/comment';
 import chaptersRouter from '@/routes/chapters';
+
+
 import { MangaRouter, AdminMangaRouter } from '@/routes/manga';
 import { NotificationsRouter, AdminNotificationsRouter } from '@/routes/notifications';
 import { WallpaperRouter, AdminWallpaperRouter} from '@/routes/wallpapers';
 import { CategoriesRouter, AdminCategoriesRouter } from '@/routes/categories';
-import { MangaListRouter, AdminMangaListRouter } from '@/routes/mangaList'; 
-import { PlaylistRouter, AdminPlaylistRouter } from '@/routes/playlists';
 import { FileRouter, AdminFileRouter } from '@/routes/files';
 import { ProfileRouter } from '@/routes/profile';
+
 
 import AdminAnalyticsRouter from '@/routes/analytics';
 
@@ -38,10 +45,12 @@ app.use(cors({
 }))
 
 app.use('/auth', AuthRouter)
+app.use('/forgot-password', ForgotPasswordRouter)
+
 app.use('/manga/', MangaRouter)
 app.use('/categories', CategoriesRouter)
 app.use('/collection', collectionRouter)
-app.use('/discover', discoverRouter)
+app.use('/discover', DiscoverRouter)
 app.use('/library', libraryRouter)
 app.use('/search', searchRouter)
 app.use('/comment', commentRouter)
@@ -54,11 +63,12 @@ app.use('/uploads', express.static('uploads'));
 app.use('/profile', ProfileRouter)
 app.use('/coins', CoinsRouter)
 app.use('/review', ReviewRouter)
-app.use('/mangalist', MangaListRouter)
+app.use('/moods', MangaListRouter)
+
 
 //ADMIN
 app.use('/admin/analytics', AdminAnalyticsRouter)
-app.use('/admin/mangalist', AdminMangaListRouter)
+app.use('/admin/moods', AdminMangaListRouter)
 app.use('/admin/users', AdminUsersRouter )
 app.use('/admin/mangas', AdminMangaRouter )
 app.use('/admin/wallpapers', AdminWallpaperRouter )

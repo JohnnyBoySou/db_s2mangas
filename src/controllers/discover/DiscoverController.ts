@@ -1,7 +1,7 @@
 import { RequestHandler } from 'express';
 import { getPaginationParams } from '@/utils/pagination';
 import { handleZodError } from '@/utils/zodError';
-import * as discoverHandlers from '@/handlers/discover';
+import * as discoverHandlers from '@/handlers/discover/DiscoverHandler';
 
 // Mais recentes
 export const getRecent: RequestHandler = async (req, res) => {
