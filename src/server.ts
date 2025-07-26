@@ -1,36 +1,35 @@
 import express from 'express'
 import cors from 'cors'
-import { AdminUsersRouter } from '@/routes/users';
 //import { cacheRouter } from './routes/cache';
 import { warmupCache } from '@/middlewares/smartCache';
 import { logger } from '@/utils/logger';
 
-import collectionRouter from '@/routes/collection';
-import CoinsRouter from '@/routes/coins';
-import ReviewRouter from '@/routes/review';
-
-import { DiscoverRouter } from '@/modules/discover/routes/DiscoverRouter';
+// ✅ Novo padrão de modulos 
+import { DiscoverRouter } from '@/modules/discover/routes/DiscoverRouter'; 
 import { PlaylistRouter, AdminPlaylistRouter } from '@/modules/playlists/routes/PlaylistRouter';
 import { AuthRouter } from '@/modules/auth/routes/AuthRouter'
 import { ForgotPasswordRouter } from '@/modules/auth/routes/ForgotPasswordRouter';
 import { AdminMangaListRouter } from '@/modules/mangalist/routes/AdminMangaListRouter';
 import { MangaListRouter } from '@/modules/mangalist/routes/MangaListRouter';
+import { AdminAnalyticsRouter } from '@/modules/analytics/routes/AnalyticsRouter';
+import { LibraryRouter } from '@/modules/library/routes/LibraryRouter';
+import { CoinsRouter } from '@/modules/coins/routes/CoinsRouter';
+import { CommentRouter } from '@/modules/comment/routes/CommentRouter';
+import { CollectionRouter } from '@/modules/collection/routers/CollectionRouter';
+import { ReviewRouter } from '@/modules/review/routes/ReviewRouter';
+import { CategoriesRouter, AdminCategoriesRouter } from '@/modules/categories/routes/CategoriesRouter';
+import { NotificationsRouter, AdminNotificationsRouter } from '@/modules/notifications/routes/NotificationsRouter';
+import { SearchRouter } from '@/modules/search/routes/SearchRouter';
+import { AdminUsersRouter } from '@/modules/users/routes/UsersRouter';
+import { WallpaperRouter, AdminWallpaperRouter } from '@/modules/wallpapers/routes/WallpaperRouter';
 
-import libraryRouter from '@/routes/library';
-import searchRouter from '@/routes/search';
-import commentRouter from '@/routes/comment';
+// ❌ Padrão antigo mudar
 import chaptersRouter from '@/routes/chapters';
-
-
 import { MangaRouter, AdminMangaRouter } from '@/routes/manga';
-import { NotificationsRouter, AdminNotificationsRouter } from '@/routes/notifications';
-import { WallpaperRouter, AdminWallpaperRouter} from '@/routes/wallpapers';
-import { CategoriesRouter, AdminCategoriesRouter } from '@/routes/categories';
 import { FileRouter, AdminFileRouter } from '@/routes/files';
 import { ProfileRouter } from '@/routes/profile';
 
 
-import AdminAnalyticsRouter from '@/routes/analytics';
 
 const app = express()
 
@@ -49,11 +48,11 @@ app.use('/forgot-password', ForgotPasswordRouter)
 
 app.use('/manga/', MangaRouter)
 app.use('/categories', CategoriesRouter)
-app.use('/collection', collectionRouter)
+app.use('/collection', CollectionRouter)
 app.use('/discover', DiscoverRouter)
-app.use('/library', libraryRouter)
-app.use('/search', searchRouter)
-app.use('/comment', commentRouter)
+app.use('/library', LibraryRouter)
+app.use('/search', SearchRouter)
+app.use('/comment', CommentRouter)
 app.use('/chapter', chaptersRouter)
 app.use('/notifications', NotificationsRouter)
 app.use('/wallpapers', WallpaperRouter)
