@@ -5,15 +5,17 @@ export const createNotification = async (data: {
     message: string;
     type: string;
     data?: Record<string, any>;
+    cover?: string;
 }) => {
-    const { title, message, type, data: notificationData } = data;
+    const { title, message, type, data: notificationData, cover } = data;
 
     return await prisma.notification.create({
         data: {
             title,
             message,
             type,
-            data: notificationData
+            data: notificationData,
+            cover
         }
     });
 };
@@ -24,15 +26,17 @@ export const createUserNotification = async (data: {
     message: string;
     type: string;
     data?: Record<string, any>;
+    cover?: string;
 }) => {
-    const { title, message, type, data: notificationData } = data;
+    const { title, message, type, data: notificationData, cover } = data;
 
     return await prisma.notification.create({
         data: {
             title,
             message,
             type,
-            data: notificationData
+            data: notificationData,
+            cover
         }
     });
 };

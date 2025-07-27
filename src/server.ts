@@ -22,14 +22,10 @@ import { NotificationsRouter, AdminNotificationsRouter } from '@/modules/notific
 import { SearchRouter } from '@/modules/search/routes/SearchRouter';
 import { AdminUsersRouter } from '@/modules/users/routes/UsersRouter';
 import { WallpaperRouter, AdminWallpaperRouter } from '@/modules/wallpapers/routes/WallpaperRouter';
-
-// ❌ Padrão antigo mudar
-import chaptersRouter from '@/routes/chapters';
-import { MangaRouter, AdminMangaRouter } from '@/routes/manga';
-import { FileRouter, AdminFileRouter } from '@/routes/files';
-import { ProfileRouter } from '@/routes/profile';
-
-
+import { MangaRouter, AdminMangaRouter } from '@/modules/manga/routes/MangaRouter';
+import { ProfileRouter } from '@/modules/profile/routes/ProfileRouter';
+import { ChaptersRouter } from '@/modules/chapters/routes/ChaptersRouter';
+import { FileRouter, AdminFileRouter } from '@/modules/files/routes/FilesRouter';
 
 const app = express()
 
@@ -53,7 +49,7 @@ app.use('/discover', DiscoverRouter)
 app.use('/library', LibraryRouter)
 app.use('/search', SearchRouter)
 app.use('/comment', CommentRouter)
-app.use('/chapter', chaptersRouter)
+app.use('/chapter', ChaptersRouter)
 app.use('/notifications', NotificationsRouter)
 app.use('/wallpapers', WallpaperRouter)
 app.use('/playlists', PlaylistRouter)
@@ -84,8 +80,9 @@ app.use('/admin/file', AdminFileRouter)
 // Configurar o proxy para a API do MangaDex
 //app.use('/api/mangadx', mangaDexProxy);
 
-app.listen(3000, async () => {
-  console.log('✅ Servidor inciado com sucesso! \n✅ Rodando em http://localhost:3000')
+app.listen(process.env.PORT || 3000, async () => {
+  const port = process.env.PORT || 3000;
+  console.log(`✅ Servidor inciado com sucesso! \n✅ Rodando em http://localhost:${port}`)
   
   // Inicializar cache warming
   try {

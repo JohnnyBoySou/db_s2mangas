@@ -7,7 +7,8 @@ import * as notificationHandlers from "@/handlers/notifications";
 const createNotificationSchema = z.object({
   title: z.string().min(1).max(100),
   message: z.string().min(1).max(500),
-  type: z.string()
+  type: z.string(),
+  cover: z.string().url().optional() // URL da imagem de cover (opcional)
 });
 
 // Listar todas as notificações (apenas admin)

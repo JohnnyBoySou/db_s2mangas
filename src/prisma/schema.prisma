@@ -161,6 +161,7 @@ model Notification {
   updatedAt DateTime @updatedAt
   type      String
   data      Json?
+  cover     String?  // URL da imagem de cover da notificação
 
   @@index([createdAt])
 }
@@ -231,15 +232,39 @@ model WallpaperImage {
 }
 
 model Playlist {
-  id          String   @id @default(uuid())
+  id          String        @id @default(uuid())
   name        String
   cover       String
   link        String
   description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  tags        PlaylistTag[]
 
   @@map("playlists")
+}
+
+model Tag {
+  id        String        @id @default(uuid())
+  name      String        @unique
+  color     String?       // Cor hexadecimal para a tag (opcional)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  playlists PlaylistTag[]
+
+  @@map("tags")
+}
+
+model PlaylistTag {
+  id         String   @id @default(uuid())
+  playlistId String
+  tagId      String
+  createdAt  DateTime @default(now())
+  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  tag        Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([playlistId, tagId])
+  @@map("playlist_tags")
 }
 
 model File {
