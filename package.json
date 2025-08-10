@@ -23,7 +23,10 @@
     "cache:warm": "ts-node -r tsconfig-paths/register -e \"import { warmupCache } from './src/middlewares/smartCache'; warmupCache().then(() => console.log('Cache warmed'))\"",
     "cache:stats": "ts-node -r tsconfig-paths/register -e \"import { AdvancedCacheManager } from './src/utils/advancedCache'; new AdvancedCacheManager().getStats().then(stats => console.log(JSON.stringify(stats, null, 2)))\"",
     "cache:example": "ts-node -r tsconfig-paths/register src/examples/cacheUsage.ts",
-    "logs": "tail -f logs/app.log"
+    "logs": "tail -f logs/app.log",
+    "docs:generate": "ts-node -r tsconfig-paths/register -e \"import { specs } from './src/config/swagger'; console.log(JSON.stringify(specs, null, 2))\" > api-spec.json",
+    "docs:serve": "npm run dev",
+    "docs:open": "open http://localhost:3000/docs/scalar"
   },
   "prisma": {
     "schema": "src/prisma/schema.prisma",
@@ -38,6 +41,7 @@
     "@auth/prisma-adapter": "^2.9.1",
     "@faker-js/faker": "^9.8.0",
     "@prisma/client": "^6.11.1",
+    "@scalar/express-api-reference": "^0.8.13",
     "@types/bcryptjs": "^2.4.6",
     "@types/http-proxy-middleware": "^0.19.3",
     "@types/multer": "^1.4.13",
@@ -57,6 +61,8 @@
     "nodemailer": "^6.9.0",
     "sharp": "^0.33.2",
     "supertest": "^7.1.1",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
     "ts-node": "^10.9.2",
     "tsc-alias": "^1.8.16",
     "tsconfig-paths": "^4.2.0",
@@ -74,6 +80,8 @@
     "@types/node": "^22.15.32",
     "@types/nodemailer": "^6.4.17",
     "@types/supertest": "^6.0.3",
+    "@types/swagger-jsdoc": "^6.0.4",
+    "@types/swagger-ui-express": "^4.1.8",
     "@typescript-eslint/eslint-plugin": "^8.33.0",
     "@typescript-eslint/parser": "^8.33.0",
     "eslint": "^9.27.0",

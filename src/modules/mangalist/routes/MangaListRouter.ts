@@ -1,10 +1,19 @@
 import { Router } from 'express';
-import { MangaListController } from "../controllers/MangalistController";
+import { 
+  list, 
+  listPublic, 
+  get, 
+  getStats, 
+  getByMood 
+} from "../controllers/MangaListController";
 import { requireAuth } from "@/middlewares/auth";
 
 const MangaListRouter = Router();
 
-MangaListRouter.get('/', requireAuth, MangaListController.list);
-MangaListRouter.get('/:id', requireAuth, MangaListController.get);
+MangaListRouter.get('/', requireAuth, list);
+MangaListRouter.get('/public', requireAuth, listPublic);
+MangaListRouter.get('/:id', requireAuth, get);
+MangaListRouter.get('/:id/stats', requireAuth, getStats);
+MangaListRouter.get('/mood/:mood', requireAuth, getByMood);
 
 export { MangaListRouter };

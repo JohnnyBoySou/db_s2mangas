@@ -1,8 +1,11 @@
 import express from 'express'
 import cors from 'cors'
+import swaggerUi from 'swagger-ui-express'
 //import { cacheRouter } from './routes/cache';
 import { warmupCache } from '@/middlewares/smartCache';
 import { logger } from '@/utils/logger';
+import { specs } from '@/config/swagger';
+import { setupScalarDocs } from '@/middlewares/scalarDocs';
 
 // ✅ Novo padrão de modulos 
 import { DiscoverRouter } from '@/modules/discover/routes/DiscoverRouter'; 
@@ -72,6 +75,29 @@ app.use('/admin/notifications', AdminNotificationsRouter)
 app.use('/admin/playlists', AdminPlaylistRouter)
 app.use('/admin/file', AdminFileRouter)
 //app.use('/cache', cacheRouter)
+
+// Endpoint para o arquivo JSON do OpenAPI
+app.get('/api-docs.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(specs);
+});
+
+// Configurar Scalar Docs (deve vir antes do Swagger)
+setupScalarDocs(app);
+
+// Configuração da documentação da API (Swagger UI)
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(specs, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'S2Mangas API Documentation',
+  customfavIcon: '/favicon.ico',
+  swaggerOptions: {
+    persistAuthorization: true,
+    displayRequestDuration: true,
+    filter: true,
+    showExtensions: true,
+    showCommonExtensions: true,
+  }
+}));
 
 // Middlewares de cache e CDN
 //app.use('/static', staticCacheMiddleware());

@@ -5,6 +5,94 @@ import * as mangaHandler from "../handlers/MangaHandler";
 import path from 'path';
 import { invalidateAdminCache } from "@/utils/invalidateAdminCache";
 
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     MangaCreate:
+ *       type: object
+ *       required:
+ *         - title
+ *         - description
+ *       properties:
+ *         title:
+ *           type: string
+ *           description: Título do mangá
+ *           example: "One Piece"
+ *         description:
+ *           type: string
+ *           description: Descrição do mangá
+ *           example: "Uma aventura épica sobre piratas"
+ *         status:
+ *           type: string
+ *           enum: [ongoing, completed, hiatus, cancelled]
+ *           description: Status do mangá
+ *           example: "ongoing"
+ *         cover:
+ *           type: string
+ *           description: URL da capa do mangá
+ *           example: "https://example.com/cover.jpg"
+ *         author:
+ *           type: string
+ *           description: Autor do mangá
+ *           example: "Eiichiro Oda"
+ *         artist:
+ *           type: string
+ *           description: Artista do mangá
+ *           example: "Eiichiro Oda"
+ *         year:
+ *           type: number
+ *           description: Ano de publicação
+ *           example: 1997
+ *         genres:
+ *           type: array
+ *           items:
+ *             type: string
+ *           description: Gêneros do mangá
+ *           example: ["Ação", "Aventura", "Comédia"]
+ */
+
+/**
+ * @swagger
+ * /admin/mangas:
+ *   post:
+ *     summary: Criar novo mangá
+ *     description: Cria um novo mangá no sistema (apenas administradores)
+ *     tags: [Mangás - Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/MangaCreate'
+ *     responses:
+ *       201:
+ *         description: Mangá criado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Manga'
+ *       400:
+ *         description: Dados inválidos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: Não autorizado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       403:
+ *         description: Acesso negado - apenas administradores
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 export const create: RequestHandler = async (req, res) => {
     try {
         const manga = await mangaHandler.createManga(req.body);
@@ -27,6 +115,50 @@ export const list: RequestHandler = async (req, res) => {
     }
 };
 
+/**
+ * @swagger
+ * /manga/{id}:
+ *   get:
+ *     summary: Obter mangá por ID
+ *     description: Retorna os detalhes de um mangá específico
+ *     tags: [Mangás]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID do mangá
+ *         example: "123e4567-e89b-12d3-a456-426614174000"
+ *       - in: query
+ *         name: lg
+ *         schema:
+ *           type: string
+ *           default: "en"
+ *         description: Idioma para tradução
+ *         example: "pt"
+ *     responses:
+ *       200:
+ *         description: Mangá encontrado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Manga'
+ *       401:
+ *         description: Não autorizado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Mangá não encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 export const get: RequestHandler = async (req, res) => {
     const { id } = req.params;
     const language = req.query.lg as string || 'en';

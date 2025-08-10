@@ -1,16 +1,25 @@
 import { Router } from 'express';
-import { MangaListController } from '../controllers/MangalistController';
+import { 
+  create, 
+  update, 
+  remove, 
+  addManga, 
+  bulkAddMangas, 
+  reorderItems, 
+  updateMangaItem, 
+  removeManga 
+} from '../controllers/MangaListController';
 import { requireAuth, requireAdmin } from "@/middlewares/auth";
 
 const AdminMangaListRouter = Router();
 
-AdminMangaListRouter.post('/', requireAuth, requireAdmin, MangaListController.create);
-AdminMangaListRouter.put('/:id', requireAuth, requireAdmin, MangaListController.update);
-AdminMangaListRouter.delete('/:id', requireAuth, requireAdmin, MangaListController.remove);
-AdminMangaListRouter.post('/:id/items', requireAuth, requireAdmin, MangaListController.addManga);
-AdminMangaListRouter.post('/:id/items/bulk', requireAuth, requireAdmin, MangaListController.bulkAddMangas);
-AdminMangaListRouter.put('/:id/items/reorder', requireAuth, requireAdmin, MangaListController.reorderItems);
-AdminMangaListRouter.put('/:listId/items/:itemId', requireAuth, requireAdmin, MangaListController.updateMangaItem);
-AdminMangaListRouter.delete('/:listId/items/:itemId', requireAuth, requireAdmin, MangaListController.removeManga);
+AdminMangaListRouter.post('/', requireAuth, requireAdmin, create);
+AdminMangaListRouter.put('/:id', requireAuth, requireAdmin, update);
+AdminMangaListRouter.delete('/:id', requireAuth, requireAdmin, remove);
+AdminMangaListRouter.post('/:id/items', requireAuth, requireAdmin, addManga);
+AdminMangaListRouter.post('/:id/items/bulk', requireAuth, requireAdmin, bulkAddMangas);
+AdminMangaListRouter.put('/:id/items/reorder', requireAuth, requireAdmin, reorderItems);
+AdminMangaListRouter.put('/:listId/items/:itemId', requireAuth, requireAdmin, updateMangaItem);
+AdminMangaListRouter.delete('/:listId/items/:itemId', requireAuth, requireAdmin, removeManga);
 
 export { AdminMangaListRouter };
