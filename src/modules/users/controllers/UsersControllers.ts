@@ -1,5 +1,5 @@
 import type { RequestHandler } from "express";
-import * as userHandlers from "@/handlers/user";
+import * as userHandlers from "../handlers/UsersHandler";
 import { handleZodError } from "@/utils/zodError";
 import { createUserSchema, updateUserSchema } from "../validators/UsersValidator";
 
