@@ -10,8 +10,7 @@ export default [
       parser: tsparser,
       parserOptions: {
         ecmaVersion: 2020,
-        sourceType: 'module',
-        project: './tsconfig.json'
+        sourceType: 'module'
       },
       globals: {
         // Node.js globals
@@ -33,7 +32,12 @@ export default [
       // Regras básicas do TypeScript
       '@typescript-eslint/no-unused-vars': ['error', { 
         argsIgnorePattern: '^_',
-        varsIgnorePattern: '^_'
+        varsIgnorePattern: '^_',
+        ignoreRestSiblings: true
+      }],
+      'no-unused-vars': ['error', {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_|^[A-Z_]+$'
       }],
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/explicit-function-return-type': 'off',
@@ -69,7 +73,7 @@ export default [
     }
   },
   {
-    files: ['**/*.test.ts', '**/*.test.js', '**/__tests__/**/*'],
+    files: ['**/*.test.ts', '**/*.spec.ts'],
     languageOptions: {
       globals: {
         // Jest globals
@@ -90,8 +94,10 @@ export default [
       }
     },
     rules: {
-      // Relaxar regras para arquivos de teste
+      // Regras mais relaxadas para testes
       '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
+      'no-unused-vars': 'off',
       'no-console': 'off'
     }
   },

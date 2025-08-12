@@ -14,8 +14,8 @@ export interface VerificationResendEmailData {
 
 // Enum para os tipos de template
 export enum EmailTemplateType {
-    // VERIFICATION = 'verification',
-    // VERIFICATION_RESEND = 'verification-resend'
+    VERIFICATION = 'verification',
+    VERIFICATION_RESEND = 'verification-resend'
 }
 
 // Classe para gerenciar templates de email
