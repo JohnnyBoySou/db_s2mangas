@@ -3,12 +3,13 @@ version: '3.8'
 services:
   postgres:
     image: postgres:latest
+    container_name: s2mangas_postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: s2mangas
-    env_file: 
-    - .env.prod
+    env_file:
+      - .env.prod
     ports:
       - "5432:5432"
     volumes:
@@ -18,6 +19,7 @@ services:
 
   redis:
     image: redis:latest
+    container_name: s2mangas_redis
     ports:
       - "6379:6379"
     volumes:
@@ -28,19 +30,21 @@ services:
 
   api:
     build: .
+    container_name: s2mangas_api
     ports:
       - "3000:3000"
+      - "5555:5555"
     depends_on:
       - postgres
       - redis
+    env_file:
+      - .env.prod
     environment:
       DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/s2mangas"
       REDIS_URL: "redis://redis:6379"
       NODE_ENV: production
     networks:
       - backend
-    volumes:
-      - .:/usr/src/app
 
 volumes:
   postgres_data:

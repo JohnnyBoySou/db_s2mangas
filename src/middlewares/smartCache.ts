@@ -10,8 +10,8 @@ interface SmartCacheConfig {
   varyBy?: string[]; // Parâmetros que afetam o cache
   compression?: boolean;
   l2Cache?: boolean;
-  skipIf?: (req: Request) => boolean;
-  keyGenerator?: (req: Request) => string;
+  skipIf?: () => boolean;
+  keyGenerator?: () => string;
   invalidateOn?: string[];
 }
 
@@ -76,7 +76,7 @@ export const smartCacheMiddleware = (type: string, customConfig?: Partial<SmartC
     const config = { ...DEFAULT_CONFIGS[type], ...customConfig };
     
     // Verificar se deve pular o cache
-    if (config.skipIf && config.skipIf(req)) {
+    if (config.skipIf && config.skipIf()) {
       return next();
     }
 
@@ -143,7 +143,7 @@ export const smartCacheMiddleware = (type: string, customConfig?: Partial<SmartC
 // Gerar chave de cache baseada na configuração
 function generateCacheKey(req: Request, type: string, config: SmartCacheConfig): string {
   if (config.keyGenerator) {
-    return config.keyGenerator(req);
+    return config.keyGenerator();
   }
 
   const keyParts = [type];

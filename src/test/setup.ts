@@ -1,8 +1,14 @@
 import { jest } from '@jest/globals';
+import { prismaMock } from './mocks/prisma';
 
 // Configuração global para os testes
 beforeAll(() => {
   // Configurações que devem ser executadas antes de todos os testes
+});
+
+beforeEach(() => {
+  // Limpa todos os mocks antes de cada teste
+  jest.clearAllMocks();
 });
 
 afterAll(() => {
@@ -20,4 +26,7 @@ declare global {
       };
     }
   }
-} 
+}
+
+// Exporta o mock para uso nos testes
+export { prismaMock };

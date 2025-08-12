@@ -1,7 +1,5 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '@/prisma/client';
 import { z } from 'zod';
-
-const prisma = new PrismaClient();
 
 const playlistSchema = z.object({
   name: z.string().min(1),
@@ -64,4 +62,4 @@ export const deletePlaylist = async (id: string) => {
   return prisma.playlist.delete({
     where: { id },
   });
-}; 
+};

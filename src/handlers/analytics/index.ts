@@ -1,10 +1,8 @@
 import prisma from '@/prisma/client';
-
 interface DateRange {
     startDate: Date;
     endDate: Date;
 }
-
 export const getGeneralStats = async () => {
     const [
         totalUsers,

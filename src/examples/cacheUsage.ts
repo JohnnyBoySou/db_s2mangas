@@ -8,7 +8,7 @@
 import * as advancedCache from '@/utils/advancedCache';
 import { processAndCacheImage, getCachedImage, getImageCacheStats, cleanupOldImages } from '@/utils/imageCache';
 import { createCachedPrismaClient, invalidatePrismaModel, prismaCacheStats } from '@/utils/prismaCache';
-import { purgeCDNCache } from '@/config/cdn';
+//import { purgeCDNCache } from '@/config/cdn';
 import { logger } from '@/utils/logger';
 
 // Inicializar cliente Prisma
@@ -54,8 +54,8 @@ export async function exemploImageCache() {
   const imageBuffer = Buffer.from('fake-image-data');
   
   // Processar e cachear em diferentes resoluções
-  const resolutions = ['thumbnail', 'small', 'medium', 'large'];
-  const formats = ['webp', 'jpeg', 'avif'];
+  // const resolutions = ['thumbnail', 'small', 'medium', 'large'];
+  // const formats = ['webp', 'jpeg', 'avif'];
   
   // Processar imagem para diferentes tipos
   try {
@@ -109,7 +109,7 @@ export async function exemploPrismaCache() {
       }
     });
     
-    logger.info('Manga encontrado:', manga?.title);
+    logger.info('Manga encontrado:', manga);
     
     // Segunda query - deve vir do cache
     const mangaCached = await prisma.manga.findUnique({
@@ -123,7 +123,7 @@ export async function exemploPrismaCache() {
       }
     });
     
-    logger.info('Manga do cache:', mangaCached?.title);
+    logger.info('Manga do cache:', mangaCached);
     
     // Obter estatísticas
     const stats = prismaCacheStats();
@@ -234,7 +234,7 @@ export async function exemploCDNIntegration() {
   ];
   
   try {
-    await purgeCDNCache(pathsToPurge);
+    //await purgeCDNCache(pathsToPurge);
     logger.info('CDN purge concluído para:', pathsToPurge);
   } catch (error) {
     logger.error('Erro no CDN purge:', error);

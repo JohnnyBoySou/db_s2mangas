@@ -1,19 +1,20 @@
 import { Router } from 'express'
-import { register, login, verifyEmailCode, updateMe, deleteMe, googleSignIn , getProfile} from '@/controllers/auth'
+import { register, login, verifyEmailCode, updateMe, deleteMe, getProfile} from '@/controllers/auth'
 import { forgotPassword, resetPassword, verifyResetCode, } from '@/controllers/auth/forgot_password'
 import { requireAuth } from '@/middlewares/auth'
 
-const authRouter = Router()
+const AuthRouter = Router()
+const AdminAuthRouter = Router()
 
-authRouter.post('/register', register)
-authRouter.post('/verify-email', verifyEmailCode)
-authRouter.post('/login', login)
-authRouter.post('/google', googleSignIn)
-authRouter.post('/forgot-password', forgotPassword);
-authRouter.post('/verify-code', verifyResetCode)
-authRouter.post('/reset-password', resetPassword);
-authRouter.patch("/me", requireAuth, updateMe);
-authRouter.delete("/me", requireAuth, deleteMe);
-authRouter.get("/me", requireAuth, getProfile);
 
-export default authRouter
+AuthRouter.post('/register', register)
+AuthRouter.post('/verify-email', verifyEmailCode)
+AuthRouter.post('/login', login)
+AuthRouter.post('/forgot-password', forgotPassword);
+AuthRouter.post('/verify-code', verifyResetCode)
+AuthRouter.post('/reset-password', resetPassword);
+AuthRouter.patch("/me", requireAuth, updateMe);
+AuthRouter.delete("/me", requireAuth, deleteMe);
+AuthRouter.get("/me", requireAuth, getProfile);
+
+export { AuthRouter, AdminAuthRouter }

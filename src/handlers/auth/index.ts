@@ -4,14 +4,14 @@ import jwt from 'jsonwebtoken';
 import emailAdapter from '@/config/nodemailer';
 import { generateUsername } from '@/utils/generate';
 import { RegisterBody, LoginBody } from '@/types/auth';
-import { OAuth2Client } from 'google-auth-library';
+//import { OAuth2Client } from 'google-auth-library';
 
 const JWT_SECRET = process.env.JWT_SECRET;
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+//const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+//const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 
 export const register = async (data: RegisterBody) => {
-    const { name, email, password, avatar, cover, categories, languages } = data;
+    const { name, email, password, avatar, cover } = data;
     const normalizedEmail = email.toLowerCase();
 
     const existingEmail = await prisma.user.findUnique({ where: { email: normalizedEmail } });
@@ -21,6 +21,7 @@ export const register = async (data: RegisterBody) => {
     }
 
     // Criar categorias se não existirem
+    /*
     const categoryConnections = await Promise.all(categories.map(async cat => {
         try {
             const existingCategory = await prisma.category.findUnique({
@@ -48,8 +49,9 @@ export const register = async (data: RegisterBody) => {
             throw error;
         }
     }));
-
+*/
     // Criar idiomas se não existirem
+    /*
     const languageConnections = await Promise.all(languages.map(async lang => {
         try {
             const existingLanguage = await prisma.language.findUnique({
@@ -77,7 +79,7 @@ export const register = async (data: RegisterBody) => {
             throw error;
         }
     }));
-
+*/
     const generatedUsername = generateUsername(name);
     let finalUsername = generatedUsername;
 
@@ -102,12 +104,6 @@ export const register = async (data: RegisterBody) => {
             emailVerificationCode: verificationCode,
             emailVerificationExp: codeExp,
             emailVerified: false,
-            languages: {
-                connect: languageConnections
-            },
-            categories: {
-                connect: categoryConnections
-            }
         },
     });
 
@@ -199,9 +195,7 @@ export const login = async (data: LoginBody) => {
 
     if (!JWT_SECRET) throw new Error("JWT_SECRET is not defined");
     const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: "15d" });
-
-    const { password: _, ...userWithoutPassword } = user;
-    return { token, user: userWithoutPassword };
+    return { token, user };
 };
 
 export const getProfile = async (userId: string) => {
@@ -327,6 +321,7 @@ export const deleteMe = async (userId: string) => {
     return { message: "Conta deletada com sucesso" };
 };
 
+/*
 export const googleSignIn = async (token: string) => {
     if (!GOOGLE_CLIENT_ID) throw new Error("GOOGLE_CLIENT_ID não configurado");
     
@@ -374,10 +369,11 @@ export const googleSignIn = async (token: string) => {
         if (!JWT_SECRET) throw new Error("JWT_SECRET não configurado");
         const jwtToken = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: "15d" });
 
-        const { password: _, ...userWithoutPassword } = user;
+        const { password, ...userWithoutPassword } = user;
         return { token: jwtToken, user: userWithoutPassword };
     } catch (error) {
         console.error('Erro na autenticação Google:', error);
         throw new Error("Falha na autenticação com Google");
     }
 };
+*/

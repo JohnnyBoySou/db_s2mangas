@@ -7,11 +7,12 @@ import * as notificationHandlers from "@/handlers/notifications";
 const createNotificationSchema = z.object({
   title: z.string().min(1).max(100),
   message: z.string().min(1).max(500),
-  type: z.string()
+  type: z.string(),
+  cover: z.string().url().optional() // URL da imagem de cover (opcional)
 });
 
-// Listar notificações
-export const listNotifications: RequestHandler = async (req, res) => {
+// Listar todas as notificações (apenas admin)
+export const listAllNotifications: RequestHandler = async (req, res) => {
   const { take, page } = getPaginationParams(req);
 
   try {
@@ -61,29 +62,3 @@ export const getNotification: RequestHandler = async (req, res) => {
     handleZodError(err, res);
   }
 };
-
-/*
-// Marcar notificação como lida
-export const markAsRead: RequestHandler = async (req, res) => {
-  const userId = (req as any).user?.id;
-  const { notificationId } = req.params;
-
-  try {
-    const notification = await notificationHandlers.markAsRead(notificationId, userId);
-    res.json(notification);
-  } catch (err) {
-    handleZodError(err, res);
-  }
-};
-
-// Marcar todas as notificações como lidas
-export const markAllAsRead: RequestHandler = async (req, res) => {
-  const userId = (req as any).user?.id;
-
-  try {
-    const result = await notificationHandlers.markAllAsRead(userId);
-    res.json(result);
-  } catch (err) {
-    handleZodError(err, res);
-  }
-};*/

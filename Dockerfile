@@ -1,23 +1,40 @@
-# Use uma imagem Node LTS
-FROM node:18
+# Stage 1: Build
+FROM node:18 AS builder
 
-# Cria diretório de trabalho
 WORKDIR /usr/src/app
 
-# Copia arquivos de dependências
+# Copia apenas os arquivos necessários primeiro para otimizar cache
 COPY package*.json ./
 
-# Instala dependências
-RUN npm install --production
+# Instala TODAS as dependências (incluindo dev para build)
+RUN npm install --legacy-peer-deps
 
-# Copia o restante da aplicação
+# Copia todo o código
 COPY . .
 
 # Gera Prisma Client
 RUN npx prisma generate
 
-# Expõe a porta que a API roda (ajuste se for diferente)
+# Compila o TypeScript
+RUN npm run build
+
+# Stage 2: Production
+FROM node:18
+
+WORKDIR /usr/src/app
+
+# Copia apenas o necessário do build anterior
+COPY --from=builder /usr/src/app/package*.json ./
+COPY --from=builder /usr/src/app/node_modules ./node_modules
+COPY --from=builder /usr/src/app/dist ./dist
+COPY --from=builder /usr/src/app/src/prisma ./src/prisma
+COPY --from=builder /usr/src/app/src/import ./src/import
+
+# Variáveis de ambiente (opcional)
+ENV NODE_ENV=production
+
+# Expõe a porta
 EXPOSE 3000
 
 # Comando para rodar a aplicação
-CMD ["node", "dist/index.js"]
+CMD ["node", "dist/server.js"]

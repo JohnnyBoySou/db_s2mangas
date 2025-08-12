@@ -14,6 +14,7 @@ export async function ping(req: Request, res: Response) {
     await prisma.$disconnect();
   }
 }
+
 export const getGeneralStats: RequestHandler = async (_req, res) => {
     try {
         const stats = await analyticsHandlers.getGeneralStats();

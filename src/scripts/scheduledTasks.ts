@@ -3,8 +3,8 @@ import { cleanOrphanFiles } from '@/utils/cleanOrphanFiles';
 import { cleanRedisCache } from '@/utils/cleanRedisCache';
 import { cleanOldNotifications } from '@/utils/cleanOldNotifications';
 import { backupDatabase } from '@/utils/backupDatabase';
-import { generateAnalytics } from '@/utils/generateAnalytics';
-import { checkSystemIntegrity } from '@/utils/checkSystemIntegrity';
+//import { generateAnalytics } from '@/utils/generateAnalytics';
+//import { checkSystemIntegrity } from '@/utils/checkSystemIntegrity';
 import { logger } from '@/utils/logger';
 
 // Limpeza de arquivos órfãos - diariamente à meia-noite
@@ -24,7 +24,7 @@ cron.schedule('0 1 * * *', async () => {
 });
 
 // Verificação de integridade do sistema - semanalmente aos domingos às 2h
-cron.schedule('0 2 * * 0', async () => {
+/*cron.schedule('0 2 * * 0', async () => {
   logger.info('Iniciando verificação de integridade do sistema...');
   try {
     await checkSystemIntegrity();
@@ -32,7 +32,7 @@ cron.schedule('0 2 * * 0', async () => {
     logger.error('Erro na verificação de integridade:', error);
   }
 });
-
+*/
 // Limpeza de cache Redis - diariamente às 3h da manhã
 cron.schedule('0 3 * * *', async () => {
   logger.info('Iniciando limpeza de cache Redis...');
@@ -54,14 +54,14 @@ cron.schedule('0 4 * * 0', async () => {
 });
 
 // Geração de relatórios de analytics - semanalmente aos domingos às 5h
-cron.schedule('0 5 * * 0', async () => {
+/*cron.schedule('0 5 * * 0', async () => {
   logger.info('Iniciando geração de relatório de analytics...');
   try {
     await generateAnalytics();
   } catch (error) {
     logger.error('Erro na geração de analytics:', error);
   }
-});
+});*/
 
 logger.info('Tarefas agendadas configuradas com sucesso!');
 logger.info('Horários das tarefas:');

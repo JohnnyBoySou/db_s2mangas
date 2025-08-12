@@ -2,8 +2,6 @@ import express from 'express';
 import * as analyticsController from '@/controllers/analytics';
 
 const AdminAnalyticsRouter = express.Router();
-
-// Rota de teste de conexão
 AdminAnalyticsRouter.get('/ping', analyticsController.ping);
 
 // Rotas de estatísticas gerais

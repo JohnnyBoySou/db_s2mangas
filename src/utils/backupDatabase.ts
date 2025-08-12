@@ -94,7 +94,6 @@ export async function cleanOldBackups(backupDir: string, keepCount: number = 7) 
  */
 export async function simpleBackup() {
   try {
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const backupDir = path.join(process.cwd(), 'backups');
     
     if (!fs.existsSync(backupDir)) {

@@ -1,11 +1,10 @@
 import type { RequestHandler } from "express";
-import { loginSchema, registerSchema } from "@/schemas/authSchemas";
+import { loginSchema, registerSchema } from "@/validators/auth";
 import { handleZodError } from "@/utils/zodError";
 import { updateUserSchema } from "@/schemas/updateSchemas";
 import * as authHandlers from "@/handlers/auth";
 
 type VerifyEmailBody = { email: string; code: string };
-type GoogleSignInBody = { token: string };
 
 // ✅ Criação de usuário
 export const register: RequestHandler = async (req, res) => {
@@ -14,6 +13,7 @@ export const register: RequestHandler = async (req, res) => {
         const result = await authHandlers.register(data);
         res.status(201).json(result);
     } catch (error: unknown) {
+        console.log(error)
         handleZodError(error, res);
     }
 };
@@ -55,13 +55,28 @@ export const getProfile: RequestHandler = async (req, res) => {
 // ✅ Editar a propria conta do usuário
 export const updateMe: RequestHandler = async (req, res) => {
     try {
-        const userId = (req as any).user.id;
+        //TODO - ADICIONAR CATEGORIAS E LINGUAGENS
+        const userId = req.user?.id;
         const data = updateUserSchema.parse(req.body);
-        const result = await authHandlers.updateMe(userId, data);
+        const result = await authHandlers.updateMe(userId as string, {
+            name: data.name,
+            email: data.email,
+            username: data.username,
+            avatar: data.avatar,
+            cover: data.cover,
+            bio: data.bio || undefined,
+            birthdate: data.birthdate,
+            //categories: data.categories?.map(({ id, name }) => ({ id, name: name ?? undefined })) || [],
+            //languages: data.languages?.map(({ id, name, code  }) => ({ id, name: name ?? undefined, code })) || []
+        });
         res.json(result);
-    } catch (error) {
-        console.log(error)
-        handleZodError(error, res);
+    } catch (error: unknown) {
+        console.error('Error updating user profile:', error);
+        if (error instanceof Error) {
+            res.status(500).json({ error: error.message });
+        } else {
+            handleZodError(error, res);
+        }
     }
 };
 
@@ -78,6 +93,7 @@ export const deleteMe: RequestHandler = async (req, res) => {
 };
 
 // ✅ Login com Google
+/*
 export const googleSignIn: RequestHandler<{}, any, GoogleSignInBody> = async (req, res) => {
     console.log("google comecou")
     try {
@@ -94,3 +110,4 @@ export const googleSignIn: RequestHandler<{}, any, GoogleSignInBody> = async (re
         res.status(500).json({ error: errorMessage });
     }
 };
+*/

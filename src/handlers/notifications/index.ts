@@ -4,14 +4,53 @@ export const createNotification = async (data: {
     title: string;
     message: string;
     type: string;
+    data?: Record<string, any>;
+    cover?: string;
 }) => {
-    const { title, message, type } = data;
+    const { title, message, type, data: notificationData, cover } = data;
 
     return await prisma.notification.create({
         data: {
             title,
             message,
-            type
+            type,
+            data: notificationData,
+            cover
+        }
+    });
+};
+
+// Criar notificação para um usuário específico (agora genérica, sem userId)
+export const createUserNotification = async (data: {
+    title: string;
+    message: string;
+    type: string;
+    data?: Record<string, any>;
+    cover?: string;
+}) => {
+    const { title, message, type, data: notificationData, cover } = data;
+
+    return await prisma.notification.create({
+        data: {
+            title,
+            message,
+            type,
+            data: notificationData,
+            cover
+        }
+    });
+};
+
+// Criar notificação de follow (sem userId)
+export const createFollowNotification = async (followerId: string, targetId: string, followerName: string) => {
+    return await createUserNotification({
+        title: 'Novo seguidor',
+        message: `${followerName} começou a te seguir`,
+        type: 'follow',
+        data: {
+            followerId,
+            followerName,
+            targetId
         }
     });
 };
@@ -27,7 +66,7 @@ export const listNotifications = async (page: number, take: number) => {
                 createdAt: 'desc'
             }
         }),
-        prisma.notification.count()
+        prisma.notification.count({})
     ]);
 
     const totalPages = Math.ceil(total / take);
@@ -44,6 +83,8 @@ export const listNotifications = async (page: number, take: number) => {
         },
     };
 };
+
+// Removido listUserNotifications, markAsRead e markAllAsRead pois dependiam de userId/isRead
 
 export const getNotification = async (notificationId: string) => {
     const notification = await prisma.notification.findUnique({

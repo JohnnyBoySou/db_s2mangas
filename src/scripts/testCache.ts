@@ -11,9 +11,6 @@ import * as advancedCache from '@/utils/advancedCache';
 import * as imageCache from '@/utils/imageCache';
 import { createCachedPrismaClient, prismaCacheStats, resetPrismaCacheStats } from '@/utils/prismaCache';
 import { getRedisClient, getRedisL1Client } from '@/config/redis';
-import { logger } from '@/utils/logger';
-import fs from 'fs/promises';
-import path from 'path';
 
 // Cores para output
 const colors = {

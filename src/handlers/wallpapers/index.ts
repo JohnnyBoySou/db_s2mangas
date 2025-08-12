@@ -16,8 +16,6 @@ const wallpaperSchema = z.object({
     })).min(1, 'Pelo menos uma imagem é necessária')
 });
 
-const updateWallpaperSchema = wallpaperSchema.partial();
-
 export const getWallpapers = async (req: Request) => {
     try {
         const { skip, take, page } = getPaginationParams(req);
@@ -103,12 +101,15 @@ export const getWallpaperById = async (id: string, req: Request) => {
 };
 
 export const createWallpaper = async (data: z.infer<typeof wallpaperSchema>) => {
+    // Validar os dados antes de usar
+    const validatedData = wallpaperSchema.parse(data);
+    
     return prisma.wallpaper.create({
         data: {
-            name: data.name,
-            cover: data.cover,
+            name: validatedData.name,
+            cover: validatedData.cover,
             images: {
-                create: data.images.map(image => ({
+                create: validatedData.images.map(image => ({
                     url: image.url
                 }))
             }
@@ -119,16 +120,19 @@ export const createWallpaper = async (data: z.infer<typeof wallpaperSchema>) => 
     });
 };
 
-export const updateWallpaper = async (id: string, data: z.infer<typeof updateWallpaperSchema>) => {
+export const updateWallpaper = async (id: string, data: z.infer<typeof wallpaperSchema>) => {
+    // Validar os dados antes de usar
+    const validatedData = wallpaperSchema.parse(data);
+    
     return prisma.wallpaper.update({
         where: { id },
         data: {
-            name: data.name,
-            cover: data.cover,
-            ...(data.images && {
+            name: validatedData.name,
+            cover: validatedData.cover,
+            ...(validatedData.images && {
                 images: {
                     deleteMany: {},
-                    create: data.images.map(image => ({
+                    create: validatedData.images.map(image => ({
                         url: image.url
                     }))
                 }

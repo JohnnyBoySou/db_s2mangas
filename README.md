@@ -16,6 +16,8 @@ Uma plataforma moderna e completa para leitura e gestão de mangás, construída
 - **Multer** - Upload de arquivos
 - **Sharp** - Processamento de imagens
 - **Nodemailer** - Envio de emails
+- **Scalar** - 
+- **Swagger** - 
 
 ### Infraestrutura
 - **Docker** - Containerização

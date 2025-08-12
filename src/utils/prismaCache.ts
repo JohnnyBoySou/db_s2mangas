@@ -128,7 +128,7 @@ function getInvalidationTags(model: string, operation: string): string[] {
   const config = PRISMA_CACHE_CONFIG[model];
   if (!config) return [];
   
-  let tags = [...config.tags];
+  const tags = [...config.tags];
   
   // Adicionar tags específicas baseadas na operação
   if (INVALIDATION_OPERATIONS.create.includes(operation)) {
