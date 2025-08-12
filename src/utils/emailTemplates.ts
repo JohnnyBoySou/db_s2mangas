@@ -14,9 +14,7 @@ export interface VerificationResendEmailData {
 
 // Enum para os tipos de template
 export enum EmailTemplateType {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     VERIFICATION = 'verification',
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     VERIFICATION_RESEND = 'verification-resend'
 }
 

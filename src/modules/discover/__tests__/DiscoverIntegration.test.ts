@@ -83,14 +83,14 @@ describe('Discover Integration Tests', () => {
     });
 
     it('deve usar idioma padrão quando não especificado', async () => {
-      (mockPrisma.manga.findMany as jest.Mock).mockResolvedValue([]);
-      (mockPrisma.manga.count as jest.Mock).mockResolvedValue(0);
+      (prismaMock.manga.findMany as jest.Mock).mockResolvedValue([]);
+      (prismaMock.manga.count as jest.Mock).mockResolvedValue(0);
 
       await request(app)
         .get('/discover/recents')
         .expect(200);
 
-      expect(mockPrisma.manga.findMany).toHaveBeenCalledWith(
+      expect(prismaMock.manga.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: {
             translations: {
@@ -114,15 +114,15 @@ describe('Discover Integration Tests', () => {
 
   describe('GET /discover/views', () => {
     it('deve retornar mangás mais vistos ordenados corretamente', async () => {
-      (mockPrisma.manga.findMany as jest.Mock).mockResolvedValue([mockMangaData]);
-      (mockPrisma.manga.count as jest.Mock).mockResolvedValue(1);
+      (prismaMock.manga.findMany as jest.Mock).mockResolvedValue([mockMangaData]);
+      (prismaMock.manga.count as jest.Mock).mockResolvedValue(1);
 
       const response = await request(app)
         .get('/discover/views?lg=pt')
         .expect(200);
 
       expect(response.body.data).toHaveLength(1);
-      expect(mockPrisma.manga.findMany).toHaveBeenCalledWith(
+      expect(prismaMock.manga.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           orderBy: {
             views: {
@@ -136,15 +136,15 @@ describe('Discover Integration Tests', () => {
 
   describe('GET /discover/likes', () => {
     it('deve retornar mangás mais curtidos ordenados corretamente', async () => {
-      (mockPrisma.manga.findMany as jest.Mock).mockResolvedValue([mockMangaData]);
-      (mockPrisma.manga.count as jest.Mock).mockResolvedValue(1);
+      (prismaMock.manga.findMany as jest.Mock).mockResolvedValue([mockMangaData]);
+      (prismaMock.manga.count as jest.Mock).mockResolvedValue(1);
 
       const response = await request(app)
         .get('/discover/likes?lg=pt')
         .expect(200);
 
       expect(response.body.data).toHaveLength(1);
-      expect(mockPrisma.manga.findMany).toHaveBeenCalledWith(
+      expect(prismaMock.manga.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           orderBy: {
             likes: {
@@ -165,16 +165,16 @@ describe('Discover Integration Tests', () => {
         ]
       };
 
-      (mockPrisma.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
-      (mockPrisma.manga.findMany as jest.Mock).mockResolvedValue([mockMangaData]);
-      (mockPrisma.manga.count as jest.Mock).mockResolvedValue(1);
+      (prismaMock.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
+      (prismaMock.manga.findMany as jest.Mock).mockResolvedValue([mockMangaData]);
+      (prismaMock.manga.count as jest.Mock).mockResolvedValue(1);
 
       const response = await request(app)
         .get('/discover/feed?lg=pt')
         .expect(200);
 
       expect(response.body.data).toHaveLength(1);
-      expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
+      expect(prismaMock.user.findUnique).toHaveBeenCalledWith({
         where: { id: 'user-123' },
         include: { categories: true }
       });
@@ -186,7 +186,7 @@ describe('Discover Integration Tests', () => {
         categories: []
       };
 
-      (mockPrisma.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
+      (prismaMock.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
 
       const response = await request(app)
         .get('/discover/feed')
@@ -227,16 +227,16 @@ describe('Discover Integration Tests', () => {
         likes: []
       };
 
-      (mockPrisma.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
-      (mockPrisma.manga.findMany as jest.Mock).mockResolvedValue([mockMangaData]);
-      (mockPrisma.manga.count as jest.Mock).mockResolvedValue(1);
+      (prismaMock.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
+      (prismaMock.manga.findMany as jest.Mock).mockResolvedValue([mockMangaData]);
+      (prismaMock.manga.count as jest.Mock).mockResolvedValue(1);
 
       const response = await request(app)
         .get('/discover/ia?lg=pt')
         .expect(200);
 
       expect(response.body.data).toHaveLength(1);
-      expect(mockPrisma.manga.findMany).toHaveBeenCalledWith(
+      expect(prismaMock.manga.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
             id: {
@@ -248,7 +248,7 @@ describe('Discover Integration Tests', () => {
     });
 
     it('deve retornar array vazio para usuário sem preferências', async () => {
-      (mockPrisma.user.findUnique as jest.Mock).mockResolvedValue(null);
+      (prismaMock.user.findUnique as jest.Mock).mockResolvedValue(null);
 
       const response = await request(app)
         .get('/discover/ia')
@@ -261,14 +261,14 @@ describe('Discover Integration Tests', () => {
 
   describe('Validação de entrada', () => {
     it('deve normalizar idiomas pt-br para pt', async () => {
-      (mockPrisma.manga.findMany as jest.Mock).mockResolvedValue([]);
-      (mockPrisma.manga.count as jest.Mock).mockResolvedValue(0);
+      (prismaMock.manga.findMany as jest.Mock).mockResolvedValue([]);
+      (prismaMock.manga.count as jest.Mock).mockResolvedValue(0);
 
       await request(app)
         .get('/discover/recents?lg=pt-br')
         .expect(200);
 
-      expect(mockPrisma.manga.findMany).toHaveBeenCalledWith(
+      expect(prismaMock.manga.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: {
             translations: {
@@ -303,8 +303,8 @@ describe('Discover Integration Tests', () => {
     it('deve aplicar cache inteligente em todas as rotas', async () => {
       const { smartCacheMiddleware } = require('@/middlewares/smartCache');
 
-      (mockPrisma.manga.findMany as jest.Mock).mockResolvedValue([]);
-      (mockPrisma.manga.count as jest.Mock).mockResolvedValue(0);
+      (prismaMock.manga.findMany as jest.Mock).mockResolvedValue([]);
+      (prismaMock.manga.count as jest.Mock).mockResolvedValue(0);
 
       await request(app).get('/discover/recents');
       await request(app).get('/discover/views');
@@ -316,7 +316,7 @@ describe('Discover Integration Tests', () => {
     it('deve aplicar configuração específica de cache para feed', async () => {
       const { smartCacheMiddleware } = require('@/middlewares/smartCache');
 
-      (mockPrisma.user.findUnique as jest.Mock).mockResolvedValue({ categories: [] });
+      (prismaMock.user.findUnique as jest.Mock).mockResolvedValue({ categories: [] });
 
       await request(app).get('/discover/feed');
 
@@ -329,7 +329,7 @@ describe('Discover Integration Tests', () => {
 
   describe('Error handling', () => {
     it('deve tratar erros do banco de dados', async () => {
-      (mockPrisma.manga.findMany as jest.Mock).mockRejectedValue(new Error('Database error'));
+      (prismaMock.manga.findMany as jest.Mock).mockRejectedValue(new Error('Database error'));
 
       const response = await request(app)
         .get('/discover/recents')
