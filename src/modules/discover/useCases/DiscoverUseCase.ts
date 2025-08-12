@@ -1,9 +1,15 @@
-import { MangaFilter } from '../repositories/DiscoverRepository';
-import { PaginatedResult, ProcessedManga } from '../services/DiscoverService';
+import { MangaFilter, DiscoverRepository } from '../repositories/DiscoverRepository';
+import { PaginatedResult, ProcessedManga, DiscoverService } from '../services/DiscoverService';
 import { validateAndNormalizeLanguage, extractPaginationFromQuery } from '../validators/discoverSchemas';
 
 export class DiscoverUseCase {
-  constructor() {}
+  private discoverRepository: DiscoverRepository;
+  private discoverService: DiscoverService;
+
+  constructor(discoverRepository: DiscoverRepository, discoverService: DiscoverService) {
+    this.discoverRepository = discoverRepository;
+    this.discoverService = discoverService;
+  }
 
   /**
    * Busca mangás recentes
@@ -31,7 +37,7 @@ export class DiscoverUseCase {
     ]);
 
     // Processa os mangás
-    const processedMangas = this.discoverService.processRecentMangas(mangas, normalizedLanguage);
+    const processedMangas = this.discoverService.processMangaList(mangas, normalizedLanguage);
 
     // Retorna resultado paginado
     return this.discoverService.createPaginatedResult(processedMangas, total, page, take);
@@ -110,7 +116,7 @@ export class DiscoverUseCase {
       return this.discoverService.createPaginatedResult([], 0, page, take);
     }
 
-    const categoryIds = user!.categories.map(cat => cat.id);
+    const categoryIds = user!.categories.map((cat: { id: string; name: string }) => cat.id);
 
     const filter: MangaFilter = {
       language: normalizedLanguage,
