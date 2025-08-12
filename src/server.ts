@@ -76,16 +76,11 @@ app.use('/admin/playlists', AdminPlaylistRouter)
 app.use('/admin/file', AdminFileRouter)
 //app.use('/cache', cacheRouter)
 
-// Endpoint para o arquivo JSON do OpenAPI
-app.get('/api-docs.json', (req, res) => {
+app.get('/api-docs.json', (_req, res) => {
   res.setHeader('Content-Type', 'application/json');
   res.send(specs);
 });
-
-// Configurar Scalar Docs (deve vir antes do Swagger)
 setupScalarDocs(app);
-
-// Configuração da documentação da API (Swagger UI)
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(specs, {
   customCss: '.swagger-ui .topbar { display: none }',
   customSiteTitle: 'S2Mangas API Documentation',
@@ -106,6 +101,28 @@ app.use('/docs', swaggerUi.serve, swaggerUi.setup(specs, {
 // Configurar o proxy para a API do MangaDex
 //app.use('/api/mangadx', mangaDexProxy);
 
+app.get('/health', (_req, res) => {
+  res.status(200).json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development'
+  })
+})
+
+app.get('/', (_req, res) => {
+  res.status(200).json({
+    message: 'S2Mangas API is running!',
+    version: require('../package.json').version,
+    endpoints: {
+      health: '/health',
+      auth: '/auth',
+      manga: '/manga',
+      categories: '/categories'
+    }
+  })
+})
+
 app.listen(process.env.PORT || 3000, async () => {
   const port = process.env.PORT || 3000;
   console.log(`✅ Servidor inciado com sucesso! \n✅ Rodando em http://localhost:${port}`)
@@ -121,27 +138,3 @@ app.listen(process.env.PORT || 3000, async () => {
 })
 
 export default app;
-
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.status(200).json({
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    environment: process.env.NODE_ENV || 'development'
-  })
-})
-
-// Root endpoint
-app.get('/', (req, res) => {
-  res.status(200).json({
-    message: 'S2Mangas API is running!',
-    version: require('../package.json').version,
-    endpoints: {
-      health: '/health',
-      auth: '/auth',
-      manga: '/manga',
-      categories: '/categories'
-    }
-  })
-})
