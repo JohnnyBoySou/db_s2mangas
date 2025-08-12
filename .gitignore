@@ -1,7 +1,13 @@
 .env
-.*
 node_modules
 # Ignore all files in the dist folder
+.trunk
+.git
+.env.example
+.env
+.env.prod
+uploads
+cache
 dist
 # Ignore all files in the coverage folder
 coverage

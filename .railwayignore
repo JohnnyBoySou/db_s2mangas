@@ -1,0 +1,60 @@
+# Railway ignore file
+
+# Development files
+*.log
+logs/
+.env.local
+.env.development
+
+# Testing
+coverage/
+*.test.ts
+*.spec.ts
+src/test/
+
+# Build artifacts
+dist/
+build/
+
+# Dependencies (will be installed by Railway)
+node_modules/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+
+# Documentation
+*.md
+docs/
+
+# Docker files (not needed for Railway)
+Dockerfile
+docker-compose.yaml
+.dockerignore
+
+# Git
+.git/
+.gitignore
+
+# Uploads (should be handled by external storage)
+uploads/
+
+# Cache files
+.cache/
+.npm/
+.yarn/
+
+# Lock files (Railway will generate its own)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
