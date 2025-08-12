@@ -5,7 +5,7 @@ import {
   get, 
   getStats, 
   getByMood 
-} from "../controllers/MangaListController";
+} from "../controllers/MangalistController";
 import { requireAuth } from "@/middlewares/auth";
 
 const MangaListRouter = Router();

@@ -685,7 +685,7 @@ export class DiscoverController {
         timestamp: new Date().toISOString(),
         service: 'discover'
       });
-    } catch (error) {
+    } catch {
       res.status(503).json({ 
         status: 'unhealthy',
         timestamp: new Date().toISOString(),
@@ -703,4 +703,4 @@ export const getFeed = DiscoverController.getFeed;
 export const getIA = DiscoverController.getIA;
 export const getMangasByCategories = DiscoverController.getMangasByCategories;
 export const getStats = DiscoverController.getStats;
-export const healthCheck = DiscoverController.healthCheck; 
+export const healthCheck = DiscoverController.healthCheck;

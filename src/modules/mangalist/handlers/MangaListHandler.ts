@@ -47,7 +47,7 @@ export class InvalidMangaListDataError extends Error {
 }
 
 // Criar lista de mangás
-export const createMangaList = async (data: z.infer<typeof createMangaListSchema>, userId?: string) => {
+export const createMangaList = async (data: z.infer<typeof createMangaListSchema>) => {
   const validatedData = createMangaListSchema.parse(data);
   
   const mangaList = await prisma.mangaList.create({
@@ -568,4 +568,4 @@ export const processPaginationFromQuery = (query: any) => {
       limit
     }
   };
-}; 
+};

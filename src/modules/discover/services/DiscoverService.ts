@@ -117,7 +117,7 @@ export class DiscoverService {
   /**
    * Processa mangás recentes removendo dados desnecessários
    */
-  processRecentMangas(mangas: MangaWithTranslations[], language: string): ProcessedManga[] {
+  processRecentMangas(mangas: MangaWithTranslations[]): ProcessedManga[] {
     return mangas.map(manga => ({
       id: manga.id,
       manga_uuid: manga.manga_uuid,
@@ -174,4 +174,4 @@ export class DiscoverService {
 
     return languageMap[normalized] || normalized;
   }
-} 
+}

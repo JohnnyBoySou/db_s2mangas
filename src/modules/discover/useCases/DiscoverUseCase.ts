@@ -1,12 +1,9 @@
-import { DiscoverRepository, MangaFilter } from '../repositories/DiscoverRepository';
-import { DiscoverService, PaginatedResult, ProcessedManga } from '../services/DiscoverService';
+import { MangaFilter } from '../repositories/DiscoverRepository';
+import { PaginatedResult, ProcessedManga } from '../services/DiscoverService';
 import { validateAndNormalizeLanguage, extractPaginationFromQuery } from '../validators/discoverSchemas';
 
 export class DiscoverUseCase {
-  constructor(
-    private discoverRepository: DiscoverRepository,
-    private discoverService: DiscoverService
-  ) {}
+  constructor() {}
 
   /**
    * Busca mangás recentes
@@ -229,7 +226,7 @@ export class DiscoverUseCase {
     try {
       const user = await this.discoverRepository.findUserWithPreferences(userId);
       return user !== null;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -251,4 +248,4 @@ export class DiscoverUseCase {
       averageMangasPerCategory: 0 // Placeholder
     };
   }
-} 
+}

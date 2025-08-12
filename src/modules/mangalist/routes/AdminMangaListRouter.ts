@@ -8,7 +8,7 @@ import {
   reorderItems, 
   updateMangaItem, 
   removeManga 
-} from '../controllers/MangaListController';
+} from '../controllers/MangalistController';
 import { requireAuth, requireAdmin } from "@/middlewares/auth";
 
 const AdminMangaListRouter = Router();

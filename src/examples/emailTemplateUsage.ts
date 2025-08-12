@@ -97,7 +97,7 @@ console.log('\n=== Exemplo 6: Tratamento de Erros ===');
 
 try {
     // Tentativa de usar template inexistente
-    const invalidTemplate = emailTemplateManager.generateVerificationEmail({
+    emailTemplateManager.generateVerificationEmail({
         userName: '',
         verificationCode: ''
     });
@@ -153,4 +153,4 @@ export {
     generateVerificationResendEmail,
     emailTemplateManager,
     EmailTemplateType
-}; 
+};

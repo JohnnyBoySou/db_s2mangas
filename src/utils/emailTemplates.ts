@@ -14,8 +14,8 @@ export interface VerificationResendEmailData {
 
 // Enum para os tipos de template
 export enum EmailTemplateType {
-    VERIFICATION = 'verification',
-    VERIFICATION_RESEND = 'verification-resend'
+    // VERIFICATION = 'verification',
+    // VERIFICATION_RESEND = 'verification-resend'
 }
 
 // Classe para gerenciar templates de email
@@ -94,7 +94,7 @@ export class EmailTemplateManager {
         templates.forEach(template => {
             try {
                 this.loadTemplate(template);
-            } catch (error) {
+            } catch {
                 console.warn(`Aviso: Template ${template} não pôde ser pré-carregado`);
             }
         });
@@ -114,4 +114,4 @@ export const generateVerificationResendEmail = (data: VerificationResendEmailDat
 };
 
 // Pré-carrega os templates na inicialização
-emailTemplateManager.preloadTemplates(); 
+emailTemplateManager.preloadTemplates();

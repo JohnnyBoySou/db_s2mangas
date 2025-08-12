@@ -1103,7 +1103,7 @@ export const create: RequestHandler = async (req, res) => {
 // Listar listas de mangás
 export const list: RequestHandler = async (req, res) => {
   try {
-    const { page, limit, filters } = mangaListHandlers.processPaginationFromQuery(req.query);
+    const { filters } = mangaListHandlers.processPaginationFromQuery(req.query);
     const result = await mangaListHandlers.getMangaLists(filters);
     res.status(200).json(result);
   } catch (error) {
@@ -1114,7 +1114,7 @@ export const list: RequestHandler = async (req, res) => {
 // Listar listas públicas
 export const listPublic: RequestHandler = async (req, res) => {
   try {
-    const { page, limit, filters } = mangaListHandlers.processPaginationFromQuery(req.query);
+    const { filters } = mangaListHandlers.processPaginationFromQuery(req.query);
     const result = await mangaListHandlers.getPublicMangaLists(filters);
     res.status(200).json(result);
   } catch (error) {
@@ -1260,7 +1260,7 @@ export const getStats: RequestHandler = async (req, res) => {
 export const getByMood: RequestHandler = async (req, res) => {
   try {
     const { mood } = req.params;
-    const { page, limit, filters } = mangaListHandlers.processPaginationFromQuery(req.query);
+    const { filters } = mangaListHandlers.processPaginationFromQuery(req.query);
     
     const result = await mangaListHandlers.getMangaListsByMood(mood, filters);
     

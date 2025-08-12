@@ -27,7 +27,7 @@ import {
 type RequestHandler = (
   req: Request,
   res: Response,
-  next?: NextFunction
+  _next?: NextFunction
 ) => Promise<void>;
 
 export const create: RequestHandler = async (req, res) => {

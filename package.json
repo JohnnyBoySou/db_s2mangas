@@ -26,11 +26,19 @@
     "logs": "tail -f logs/app.log",
     "docs:generate": "ts-node -r tsconfig-paths/register -e \"import { specs } from './src/config/swagger'; console.log(JSON.stringify(specs, null, 2))\" > api-spec.json",
     "docs:serve": "npm run dev",
-    "docs:open": "open http://localhost:3000/docs/scalar"
+    "docs:open": "open http://localhost:3000/docs/scalar",
+    "railway:build": "./railway-build.sh",
+    "railway:start": "npx prisma migrate deploy && node dist/server.js",
+    "railway:check": "node pre-deploy-check.js",
+    "postinstall": "npx prisma generate"
   },
   "prisma": {
     "schema": "src/prisma/schema.prisma",
     "seed": "ts-node src/prisma/seed.ts"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
   },
   "keywords": [],
   "author": "",

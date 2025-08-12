@@ -1,6 +1,6 @@
 import prisma from "@/prisma/client";
 import { z } from "zod";
-import { MangaListResponse, MangaListFilters } from "@/interfaces/mangaList";
+import { MangaListFilters } from "@/interfaces/mangaList";
 
 const mangaListCreateSchema = z.object({
   name: z.string().min(1),
@@ -226,7 +226,7 @@ export const addMangaToList = async (
       },
     });
     return true;
-  } catch (error) {
+  } catch {
     // Manga já está na lista
     return false;
   }
