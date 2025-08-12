@@ -1,10 +1,13 @@
 # Stage 1: Build
-FROM node:18 AS builder
+FROM node:20 AS builder
 
 WORKDIR /usr/src/app
 
 # Copia apenas os arquivos necessários primeiro para otimizar cache
 COPY package*.json ./
+
+# Copia o diretório Prisma completo antes do npm install (necessário para postinstall)
+COPY src/prisma/ ./src/prisma/
 
 # Instala TODAS as dependências (incluindo dev para build)
 RUN npm install --legacy-peer-deps
@@ -12,14 +15,11 @@ RUN npm install --legacy-peer-deps
 # Copia todo o código
 COPY . .
 
-# Gera Prisma Client
-RUN npx prisma generate
-
 # Compila o TypeScript
 RUN npm run build
 
 # Stage 2: Production
-FROM node:18
+FROM node:20
 
 WORKDIR /usr/src/app
 
