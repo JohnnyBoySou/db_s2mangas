@@ -1,6 +1,12 @@
-import type { RequestHandler } from "express";
+import type { Request, Response } from "express";
 import { handleZodError } from "@/utils/zodError";
-import * as categoryHandlers from "../handlers/CategoriesHandler";
+import { CategoryHandler } from "../handlers/CategoriesHandler";
+import {
+    createCategorySchema,
+    updateCategorySchema,
+    categoryParamsSchema,
+    categoryQuerySchema
+} from "../validators/CategoriesValidators";
 
 /**
  * @swagger
@@ -305,65 +311,51 @@ import * as categoryHandlers from "../handlers/CategoriesHandler";
  *               $ref: '#/components/schemas/Error'
  */
 
-export const create: RequestHandler = async (req, res) => {
-    try {
-        const category = await categoryHandlers.createCategory(req.body);
-        res.status(201).json(category);
-    } catch (error) {
-        handleZodError(error, res);
-    }
-};
-
-export const list: RequestHandler = async (req, res) => {
-    try {
-        const categories = await categoryHandlers.listCategories();
-        res.json(categories);
-    } catch (error) {
-        handleZodError(error, res);
-    }
-};
-
-export const get: RequestHandler = async (req, res) => {
-    const { id } = req.params;
-
-    try {
-        const category = await categoryHandlers.getCategoryById(id);
-        res.json(category);
-    } catch (error) {
-        if (error instanceof Error && error.message === "Categoria não encontrada") {
-            res.status(404).json({ error: error.message });
-        } else {
+export const CategoryController = {
+    create: async (req: Request, res: Response) => {
+        try {
+            const validatedData = createCategorySchema.parse(req.body);
+            const category = await CategoryHandler.create(validatedData);
+            res.status(201).json(category);
+        } catch (error) {
             handleZodError(error, res);
         }
-    }
-};
-
-export const update: RequestHandler = async (req, res) => {
-    const { id } = req.params;
-
-    try {
-        const updated = await categoryHandlers.updateCategory(id, req.body);
-        res.json(updated);
-    } catch (error) {
-        if (error instanceof Error && error.message === "Categoria não encontrada") {
-            res.status(404).json({ error: error.message });
-        } else {
+    },
+    list: async (req: Request, res: Response) => {
+        try {
+            const { page, limit } = categoryQuerySchema.parse(req.query);
+            const categories = await CategoryHandler.list(page, limit);
+            res.json(categories);
+        } catch (error) {
             handleZodError(error, res);
         }
-    }
-};
-
-export const remove: RequestHandler = async (req, res) => {
-    const { id } = req.params;
-
-    try {
-        const result = await categoryHandlers.deleteCategory(id);
-        res.json(result);
-    } catch (error) {
-        if (error instanceof Error && error.message === "Categoria não encontrada") {
-            res.status(404).json({ error: error.message });
-        } else {
+    },
+    getById: async (req: Request, res: Response) => {
+        try {
+            const { id } = categoryParamsSchema.parse(req.params);
+            const category = await CategoryHandler.getById(id);
+            res.json(category);
+        } catch (error) {
             handleZodError(error, res);
         }
-    }
-}; 
+    },
+    update: async (req: Request, res: Response) => {
+        try {
+            const { id } = categoryParamsSchema.parse(req.params);
+            const validatedData = updateCategorySchema.parse(req.body);
+            const category = await CategoryHandler.update(id, validatedData);
+            res.json(category);
+        } catch (error) {
+            handleZodError(error, res);
+        }
+    },
+    delete: async (req: Request, res: Response) => {
+        try {
+            const { id } = categoryParamsSchema.parse(req.params);
+            const category = await CategoryHandler.delete(id);
+            res.json({ message: "Categoria deletada com sucesso!", data: category });
+        } catch (error) {
+            handleZodError(error, res);
+        }
+    },
+}

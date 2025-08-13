@@ -308,7 +308,7 @@ export const updateMe: RequestHandler = async (req, res) => {
         });
         res.json(result);
     } catch (error: unknown) {
-        console.error('Error updating user profile:', error);
+       // console.error('Error updating user profile:', error);
         if (error instanceof Error) {
             res.status(500).json({ error: error.message });
         } else {

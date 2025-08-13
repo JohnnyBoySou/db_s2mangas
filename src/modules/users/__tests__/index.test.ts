@@ -1,15 +1,22 @@
 import request from 'supertest';
 import express from 'express';
-import * as userController from '../controllers/UsersControllers';
-import * as userHandlers from '../../../handlers/user';
-import { handleZodError } from '@/utils/zodError';
+import { handleZodError } from '../../../utils/zodError';
 
 // Mock das dependências
-jest.mock('@/handlers/user');
+jest.mock('../handlers/UsersHandler', () => ({
+    listUsers: jest.fn(),
+    getUserById: jest.fn(),
+    createUser: jest.fn(),
+    updateUser: jest.fn(),
+    deleteUser: jest.fn()
+}));
+
 jest.mock('@/utils/zodError');
 
-const mockedUserHandlers = userHandlers as jest.Mocked<typeof userHandlers>;
+const mockedUserHandlers = require('../handlers/UsersHandler');
 const mockedHandleZodError = handleZodError as jest.MockedFunction<typeof handleZodError>;
+
+import * as userController from '../controllers/UsersControllers';
 
 // Setup do Express app para testes
 const app = express();

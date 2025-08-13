@@ -18,6 +18,7 @@ export const prismaMock = {
     findUnique: jest.fn(),
     update: jest.fn(),
     delete: jest.fn(),
+    deleteMany: jest.fn(), // Adicionar esta linha
     count: jest.fn()
   },
   collection: {

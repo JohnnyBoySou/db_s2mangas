@@ -1,11 +1,16 @@
 import request from 'supertest';
 import express from 'express';
-import * as forgotPasswordController from '../controller_forgot_password';
-import * as forgotPasswordHandlers from '../handler_forgot_password';
+import * as forgotPasswordController from '../controllers/ForgotPasswordController';
+import * as forgotPasswordHandlers from '../handlers/ForgotPasswordHandler';
 import { handleZodError } from '../../../utils/zodError';
 
 // Mock das dependências
-jest.mock('@/handlers/auth/forgot_password');
+jest.mock('../handlers/ForgotPasswordHandler', () => ({
+    forgotPassword: jest.fn(),
+    verifyResetCode: jest.fn(),
+    resetPassword: jest.fn()
+}));
+
 jest.mock('@/utils/zodError');
 jest.mock('@/prisma/client', () => ({
   prisma: {
@@ -20,7 +25,7 @@ jest.mock('@/config/nodemailer', () => ({
   sendMail: jest.fn().mockResolvedValue({ messageId: 'test-message-id' })
 }));
 
-const mockedForgotPasswordHandlers = forgotPasswordHandlers as jest.Mocked<typeof forgotPasswordHandlers>;
+const mockedForgotPasswordHandlers = require('../handlers/ForgotPasswordHandler');
 const mockedHandleZodError = handleZodError as jest.MockedFunction<typeof handleZodError>;
 
 // Setup do Express app para testes

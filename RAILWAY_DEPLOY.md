@@ -97,6 +97,25 @@ npx prisma generate
 npx prisma migrate deploy
 ```
 
+### Erro: "P1001: Can't reach database server"
+
+**Solução:**
+1. Execute o diagnóstico completo:
+```bash
+npm run railway:troubleshoot
+```
+
+2. Verifique se o serviço PostgreSQL está ativo no Railway
+3. Confirme se a URL do banco está correta
+4. Se necessário, recrie o serviço PostgreSQL
+
+**Scripts de diagnóstico disponíveis:**
+```bash
+npm run railway:quick-check    # Verificação rápida
+npm run railway:diagnose       # Diagnóstico detalhado
+npm run railway:troubleshoot   # Troubleshooting completo
+```
+
 ### Erro: "Redis connection failed"
 
 **Solução:**

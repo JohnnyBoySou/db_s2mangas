@@ -28,8 +28,11 @@
     "docs:serve": "npm run dev",
     "docs:open": "open http://localhost:3000/docs/scalar",
     "railway:build": "./railway-build.sh",
-    "railway:start": "npx prisma migrate deploy && node dist/server.js",
+    "railway:start": "ts-node -r tsconfig-paths/register src/scripts/railwayStart.ts",
     "railway:check": "node pre-deploy-check.js",
+    "railway:diagnose": "ts-node -r tsconfig-paths/register src/scripts/diagnoseDatabase.ts",
+    "railway:troubleshoot": "ts-node -r tsconfig-paths/register src/scripts/railwayTroubleshoot.ts",
+    "railway:quick-check": "ts-node -r tsconfig-paths/register src/scripts/quickCheck.ts",
     "postinstall": "npx prisma generate"
   },
   "prisma": {
