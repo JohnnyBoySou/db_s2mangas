@@ -36,5 +36,5 @@ ENV NODE_ENV=production
 # Expõe a porta
 EXPOSE 3000
 
-# Comando para rodar a aplicação
-CMD ["node", "dist/server.js"]
+# Comando para rodar a aplicação usando o script start do package.json
+CMD ["npm", "start"]
