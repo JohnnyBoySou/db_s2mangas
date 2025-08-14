@@ -44,8 +44,8 @@ export class EmailTemplateManager {
         
         try {
             const template = fs.readFileSync(templatePath, 'utf8');
-        //    this.templateCache.set(templateName, template);
-           // console.log(`Template ${templateName} carregado com sucesso`);
+            this.templateCache.set(templateName, template);
+            // console.log(`Template ${templateName} carregado com sucesso`);
             return template;
         } catch (error) {
             // console.error(`Erro ao carregar template ${templateName}:`, error);
