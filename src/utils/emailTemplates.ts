@@ -39,18 +39,18 @@ export class EmailTemplateManager {
 
         const templatePath = path.join(this.templatesPath, `${templateName}.html`);
         
-        console.log(`Tentando carregar template: ${templatePath}`);
-        console.log(`Templates path: ${this.templatesPath}`);
+        //console.log(`Tentando carregar template: ${templatePath}`);
+        //console.log(`Templates path: ${this.templatesPath}`);
         
         try {
             const template = fs.readFileSync(templatePath, 'utf8');
-            this.templateCache.set(templateName, template);
-            console.log(`Template ${templateName} carregado com sucesso`);
+        //    this.templateCache.set(templateName, template);
+           // console.log(`Template ${templateName} carregado com sucesso`);
             return template;
         } catch (error) {
-            console.error(`Erro ao carregar template ${templateName}:`, error);
-            console.error(`Caminho tentado: ${templatePath}`);
-            console.error(`Diretório existe: ${fs.existsSync(this.templatesPath)}`);
+            // console.error(`Erro ao carregar template ${templateName}:`, error);
+            // console.error(`Caminho tentado: ${templatePath}`);
+            // console.error(`Diretório existe: ${fs.existsSync(this.templatesPath)}`);
             if (fs.existsSync(this.templatesPath)) {
                 console.error(`Arquivos no diretório:`, fs.readdirSync(this.templatesPath));
             }

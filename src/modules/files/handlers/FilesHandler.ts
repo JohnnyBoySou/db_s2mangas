@@ -6,7 +6,7 @@ import prisma from '@/prisma/client';
 const UPLOAD_DIR =
   process.env.RAILWAY_VOLUME_MOUNT_PATH 
   || process.env.UPLOAD_DIR             
-  || "/data/uploads";                   
+  || path.join(process.cwd(), "data", "uploads");                   
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_MIMETYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
