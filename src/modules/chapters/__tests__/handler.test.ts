@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { listChapters, getChapterPages } from '../handler';
+import { listChapters, getChapterPages } from '../handlers/ChaptersHandler';
 
 // Mock axios
 jest.mock('axios');

@@ -1,12 +1,14 @@
 import { RequestHandler } from 'express';
-import { DiscoverUseCase } from '../useCases/DiscoverUseCase';
-import { DiscoverRepository } from '../repositories/DiscoverRepository';
-import { DiscoverService } from '../services/DiscoverService';
-
-// Instâncias dos serviços (poderia ser injetado por DI container)
-const discoverRepository = new DiscoverRepository();
-const discoverService = new DiscoverService();
-const discoverUseCase = new DiscoverUseCase(discoverRepository, discoverService);
+import { getPaginationParams } from '@/utils/pagination';
+import {
+  getRecentMangas,
+  getMostViewedMangas,
+  getMostLikedMangas,
+  getFeedForUser,
+  getIARecommendations,
+  getMangasByCategories as getMangasByCategoriesHandler,
+  getDiscoverStats
+} from '../handlers/DiscoverHandler';
 
 /**
  * @swagger
@@ -309,7 +311,7 @@ const discoverUseCase = new DiscoverUseCase(discoverRepository, discoverService)
  * /discover/feed:
  *   get:
  *     summary: Obter feed personalizado
- *     description: Retorna mangás recomendados baseados nas categorias favoritas do usuário
+ *     description: Retorna uma lista de mangás personalizada baseada nas preferências do usuário
  *     tags: [Discover]
  *     security:
  *       - bearerAuth: []
@@ -365,7 +367,7 @@ const discoverUseCase = new DiscoverUseCase(discoverRepository, discoverService)
  * /discover/ia:
  *   get:
  *     summary: Obter recomendações de IA
- *     description: Retorna recomendações personalizadas baseadas em algoritmos de IA
+ *     description: Retorna recomendações baseadas em IA para o usuário
  *     tags: [Discover]
  *     security:
  *       - bearerAuth: []
@@ -421,7 +423,7 @@ const discoverUseCase = new DiscoverUseCase(discoverRepository, discoverService)
  * /discover/categories/{categoryIds}:
  *   get:
  *     summary: Obter mangás por categorias
- *     description: Retorna mangás de categorias específicas (IDs separados por vírgula)
+ *     description: Retorna uma lista de mangás de categorias específicas
  *     tags: [Discover]
  *     security:
  *       - bearerAuth: []
@@ -466,7 +468,7 @@ const discoverUseCase = new DiscoverUseCase(discoverRepository, discoverService)
  *             schema:
  *               $ref: '#/components/schemas/DiscoverResponse'
  *       400:
- *         description: IDs de categorias são obrigatórios ou parâmetros inválidos
+ *         description: Parâmetros inválidos
  *         content:
  *           application/json:
  *             schema:
@@ -483,9 +485,11 @@ const discoverUseCase = new DiscoverUseCase(discoverRepository, discoverService)
  * @swagger
  * /discover/stats:
  *   get:
- *     summary: Obter estatísticas do discover
+ *     summary: Obter estatísticas de discover
  *     description: Retorna estatísticas gerais do sistema de discover (admin only)
- *     tags: [Discover - Admin]
+ *     tags: [Discover]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: query
  *         name: lg
@@ -493,8 +497,8 @@ const discoverUseCase = new DiscoverUseCase(discoverRepository, discoverService)
  *           type: string
  *           enum: [pt, en, es, fr, de, ja]
  *           default: "en"
- *         description: Idioma para filtros
- *         example: "en"
+ *         description: Idioma para traduções
+ *         example: "pt"
  *     responses:
  *       200:
  *         description: Estatísticas retornadas com sucesso
@@ -514,8 +518,8 @@ const discoverUseCase = new DiscoverUseCase(discoverRepository, discoverService)
  * @swagger
  * /discover/health:
  *   get:
- *     summary: Health check do discover
- *     description: Verifica o status de saúde do serviço de discover
+ *     summary: Health check
+ *     description: Verifica o status do serviço de discover
  *     tags: [Discover]
  *     responses:
  *       200:
@@ -532,16 +536,21 @@ const discoverUseCase = new DiscoverUseCase(discoverRepository, discoverService)
  *               $ref: '#/components/schemas/HealthCheck'
  */
 
-export class DiscoverController {
+class DiscoverController {
   /**
    * GET /discover/recents
    * Retorna mangás recentes
    */
   static getRecent: RequestHandler = async (req, res) => {
     try {
-      const { page, take, language } = discoverUseCase.processPaginationFromQuery(req.query);
+      const { page, take } = getPaginationParams(req);
+      const language = (req.query.lg as string) || 'pt-BR';
       
-      const result = await discoverUseCase.getRecentMangas(language, page, take);
+      const result = await getRecentMangas({
+        page,
+        take,
+        language
+      });
       
       res.status(200).json(result);
     } catch (error) {
@@ -556,9 +565,14 @@ export class DiscoverController {
    */
   static getMostViewed: RequestHandler = async (req, res) => {
     try {
-      const { page, take, language } = discoverUseCase.processPaginationFromQuery(req.query);
+      const { page, take } = getPaginationParams(req);
+      const language = (req.query.lg as string) || 'pt-BR';
       
-      const result = await discoverUseCase.getMostViewedMangas(language, page, take);
+      const result = await getMostViewedMangas({
+        page,
+        take,
+        language
+      });
       
       res.status(200).json(result);
     } catch (error) {
@@ -573,9 +587,14 @@ export class DiscoverController {
    */
   static getMostLiked: RequestHandler = async (req, res) => {
     try {
-      const { page, take, language } = discoverUseCase.processPaginationFromQuery(req.query);
+      const { page, take } = getPaginationParams(req);
+      const language = (req.query.lg as string) || 'pt-BR';
       
-      const result = await discoverUseCase.getMostLikedMangas(language, page, take);
+      const result = await getMostLikedMangas({
+        page,
+        take,
+        language
+      });
       
       res.status(200).json(result);
     } catch (error) {
@@ -586,7 +605,7 @@ export class DiscoverController {
 
   /**
    * GET /discover/feed
-   * Retorna feed personalizado baseado nas categorias favoritas do usuário
+   * Retorna feed personalizado para o usuário
    */
   static getFeed: RequestHandler = async (req, res) => {
     try {
@@ -597,9 +616,14 @@ export class DiscoverController {
         return;
       }
 
-      const { page, take, language } = discoverUseCase.processPaginationFromQuery(req.query);
+      const { page, take } = getPaginationParams(req);
+      const language = (req.query.lg as string) || 'pt-BR';
       
-      const result = await discoverUseCase.getFeedForUser(userId, language, page, take);
+      const result = await getFeedForUser(userId, {
+        page,
+        take,
+        language
+      });
       
       res.status(200).json(result);
     } catch (error) {
@@ -621,9 +645,14 @@ export class DiscoverController {
         return;
       }
 
-      const { page, take, language } = discoverUseCase.processPaginationFromQuery(req.query);
+      const { page, take } = getPaginationParams(req);
+      const language = (req.query.lg as string) || 'pt-BR';
       
-      const result = await discoverUseCase.getIARecommendations(userId, language, page, take);
+      const result = await getIARecommendations(userId, {
+        page,
+        take,
+        language
+      });
       
       res.status(200).json(result);
     } catch (error) {
@@ -645,9 +674,14 @@ export class DiscoverController {
         return;
       }
 
-      const { page, take, language } = discoverUseCase.processPaginationFromQuery(req.query);
+      const { page, take } = getPaginationParams(req);
+      const language = (req.query.lg as string) || 'pt-BR';
       
-      const result = await discoverUseCase.getMangasByCategories(categoryIds, language, page, take);
+      const result = await getMangasByCategoriesHandler(categoryIds, {
+        page,
+        take,
+        language
+      });
       
       res.status(200).json(result);
     } catch (error) {
@@ -662,9 +696,9 @@ export class DiscoverController {
    */
   static getStats: RequestHandler = async (req, res) => {
     try {
-      const language = req.query.lg as string || 'en';
+      const language = (req.query.lg as string) || 'pt-BR';
       
-      const stats = await discoverUseCase.getDiscoverStats(language);
+      const stats = await getDiscoverStats(language);
       
       res.status(200).json(stats);
     } catch (error) {

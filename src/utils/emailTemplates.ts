@@ -24,7 +24,8 @@ export class EmailTemplateManager {
     private templateCache: Map<string, string> = new Map();
 
     constructor() {
-        this.templatesPath = path.join(__dirname, '..', 'templates', 'email');
+        // Usa o diretório raiz do projeto para garantir que o caminho funcione
+        this.templatesPath = path.join(process.cwd(), 'src', 'templates', 'email');
     }
 
     /**
@@ -38,12 +39,21 @@ export class EmailTemplateManager {
 
         const templatePath = path.join(this.templatesPath, `${templateName}.html`);
         
+        console.log(`Tentando carregar template: ${templatePath}`);
+        console.log(`Templates path: ${this.templatesPath}`);
+        
         try {
             const template = fs.readFileSync(templatePath, 'utf8');
             this.templateCache.set(templateName, template);
+            console.log(`Template ${templateName} carregado com sucesso`);
             return template;
         } catch (error) {
             console.error(`Erro ao carregar template ${templateName}:`, error);
+            console.error(`Caminho tentado: ${templatePath}`);
+            console.error(`Diretório existe: ${fs.existsSync(this.templatesPath)}`);
+            if (fs.existsSync(this.templatesPath)) {
+                console.error(`Arquivos no diretório:`, fs.readdirSync(this.templatesPath));
+            }
             throw new Error(`Template ${templateName} não encontrado`);
         }
     }

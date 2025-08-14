@@ -1,10 +1,10 @@
 import request from 'supertest';
 import express from 'express';
-import * as chapterController from '../controller';
-import * as chapterHandlers from '../handler';
+import * as chapterController from '../controllers/ChaptersController';
+import * as chapterHandlers from '../handlers/ChaptersHandler';
 
 // Mock das dependências
-jest.mock('@/handlers/chapters');
+jest.mock('../handlers/ChaptersHandler');
 
 const mockedChapterHandlers = chapterHandlers as jest.Mocked<typeof chapterHandlers>;
 

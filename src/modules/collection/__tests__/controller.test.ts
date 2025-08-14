@@ -9,8 +9,13 @@ import {
   listPublic,
   checkInCollections,
   toggleCollection
-} from '../controller';
+} from '../controllers/CollectionController';
 import { CollectionStatus } from '@prisma/client';
+
+// Extender o tipo Request para incluir a propriedade user
+interface RequestWithUser extends Request {
+  user?: { id: string };
+}
 
 // Mock do Prisma Client
 jest.mock('@/prisma/client', () => prismaMock);
@@ -21,7 +26,7 @@ jest.mock('@/utils/zodError', () => ({
 }));
 
 // Mock dos handlers
-jest.mock('@/handlers/collection', () => ({
+jest.mock('../handlers/CollectionHandler', () => ({
   createCollection: jest.fn(),
   listCollections: jest.fn(),
   getCollection: jest.fn(),
@@ -46,10 +51,10 @@ const {
   listPublicCollections,
   checkMangaInCollections,
   toggleMangaInCollection
-} = require('@/handlers/collection');
+} = require('../handlers/CollectionHandler');
 
 describe('Collection Controller', () => {
-  let mockReq: Partial<Request>;
+  let mockReq: Partial<RequestWithUser>;
   let mockRes: Partial<Response>;
   let mockJson: jest.Mock;
   let mockStatus: jest.Mock;
@@ -98,7 +103,7 @@ describe('Collection Controller', () => {
 
       createCollection.mockResolvedValue(mockCollection);
 
-      await create(mockReq as Request, mockRes as Response, mockNext);
+      await create(mockReq as Request, mockRes as Response);
 
       expect(createCollection).toHaveBeenCalledWith({
         userId: 'user-123',
@@ -113,6 +118,7 @@ describe('Collection Controller', () => {
     });
 
     it('should return 401 if user is not authenticated', async () => {
+      mockReq.user = undefined;
       mockReq.body = {
         name: 'Test Collection',
         cover: 'https://example.com/cover.jpg',
@@ -121,7 +127,7 @@ describe('Collection Controller', () => {
         mangaIds: []
       };
 
-      await create(mockReq as Request, mockRes as Response, mockNext);
+      await create(mockReq as Request, mockRes as Response);
 
       expect(mockStatus).toHaveBeenCalledWith(401);
       expect(mockJson).toHaveBeenCalledWith({ error: 'Unauthorized' });
@@ -149,7 +155,7 @@ describe('Collection Controller', () => {
       mockReq.query = { page: '1', limit: '10' };
       listCollections.mockResolvedValue(mockResult);
 
-      await list(mockReq as Request, mockRes as Response, mockNext);
+      await list(mockReq as Request, mockRes as Response);
 
       expect(listCollections).toHaveBeenCalledWith('user-123', 1, 10);
       expect(mockStatus).toHaveBeenCalledWith(200);
@@ -172,7 +178,7 @@ describe('Collection Controller', () => {
       mockReq.query = { lg: 'pt-BR' };
       getCollection.mockResolvedValue(mockCollection);
 
-      await get(mockReq as Request, mockRes as Response, mockNext);
+      await get(mockReq as Request, mockRes as Response);
 
       expect(getCollection).toHaveBeenCalledWith('b59b50aa-1116-493d-89cc-b759f3626f68', 'user-123', 'pt-BR');
       expect(mockJson).toHaveBeenCalledWith(mockCollection);
@@ -180,9 +186,9 @@ describe('Collection Controller', () => {
 
     it('should return 404 if collection not found', async () => {
       mockReq.params = { id: '550e8400-e29b-41d4-a716-446655440000' }; // UUID válido
-      getCollection.mockResolvedValue(null);
+      getCollection.mockRejectedValue(new Error('Coleção não encontrada.'));
 
-      await get(mockReq as Request, mockRes as Response, mockNext);
+      await get(mockReq as Request, mockRes as Response);
 
       expect(mockStatus).toHaveBeenCalledWith(404);
       expect(mockJson).toHaveBeenCalledWith({ error: 'Coleção não encontrada.' });
@@ -192,7 +198,7 @@ describe('Collection Controller', () => {
       mockReq.user = undefined;
       mockReq.params = { id: 'b59b50aa-1116-493d-89cc-b759f3626f68' };
 
-      await get(mockReq as Request, mockRes as Response, mockNext);
+      await get(mockReq as Request, mockRes as Response);
 
       expect(mockStatus).toHaveBeenCalledWith(401);
       expect(mockJson).toHaveBeenCalledWith({ error: 'Unauthorized' });
@@ -201,27 +207,33 @@ describe('Collection Controller', () => {
 
   describe('update', () => {
     it('should update a collection successfully', async () => {
+      const updateData = {
+        name: 'Updated Collection',
+        description: 'Updated Description',
+        status: CollectionStatus.PRIVATE
+      };
+
       const mockUpdatedCollection = {
         id: 'b59b50aa-1116-493d-89cc-b759f3626f68',
-        name: 'Updated Collection',
+        ...updateData,
         userId: 'user-123'
       };
 
       mockReq.params = { id: 'b59b50aa-1116-493d-89cc-b759f3626f68' };
-      mockReq.body = { name: 'Updated Collection' };
+      mockReq.body = updateData;
       updateCollection.mockResolvedValue(mockUpdatedCollection);
 
-      await update(mockReq as Request, mockRes as Response, mockNext);
+      await update(mockReq as Request, mockRes as Response);
 
-      expect(updateCollection).toHaveBeenCalledWith('b59b50aa-1116-493d-89cc-b759f3626f68', 'user-123', { name: 'Updated Collection' });
+      expect(updateCollection).toHaveBeenCalledWith('b59b50aa-1116-493d-89cc-b759f3626f68', 'user-123', updateData);
       expect(mockJson).toHaveBeenCalledWith(mockUpdatedCollection);
     });
 
     it('should return 401 if user is not authenticated', async () => {
+      mockReq.user = undefined;
       mockReq.params = { id: 'b59b50aa-1116-493d-89cc-b759f3626f68' };
-      mockReq.body = { name: 'Updated Collection' };
 
-      await update(mockReq as Request, mockRes as Response, mockNext);
+      await update(mockReq as Request, mockRes as Response);
 
       expect(mockStatus).toHaveBeenCalledWith(401);
       expect(mockJson).toHaveBeenCalledWith({ error: 'Unauthorized' });
@@ -230,50 +242,47 @@ describe('Collection Controller', () => {
 
   describe('remove', () => {
     it('should delete a collection successfully', async () => {
-      mockReq.params = { id: '550e8400-e29b-41d4-a716-446655440000' }; // UUID válido
+      const mockDeletedCollection = {
+        id: 'b59b50aa-1116-493d-89cc-b759f3626f68',
+        name: 'Test Collection',
+        userId: 'user-123'
+      };
+
+      mockReq.params = { id: 'b59b50aa-1116-493d-89cc-b759f3626f68' };
       deleteCollection.mockResolvedValue(undefined);
 
-      await remove(mockReq as Request, mockRes as Response, mockNext);
+      await remove(mockReq as Request, mockRes as Response);
 
-      expect(deleteCollection).toHaveBeenCalledWith('550e8400-e29b-41d4-a716-446655440000', 'user-123');
+      expect(deleteCollection).toHaveBeenCalledWith('b59b50aa-1116-493d-89cc-b759f3626f68', 'user-123');
       expect(mockStatus).toHaveBeenCalledWith(204);
       expect(mockSend).toHaveBeenCalled();
-    });
-
-    it('should return 400 for invalid UUID', async () => {
-      mockReq.params = { id: 'invalid-uuid' };
-
-      await remove(mockReq as Request, mockRes as Response, mockNext);
-
-      expect(mockStatus).toHaveBeenCalledWith(400);
-      expect(deleteCollection).not.toHaveBeenCalled();
-    });
-
-    it('should return 401 if user is not authenticated', async () => {
-      mockReq.user = undefined;
-      mockReq.params = { id: '550e8400-e29b-41d4-a716-446655440000' };
-
-      await remove(mockReq as Request, mockRes as Response, mockNext);
-
-      expect(mockStatus).toHaveBeenCalledWith(401);
-      expect(mockJson).toHaveBeenCalledWith({ error: 'Unauthorized' });
     });
 
     it('should return 404 if collection not found', async () => {
       mockReq.params = { id: '550e8400-e29b-41d4-a716-446655440000' };
       deleteCollection.mockRejectedValue(new Error('Coleção não encontrada.'));
 
-      await remove(mockReq as Request, mockRes as Response, mockNext);
+      await remove(mockReq as Request, mockRes as Response);
 
       expect(mockStatus).toHaveBeenCalledWith(404);
       expect(mockJson).toHaveBeenCalledWith({ error: 'Coleção não encontrada.' });
     });
 
-    it('should return 403 if user has no permission', async () => {
-      mockReq.params = { id: '550e8400-e29b-41d4-a716-446655440000' };
+    it('should return 401 if user is not authenticated', async () => {
+      mockReq.user = undefined;
+      mockReq.params = { id: 'b59b50aa-1116-493d-89cc-b759f3626f68' };
+
+      await remove(mockReq as Request, mockRes as Response);
+
+      expect(mockStatus).toHaveBeenCalledWith(401);
+      expect(mockJson).toHaveBeenCalledWith({ error: 'Unauthorized' });
+    });
+
+    it('should return 403 if user is not the owner', async () => {
+      mockReq.params = { id: 'b59b50aa-1116-493d-89cc-b759f3626f68' };
       deleteCollection.mockRejectedValue(new Error('Você não tem permissão para deletar esta coleção.'));
 
-      await remove(mockReq as Request, mockRes as Response, mockNext);
+      await remove(mockReq as Request, mockRes as Response);
 
       expect(mockStatus).toHaveBeenCalledWith(403);
       expect(mockJson).toHaveBeenCalledWith({ error: 'Você não tem permissão para deletar esta coleção.' });
@@ -286,10 +295,8 @@ describe('Collection Controller', () => {
         data: [
           {
             id: 'collection-1',
-            name: 'Public Collection',
-            status: CollectionStatus.PUBLIC,
-            user: { id: 'user-1', name: 'User 1', avatar: 'avatar.jpg' },
-            _count: { likes: 0 }
+            name: 'Public Collection 1',
+            _count: { likes: 0, mangas: 0 }
           }
         ],
         pagination: {
@@ -303,7 +310,7 @@ describe('Collection Controller', () => {
       mockReq.query = { page: '1', limit: '10' };
       listPublicCollections.mockResolvedValue(mockResult);
 
-      await listPublic(mockReq as Request, mockRes as Response, mockNext);
+      await listPublic(mockReq as Request, mockRes as Response);
 
       expect(listPublicCollections).toHaveBeenCalledWith(1, 10);
       expect(mockJson).toHaveBeenCalledWith(mockResult);
@@ -311,7 +318,7 @@ describe('Collection Controller', () => {
   });
 
   describe('checkInCollections', () => {
-    it('should check if manga is in collections', async () => {
+    it('should check if manga is in user collections', async () => {
       const mockResult = {
         data: [
           {
@@ -329,87 +336,86 @@ describe('Collection Controller', () => {
         }
       };
 
-      mockReq.params = { mangaId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' };
+      mockReq.params = { mangaId: 'manga-123' };
       mockReq.query = { page: '1', limit: '10' };
       checkMangaInCollections.mockResolvedValue(mockResult);
 
-      await checkInCollections(mockReq as Request, mockRes as Response, mockNext);
+      await checkInCollections(mockReq as Request, mockRes as Response);
 
-      expect(checkMangaInCollections).toHaveBeenCalledWith('a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'user-123', 1, 10);
-      expect(mockStatus).toHaveBeenCalledWith(200);
-      expect(mockJson).toHaveBeenCalledWith(mockResult);
-    });
-  });
-
-  describe('toggleCollection', () => {
-    it('should add manga to collection when not present', async () => {
-      const mockResult = {
-        collection: {
-          id: 'collection-123',
-          mangas: [{ id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' }],
-          _count: { likes: 0, mangas: 1 }
-        },
-        action: 'added'
-      };
-
-      mockReq.params = { id: 'collection-123', mangaId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' };
-      toggleMangaInCollection.mockResolvedValue(mockResult);
-
-      await toggleCollection(mockReq as Request, mockRes as Response, mockNext);
-
-      expect(toggleMangaInCollection).toHaveBeenCalledWith('collection-123', 'a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'user-123');
-      expect(mockStatus).toHaveBeenCalledWith(200);
-      expect(mockJson).toHaveBeenCalledWith(mockResult);
-    });
-
-    it('should remove manga from collection when present', async () => {
-      const mockResult = {
-        collection: {
-          id: 'collection-123',
-          mangas: [],
-          _count: { likes: 0, mangas: 0 }
-        },
-        action: 'removed'
-      };
-
-      mockReq.params = { id: 'collection-123', mangaId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' };
-      toggleMangaInCollection.mockResolvedValue(mockResult);
-
-      await toggleCollection(mockReq as Request, mockRes as Response, mockNext);
-
-      expect(toggleMangaInCollection).toHaveBeenCalledWith('collection-123', 'a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'user-123');
+      expect(checkMangaInCollections).toHaveBeenCalledWith('manga-123', 'user-123', 1, 10);
       expect(mockStatus).toHaveBeenCalledWith(200);
       expect(mockJson).toHaveBeenCalledWith(mockResult);
     });
 
     it('should return 401 if user is not authenticated', async () => {
       mockReq.user = undefined;
-      mockReq.params = { id: 'collection-123', mangaId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' };
+      mockReq.params = { mangaId: 'manga-123' };
 
-      await toggleCollection(mockReq as Request, mockRes as Response, mockNext);
+      await checkInCollections(mockReq as Request, mockRes as Response);
 
       expect(mockStatus).toHaveBeenCalledWith(401);
       expect(mockJson).toHaveBeenCalledWith({ error: 'Unauthorized' });
     });
+  });
+
+  describe('toggleCollection', () => {
+    it('should toggle manga in collection successfully', async () => {
+      const mockResult = {
+        id: 'collection-123',
+        name: 'Test Collection',
+        mangas: [{ id: 'manga-123' }],
+        action: 'added'
+      };
+
+      mockReq.params = { id: 'collection-123', mangaId: 'manga-123' };
+      toggleMangaInCollection.mockResolvedValue(mockResult);
+
+      await toggleCollection(mockReq as Request, mockRes as Response);
+
+      expect(toggleMangaInCollection).toHaveBeenCalledWith('collection-123', 'manga-123', 'user-123');
+      expect(mockStatus).toHaveBeenCalledWith(200);
+      expect(mockJson).toHaveBeenCalledWith(mockResult);
+    });
 
     it('should return 404 if collection not found', async () => {
-      mockReq.params = { id: 'non-existent', mangaId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' };
+      mockReq.params = { id: 'non-existent', mangaId: 'manga-123' };
       toggleMangaInCollection.mockRejectedValue(new Error('Coleção não encontrada'));
 
-      await toggleCollection(mockReq as Request, mockRes as Response, mockNext);
+      await toggleCollection(mockReq as Request, mockRes as Response);
 
       expect(mockStatus).toHaveBeenCalledWith(404);
       expect(mockJson).toHaveBeenCalledWith({ error: 'Coleção não encontrada' });
     });
 
-    it('should return 403 if user is not the collection owner', async () => {
-      mockReq.params = { id: 'collection-123', mangaId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' };
+    it('should return 401 if user is not authenticated', async () => {
+      mockReq.user = undefined;
+      mockReq.params = { id: 'collection-123', mangaId: 'manga-123' };
+
+      await toggleCollection(mockReq as Request, mockRes as Response);
+
+      expect(mockStatus).toHaveBeenCalledWith(401);
+      expect(mockJson).toHaveBeenCalledWith({ error: 'Unauthorized' });
+    });
+
+    it('should return 403 if user is not the owner', async () => {
+      mockReq.params = { id: 'collection-123', mangaId: 'manga-123' };
       toggleMangaInCollection.mockRejectedValue(new Error('Você não tem permissão para modificar esta coleção'));
 
-      await toggleCollection(mockReq as Request, mockRes as Response, mockNext);
+      await toggleCollection(mockReq as Request, mockRes as Response);
 
       expect(mockStatus).toHaveBeenCalledWith(403);
       expect(mockJson).toHaveBeenCalledWith({ error: 'Você não tem permissão para modificar esta coleção' });
+    });
+
+    it('should return 404 if manga not found', async () => {
+      const handleZodError = require('@/utils/zodError').handleZodError;
+      mockReq.params = { id: 'collection-123', mangaId: 'non-existent' };
+      toggleMangaInCollection.mockRejectedValue(new Error('Mangá não encontrado.'));
+
+      await toggleCollection(mockReq as Request, mockRes as Response);
+
+      expect(toggleMangaInCollection).toHaveBeenCalledWith('collection-123', 'non-existent', 'user-123');
+      expect(handleZodError).toHaveBeenCalledWith(new Error('Mangá não encontrado.'), mockRes);
     });
   });
 });

@@ -1,8 +1,13 @@
-import { createCategory, listCategories, getCategoryById, updateCategory, deleteCategory } from '../handler';
 import { prismaMock } from '../../../test/mocks/prisma';
 import { ZodError } from 'zod';
 
-// Mock do Prisma já configurado no prismaMock
+// Mock do Prisma
+jest.mock('@/prisma/client', () => ({
+    __esModule: true,
+    default: prismaMock,
+}));
+
+import { CategoryHandler } from '../handlers/CategoriesHandler';
 
 describe('Category Handlers', () => {
     beforeEach(() => {
@@ -49,12 +54,12 @@ describe('Category Handlers', () => {
         ]
     };
 
-    describe('createCategory', () => {
+    describe('create', () => {
         it('deve criar uma categoria com sucesso', async () => {
             const categoryData = { name: 'Ação' };
-            prismaMock.category.create.mockResolvedValue(mockCategoryData);
+            (prismaMock.category.create as jest.Mock).mockResolvedValue(mockCategoryData);
 
-            const result = await createCategory(categoryData);
+            const result = await CategoryHandler.create(categoryData);
 
             expect(prismaMock.category.create).toHaveBeenCalledWith({
                 data: { name: 'Ação' }
@@ -65,12 +70,12 @@ describe('Category Handlers', () => {
         it('deve lançar erro de validação para dados inválidos', async () => {
             const invalidData = { name: '' }; // Nome vazio
 
-            await expect(createCategory(invalidData)).rejects.toThrow(ZodError);
+            await expect(CategoryHandler.create(invalidData)).rejects.toThrow(ZodError);
             expect(prismaMock.category.create).not.toHaveBeenCalled();
         });
     });
 
-    describe('listCategories', () => {
+    describe('list', () => {
         it('deve listar categorias com paginação padrão', async () => {
             const mockCategories = [
                 { ...mockCategoryData, _count: { mangas: 5 } },
@@ -84,10 +89,10 @@ describe('Category Handlers', () => {
             ];
             const mockTotal = 2;
 
-            prismaMock.category.findMany.mockResolvedValue(mockCategories);
-            prismaMock.category.count.mockResolvedValue(mockTotal);
+            (prismaMock.category.findMany as jest.Mock).mockResolvedValue(mockCategories);
+            (prismaMock.category.count as jest.Mock).mockResolvedValue(mockTotal);
 
-            const result = await listCategories();
+            const result = await CategoryHandler.list();
 
             expect(prismaMock.category.findMany).toHaveBeenCalledWith({
                 include: {
@@ -121,10 +126,10 @@ describe('Category Handlers', () => {
             const mockCategories = [{ ...mockCategoryData, _count: { mangas: 5 } }];
             const mockTotal = 15;
 
-            prismaMock.category.findMany.mockResolvedValue(mockCategories);
-            prismaMock.category.count.mockResolvedValue(mockTotal);
+            (prismaMock.category.findMany as jest.Mock).mockResolvedValue(mockCategories);
+            (prismaMock.category.count as jest.Mock).mockResolvedValue(mockTotal);
 
-            const result = await listCategories(2, 5);
+            const result = await CategoryHandler.list(2, 5);
 
             expect(prismaMock.category.findMany).toHaveBeenCalledWith({
                 include: {
@@ -151,12 +156,12 @@ describe('Category Handlers', () => {
         });
     });
 
-    describe('getCategoryById', () => {
+    describe('getById', () => {
         it('deve buscar categoria por ID com sucesso', async () => {
             const categoryId = 'cat-a1b2c3d4-e5f6-7890-abcd-ef1234567890';
-            prismaMock.category.findUnique.mockResolvedValue(mockCategoryWithMangas);
+            (prismaMock.category.findUnique as jest.Mock).mockResolvedValue(mockCategoryWithMangas);
 
-            const result = await getCategoryById(categoryId);
+            const result = await CategoryHandler.getById(categoryId);
 
             expect(prismaMock.category.findUnique).toHaveBeenCalledWith({
                 where: { id: categoryId },
@@ -174,9 +179,9 @@ describe('Category Handlers', () => {
 
         it('deve lançar erro quando categoria não for encontrada', async () => {
             const categoryId = 'categoria-inexistente';
-            prismaMock.category.findUnique.mockResolvedValue(null);
+            (prismaMock.category.findUnique as jest.Mock).mockResolvedValue(null);
 
-            await expect(getCategoryById(categoryId)).rejects.toThrow('Categoria não encontrada');
+            await expect(CategoryHandler.getById(categoryId)).rejects.toThrow('Categoria não encontrada');
             expect(prismaMock.category.findUnique).toHaveBeenCalledWith({
                 where: { id: categoryId },
                 include: {
@@ -191,16 +196,16 @@ describe('Category Handlers', () => {
         });
     });
 
-    describe('updateCategory', () => {
+    describe('update', () => {
         it('deve atualizar categoria com sucesso', async () => {
             const categoryId = 'cat-a1b2c3d4-e5f6-7890-abcd-ef1234567890';
             const updateData = { name: 'Ação Atualizada' };
             const updatedCategory = { ...mockCategoryData, name: 'Ação Atualizada' };
 
-            prismaMock.category.findUnique.mockResolvedValue(mockCategoryData);
-            prismaMock.category.update.mockResolvedValue(updatedCategory);
+            (prismaMock.category.findUnique as jest.Mock).mockResolvedValue(mockCategoryData);
+            (prismaMock.category.update as jest.Mock).mockResolvedValue(updatedCategory);
 
-            const result = await updateCategory(categoryId, updateData);
+            const result = await CategoryHandler.update(categoryId, updateData);
 
             expect(prismaMock.category.findUnique).toHaveBeenCalledWith({
                 where: { id: categoryId }
@@ -216,9 +221,9 @@ describe('Category Handlers', () => {
             const categoryId = 'categoria-inexistente';
             const updateData = { name: 'Ação Atualizada' };
 
-            prismaMock.category.findUnique.mockResolvedValue(null);
+            (prismaMock.category.findUnique as jest.Mock).mockResolvedValue(null);
 
-            await expect(updateCategory(categoryId, updateData)).rejects.toThrow('Categoria não encontrada');
+            await expect(CategoryHandler.update(categoryId, updateData)).rejects.toThrow('Categoria não encontrada');
             expect(prismaMock.category.findUnique).toHaveBeenCalledWith({
                 where: { id: categoryId }
             });
@@ -229,20 +234,20 @@ describe('Category Handlers', () => {
             const categoryId = 'cat-a1b2c3d4-e5f6-7890-abcd-ef1234567890';
             const invalidData = { name: '' }; // Nome vazio
 
-            await expect(updateCategory(categoryId, invalidData)).rejects.toThrow(ZodError);
+            await expect(CategoryHandler.update(categoryId, invalidData)).rejects.toThrow(ZodError);
             expect(prismaMock.category.findUnique).not.toHaveBeenCalled();
             expect(prismaMock.category.update).not.toHaveBeenCalled();
         });
     });
 
-    describe('deleteCategory', () => {
+    describe('delete', () => {
         it('deve deletar categoria com sucesso', async () => {
             const categoryId = 'cat-a1b2c3d4-e5f6-7890-abcd-ef1234567890';
 
-            prismaMock.category.findUnique.mockResolvedValue(mockCategoryData);
-            prismaMock.category.delete.mockResolvedValue(mockCategoryData);
+            (prismaMock.category.findUnique as jest.Mock).mockResolvedValue(mockCategoryData);
+            (prismaMock.category.delete as jest.Mock).mockResolvedValue(mockCategoryData);
 
-            const result = await deleteCategory(categoryId);
+            const result = await CategoryHandler.delete(categoryId);
 
             expect(prismaMock.category.findUnique).toHaveBeenCalledWith({
                 where: { id: categoryId }
@@ -256,9 +261,9 @@ describe('Category Handlers', () => {
         it('deve lançar erro quando categoria não existir', async () => {
             const categoryId = 'categoria-inexistente';
 
-            prismaMock.category.findUnique.mockResolvedValue(null);
+            (prismaMock.category.findUnique as jest.Mock).mockResolvedValue(null);
 
-            await expect(deleteCategory(categoryId)).rejects.toThrow('Categoria não encontrada');
+            await expect(CategoryHandler.delete(categoryId)).rejects.toThrow('Categoria não encontrada');
             expect(prismaMock.category.findUnique).toHaveBeenCalledWith({
                 where: { id: categoryId }
             });

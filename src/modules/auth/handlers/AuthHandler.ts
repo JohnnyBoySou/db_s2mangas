@@ -12,7 +12,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 //const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 
 export const register = async (data: RegisterBody) => {
-    const { name, email, password, avatar, cover } = data;
+    const { name, email, password, } = data;
     const normalizedEmail = email.toLowerCase();
 
     const existingEmail = await prisma.user.findUnique({ where: { email: normalizedEmail } });
@@ -98,8 +98,6 @@ export const register = async (data: RegisterBody) => {
         data: {
             name,
             email: normalizedEmail,
-            avatar,
-            cover,
             username: finalUsername,
             password: hashedPassword,
             emailVerificationCode: verificationCode,

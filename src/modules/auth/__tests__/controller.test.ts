@@ -1,32 +1,37 @@
 import request from 'supertest';
 import express from 'express';
-import * as authController from '../controller';
-import * as authHandlers from '../../../handlers/auth';
 import { handleZodError } from '../../../utils/zodError';
 
 // Mock das dependências
-jest.mock('@/handlers/auth');
+jest.mock('../handlers/AuthHandler', () => ({
+    register: jest.fn(),
+    verifyEmailCode: jest.fn(),
+    login: jest.fn(),
+    getProfile: jest.fn(),
+    updateMe: jest.fn(),
+    deleteMe: jest.fn()
+}));
+
 jest.mock('@/utils/zodError');
-jest.mock('@/validators/auth', () => ({
+jest.mock('../validators/AuthSchema', () => ({
   loginSchema: {
     parse: jest.fn()
   },
   registerSchema: {
     parse: jest.fn()
-  }
-}));
-jest.mock('@/schemas/updateSchemas', () => ({
+  },
   updateUserSchema: {
     parse: jest.fn()
   }
 }));
 
-const mockedAuthHandlers = authHandlers as jest.Mocked<typeof authHandlers>;
+const mockedAuthHandlers = require('../handlers/AuthHandler');
 const mockedHandleZodError = handleZodError as jest.MockedFunction<typeof handleZodError>;
 
 // Importar os schemas mockados
-const { loginSchema, registerSchema } = require('@/validators/auth');
-const { updateUserSchema } = require('@/schemas/updateSchemas');
+const { loginSchema, registerSchema, updateUserSchema } = require('../validators/AuthSchema');
+
+import * as authController from '../controllers/AuthController';
 
 // Setup do Express app para testes
 const app = express();

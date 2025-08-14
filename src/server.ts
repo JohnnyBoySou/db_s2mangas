@@ -30,6 +30,8 @@ import { ProfileRouter } from '@/modules/profile/routes/ProfileRouter';
 import { ChaptersRouter } from '@/modules/chapters/routes/ChaptersRouter';
 import { FileRouter, AdminFileRouter } from '@/modules/files/routes/FilesRouter';
 
+const uploadsDir = process.env.RAILWAY_VOLUME_MOUNT_PATH || process.env.UPLOAD_DIR || "/data/uploads";
+
 const app = express()
 
 // Aumenta o limite para 50MB
@@ -57,12 +59,12 @@ app.use('/notifications', NotificationsRouter)
 app.use('/wallpapers', WallpaperRouter)
 app.use('/playlists', PlaylistRouter)
 app.use('/file', FileRouter)
-app.use('/uploads', express.static('uploads'));
 app.use('/profile', ProfileRouter)
 app.use('/coins', CoinsRouter)
 app.use('/review', ReviewRouter)
 app.use('/moods', MangaListRouter)
 
+app.use("/uploads", express.static(uploadsDir, { maxAge: "7d", immutable: true,}));
 
 //ADMIN
 app.use('/admin/analytics', AdminAnalyticsRouter)

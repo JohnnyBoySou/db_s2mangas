@@ -118,7 +118,6 @@ export const listLibrary = async (userId: string, type: string, page: number, ta
     const totalPages = Math.ceil(total / take);
 
     const formattedEntries = entries.map(entry => {
-        console.log('Manga translations:', entry.manga.translations);
         return {
             ...entry,
             manga: {
@@ -167,7 +166,6 @@ export const toggleLibraryEntry = async (data: {
     });
 
     if (!mangaExists) {
-        console.log("nao existe")
         throw new Error('Mangá não encontrado');
     }
 

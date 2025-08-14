@@ -1,19 +1,24 @@
 import { prismaMock } from '../../../test/mocks/prisma';
-import { forgotPassword, verifyResetCode, resetPassword } from '../handler_forgot_password';
 import bcrypt from 'bcrypt';
 import emailAdapter from '../../../config/nodemailer';
 
+// Mock do Prisma
+jest.mock('@/prisma/client', () => ({
+    __esModule: true,
+    default: prismaMock,
+}));
+
 // Mock das dependências
 jest.mock('bcrypt');
-jest.mock('@/config/nodemailer', () => ({
-  sendMail: jest.fn(),
-}));
+jest.mock('@/config/nodemailer');
 
 const bcryptMock = bcrypt as jest.Mocked<typeof bcrypt>;
 const emailMock = emailAdapter as jest.Mocked<typeof emailAdapter>;
 
 // Mock do process.env
 process.env.SMTP_USER = 'test@example.com';
+
+import { forgotPassword, verifyResetCode, resetPassword } from '../handlers/ForgotPasswordHandler';
 
 describe('Forgot Password Handlers', () => {
   beforeEach(() => {
@@ -35,8 +40,8 @@ describe('Forgot Password Handlers', () => {
 
     it('deve enviar código de recuperação com sucesso', async () => {
       // Given
-      prismaMock.user.findUnique.mockResolvedValue(mockUser);
-      prismaMock.user.update.mockResolvedValue({ ...mockUser, resetToken: expect.any(String), resetTokenExp: new Date() });
+      (prismaMock.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
+      (prismaMock.user.update as jest.Mock).mockResolvedValue({ ...mockUser, resetToken: expect.any(String), resetTokenExp: new Date() });
       emailMock.sendMail.mockResolvedValue({
         messageId: 'test-id',
         envelope: { from: 'test@example.com', to: ['test@example.com'] },
@@ -80,7 +85,7 @@ describe('Forgot Password Handlers', () => {
 
     it('deve lançar erro quando usuário não for encontrado', async () => {
       // Given
-      prismaMock.user.findUnique.mockResolvedValue(null);
+      (prismaMock.user.findUnique as jest.Mock).mockResolvedValue(null);
 
       // When & Then
       await expect(forgotPassword('nonexistent@example.com'))
@@ -92,8 +97,8 @@ describe('Forgot Password Handlers', () => {
 
     it('deve lidar com erro no envio de email', async () => {
       // Given
-      prismaMock.user.findUnique.mockResolvedValue(mockUser);
-      prismaMock.user.update.mockResolvedValue({ ...mockUser, resetToken: expect.any(String), resetTokenExp: new Date() });
+      (prismaMock.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
+      (prismaMock.user.update as jest.Mock).mockResolvedValue({ ...mockUser, resetToken: expect.any(String), resetTokenExp: new Date() });
       emailMock.sendMail.mockRejectedValue(new Error('Erro no envio'));
 
       // When & Then
@@ -112,7 +117,7 @@ describe('Forgot Password Handlers', () => {
 
     it('deve verificar código válido com sucesso', async () => {
       // Given
-      prismaMock.user.findFirst.mockResolvedValue(mockUser);
+      (prismaMock.user.findFirst as jest.Mock).mockResolvedValue(mockUser);
 
       // When
       const result = await verifyResetCode('test@example.com', '123456');
@@ -147,7 +152,7 @@ describe('Forgot Password Handlers', () => {
 
     it('deve lançar erro quando código for inválido', async () => {
       // Given
-      prismaMock.user.findFirst.mockResolvedValue(null);
+      (prismaMock.user.findFirst as jest.Mock).mockResolvedValue(null);
 
       // When & Then
       await expect(verifyResetCode('test@example.com', 'invalid-code'))
@@ -160,7 +165,7 @@ describe('Forgot Password Handlers', () => {
         ...mockUser,
         resetTokenExp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutos no passado
       };
-      prismaMock.user.findFirst.mockResolvedValue(null); // Simulando que não encontrou devido à expiração
+      (prismaMock.user.findFirst as jest.Mock).mockResolvedValue(null); // Simulando que não encontrou devido à expiração
 
       // When & Then
       await expect(verifyResetCode('test@example.com', '123456'))
@@ -181,9 +186,9 @@ describe('Forgot Password Handlers', () => {
       const newPassword = 'newPassword123';
       const hashedPassword = 'hashedPassword123';
       
-      prismaMock.user.findFirst.mockResolvedValue(mockUser);
+      (prismaMock.user.findFirst as jest.Mock).mockResolvedValue(mockUser);
       bcryptMock.hash.mockResolvedValue(hashedPassword as never);
-      prismaMock.user.update.mockResolvedValue({ 
+      (prismaMock.user.update as jest.Mock).mockResolvedValue({ 
         ...mockUser, 
         password: hashedPassword,
         resetToken: null,
@@ -242,7 +247,7 @@ describe('Forgot Password Handlers', () => {
 
     it('deve lançar erro quando código for inválido ou expirado', async () => {
       // Given
-      prismaMock.user.findFirst.mockResolvedValue(null);
+      (prismaMock.user.findFirst as jest.Mock).mockResolvedValue(null);
 
       // When & Then
       await expect(resetPassword('test@example.com', 'invalid-code', 'newPassword'))
@@ -254,7 +259,7 @@ describe('Forgot Password Handlers', () => {
 
     it('deve lidar com erro no hash da senha', async () => {
       // Given
-      prismaMock.user.findFirst.mockResolvedValue(mockUser);
+      (prismaMock.user.findFirst as jest.Mock).mockResolvedValue(mockUser);
       bcryptMock.hash.mockRejectedValue(new Error('Erro no hash') as never);
 
       // When & Then
@@ -268,9 +273,9 @@ describe('Forgot Password Handlers', () => {
       // Given
       const hashedPassword = 'hashedPassword123';
       
-      prismaMock.user.findFirst.mockResolvedValue(mockUser);
+      (prismaMock.user.findFirst as jest.Mock).mockResolvedValue(mockUser);
       bcryptMock.hash.mockResolvedValue(hashedPassword as never);
-      prismaMock.user.update.mockRejectedValue(new Error('Erro no banco'));
+      (prismaMock.user.update as jest.Mock).mockRejectedValue(new Error('Erro no banco'));
 
       // When & Then
       await expect(resetPassword('test@example.com', '123456', 'newPassword'))
@@ -287,8 +292,8 @@ describe('Forgot Password Handlers', () => {
 
     it('deve executar fluxo completo de recuperação de senha', async () => {
       // Step 1: Solicitar código
-      prismaMock.user.findUnique.mockResolvedValue(mockUser);
-      prismaMock.user.update.mockResolvedValue({ ...mockUser, resetToken: '223456', resetTokenExp: new Date() });
+      (prismaMock.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
+      (prismaMock.user.update as jest.Mock).mockResolvedValue({ ...mockUser, resetToken: '223456', resetTokenExp: new Date() });
       emailMock.sendMail.mockResolvedValue({
         messageId: 'test-id',
         envelope: { from: 'test@example.com', to: ['integration@example.com'] },
@@ -307,7 +312,7 @@ describe('Forgot Password Handlers', () => {
         resetToken: '223456',
         resetTokenExp: new Date(Date.now() + 1000 * 60 * 30),
       };
-      prismaMock.user.findFirst.mockResolvedValue(userWithToken);
+      (prismaMock.user.findFirst as jest.Mock).mockResolvedValue(userWithToken);
 
       const verifyResult = await verifyResetCode('integration@example.com', '223456');
       expect(verifyResult.message).toBe('Código válido');
@@ -315,7 +320,7 @@ describe('Forgot Password Handlers', () => {
       // Step 3: Redefinir senha
       const hashedPassword = 'newHashedPassword';
       bcryptMock.hash.mockResolvedValue(hashedPassword as never);
-      prismaMock.user.update.mockResolvedValue({ 
+      (prismaMock.user.update as jest.Mock).mockResolvedValue({ 
         ...userWithToken, 
         password: hashedPassword,
         resetToken: null,

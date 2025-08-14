@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
-import * as coinsController from '../controller';
-import * as coinsHandler from '../handler';
+import * as coinsController from '../controllers/CoinsController';
+import * as coinsHandler from '../handlers/CoinsHandler';
 
 // Mock dos handlers
-jest.mock('../../../handlers/coins');
+jest.mock('../handlers/CoinsHandler');
 const mockCoinsHandler = coinsHandler as jest.Mocked<typeof coinsHandler>;
 
 describe('Coins Controller', () => {
@@ -19,6 +19,9 @@ describe('Coins Controller', () => {
     mockNext = jest.fn();
     
     mockReq = {
+      user: {
+        id: 'user-123'
+      }
     };
     
     mockRes = {
@@ -60,6 +63,7 @@ describe('Coins Controller', () => {
 
     it('deve lidar com usuário sem ID', async () => {
       // Given
+      mockReq.user = undefined;
       const errorMessage = 'Cannot read properties of undefined';
       mockCoinsHandler.addCoins.mockRejectedValue(new Error(errorMessage));
 
@@ -147,6 +151,7 @@ describe('Coins Controller', () => {
 
     it('deve lidar com usuário sem ID no token', async () => {
       // Given
+      mockReq.user = undefined;
       const errorMessage = 'ID do usuário é obrigatório';
       mockCoinsHandler.getCoins.mockRejectedValue(new Error(errorMessage));
 

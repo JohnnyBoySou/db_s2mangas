@@ -1,9 +1,22 @@
 import request from 'supertest';
 import express from 'express';
-import * as analyticsController from '../controller';
+import { handleZodError } from '../../../utils/zodError';
 
 // Mock das dependências
-jest.mock('@/handlers/analytics');
+jest.mock('../handlers/AnalyticsHandler', () => ({
+    getGeneralStats: jest.fn(),
+    getViewsByPeriod: jest.fn(),
+    getMostViewedMangas: jest.fn(),
+    getMostLikedMangas: jest.fn(),
+    getMostCommentedMangas: jest.fn(),
+    getUsersByPeriod: jest.fn(),
+    getMostActiveUsers: jest.fn(),
+    getCategoryStats: jest.fn(),
+    getLanguageStats: jest.fn(),
+    getMangaTypeStats: jest.fn(),
+    getMangaStatusStats: jest.fn()
+}));
+
 jest.mock('@/utils/zodError');
 
 // Mock do prisma global
@@ -12,8 +25,10 @@ jest.mock('@/utils/zodError');
   $disconnect: jest.fn()
 } as any;
 
-const mockedAnalyticsHandlers = analyticsHandlers as jest.Mocked<typeof analyticsHandlers>;
+const mockedAnalyticsHandlers = require('../handlers/AnalyticsHandler');
 const mockedHandleZodError = handleZodError as jest.MockedFunction<typeof handleZodError>;
+
+import * as analyticsController from '../controllers/AnalyticsController';
 
 // Setup do Express app para testes
 const app = express();
@@ -66,7 +81,7 @@ describe('Controlador de Analytics', () => {
       // Given
       const error = new Error('Database error');
       mockedAnalyticsHandlers.getGeneralStats.mockRejectedValue(error);
-      mockedHandleZodError.mockImplementation((err, res) => {
+      mockedHandleZodError.mockImplementation((err: any, res: any) => {
         return res.status(500).json({ error: 'Internal server error' });
       });
 
