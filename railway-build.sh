@@ -22,10 +22,6 @@ npm install --no-audit --no-fund --legacy-peer-deps
 echo "🔧 Generating Prisma client..."
 npx prisma generate
 
-# Build TypeScript
-echo "🏗️ Building TypeScript..."
-npm run build
-
 # Run database migrations
 echo "🔄 Running database migrations..."
 npx prisma migrate deploy

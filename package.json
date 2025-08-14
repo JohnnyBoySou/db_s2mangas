@@ -2,6 +2,7 @@
   "name": "db_s2mangas",
   "version": "1.0.1",
   "main": "server.ts",
+  "type": "module",
   "scripts": {
     "test": "jest --passWithNoTests",
     "test:watch": "jest --watch --passWithNoTests",
