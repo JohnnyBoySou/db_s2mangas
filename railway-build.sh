@@ -16,7 +16,7 @@ rm -f package-lock.json
 
 # Install dependencies with specific flags for Railway
 echo "📦 Installing dependencies..."
-npm install --production --no-audit --no-fund --legacy-peer-deps
+npm install --no-audit --no-fund --legacy-peer-deps
 
 # Generate Prisma client
 echo "🔧 Generating Prisma client..."
@@ -25,5 +25,9 @@ npx prisma generate
 # Build TypeScript
 echo "🏗️ Building TypeScript..."
 npm run build
+
+# Run database migrations
+echo "🔄 Running database migrations..."
+npx prisma migrate deploy
 
 echo "✅ Build completed successfully!"

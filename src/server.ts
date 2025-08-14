@@ -103,14 +103,30 @@ app.use('/docs', swaggerUi.serve, swaggerUi.setup(specs, {
 // Configurar o proxy para a API do MangaDex
 //app.use('/api/mangadx', mangaDexProxy);
 
+// Healthcheck simples para o Railway
 app.get('/health', (_req, res) => {
-  res.status(200).json({
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    environment: process.env.NODE_ENV || 'development'
-  })
-})
+  res.status(200).json({ status: 'ok' });
+});
+
+// Healthcheck detalhado
+app.get('/health/detailed', (_req, res) => {
+  try {
+    res.status(200).json({
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      environment: process.env.NODE_ENV || 'development',
+      version: require('../package.json').version
+    });
+  } catch (error) {
+    console.error('Erro no healthcheck:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Health check failed',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
 
 app.get('/', (_req, res) => {
   res.status(200).json({
