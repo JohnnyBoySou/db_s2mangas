@@ -1,6 +1,8 @@
-import { execSync } from 'child_process';
-import { existsSync, mkdirSync } from 'fs';
-import path from 'path';
+#!/usr/bin/env node
+
+const { execSync } = require('child_process');
+const { existsSync, mkdirSync } = require('fs');
+const path = require('path');
 
 console.log('🚀 Iniciando aplicação no Railway...');
 

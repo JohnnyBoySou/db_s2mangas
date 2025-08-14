@@ -28,7 +28,7 @@
     "docs:serve": "npm run dev",
     "docs:open": "open http://localhost:3000/docs/scalar",
     "railway:build": "./railway-build.sh",
-    "railway:start": "ts-node -r tsconfig-paths/register src/scripts/railwayStart.ts",
+    "railway:start": "node railway-start.js",
     "railway:check": "node pre-deploy-check.js",
     "railway:diagnose": "ts-node -r tsconfig-paths/register src/scripts/diagnoseDatabase.ts",
     "railway:troubleshoot": "ts-node -r tsconfig-paths/register src/scripts/railwayTroubleshoot.ts",
