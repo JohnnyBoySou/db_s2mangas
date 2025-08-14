@@ -82,7 +82,11 @@ app.get('/api-docs.json', (_req, res) => {
   res.setHeader('Content-Type', 'application/json');
   res.send(specs);
 });
-setupScalarDocs(app);
+
+// Configurar Scalar docs de forma assíncrona
+setupScalarDocs(app).catch(error => {
+  console.warn('⚠️ Erro ao configurar Scalar docs:', error);
+});
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(specs, {
   customCss: '.swagger-ui .topbar { display: none }',
   customSiteTitle: 'S2Mangas API Documentation',
