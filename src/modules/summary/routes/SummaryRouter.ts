@@ -6,6 +6,6 @@ const SummaryRouter = Router();
 
 const upload = multer({ storage: multer.memoryStorage() });
 
-SummaryRouter.post('/summary', upload.array('pages', 100), postSummary);
+SummaryRouter.post('/', upload.array('pages', 100), postSummary);
 
 export { SummaryRouter };
