@@ -23,6 +23,7 @@
     "cache:warm": "ts-node -r tsconfig-paths/register -e \"import { warmupCache } from './src/middlewares/smartCache'; warmupCache().then(() => console.log('Cache warmed'))\"",
     "cache:stats": "ts-node -r tsconfig-paths/register -e \"import { AdvancedCacheManager } from './src/utils/advancedCache'; new AdvancedCacheManager().getStats().then(stats => console.log(JSON.stringify(stats, null, 2)))\"",
     "cache:example": "ts-node -r tsconfig-paths/register src/examples/cacheUsage.ts",
+    "cache:test-external": "ts-node -r tsconfig-paths/register src/scripts/testExternalRedis.ts",
     "logs": "tail -f logs/app.log",
     "docs:generate": "ts-node -r tsconfig-paths/register -e \"import { specs } from './src/config/swagger'; console.log(JSON.stringify(specs, null, 2))\" > api-spec.json",
     "docs:serve": "npm run dev",

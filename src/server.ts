@@ -29,6 +29,7 @@ import { MangaRouter, AdminMangaRouter } from '@/modules/manga/routes/MangaRoute
 import { ProfileRouter } from '@/modules/profile/routes/ProfileRouter';
 import { ChaptersRouter } from '@/modules/chapters/routes/ChaptersRouter';
 import { FileRouter, AdminFileRouter } from '@/modules/files/routes/FilesRouter';
+import { SummaryRouter } from '@/modules/summary/routes/SummaryRouter';
 
 const uploadsDir = process.env.RAILWAY_VOLUME_MOUNT_PATH || process.env.UPLOAD_DIR || "/data/uploads";
 
@@ -63,7 +64,7 @@ app.use('/profile', ProfileRouter)
 app.use('/coins', CoinsRouter)
 app.use('/review', ReviewRouter)
 app.use('/moods', MangaListRouter)
-
+app.use('/summary', SummaryRouter)
 app.use("/uploads", express.static(uploadsDir, { maxAge: "7d", immutable: true,}));
 
 //ADMIN
