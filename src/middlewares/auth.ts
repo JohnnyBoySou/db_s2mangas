@@ -37,7 +37,7 @@ export const requireAdmin: RequestHandler = async (req, res, next) => {
 
     // Tenta buscar do cache primeiro
     const cacheKey = `admin:${userId}`;
-    const cachedIsAdmin = await redis.get(cacheKey);
+    const cachedIsAdmin = await redis?.get(cacheKey);
 
     if (cachedIsAdmin !== null) {
       if (cachedIsAdmin === 'true') {
@@ -56,8 +56,8 @@ export const requireAdmin: RequestHandler = async (req, res, next) => {
     });
 
     // Salva no cache
-    await redis.set(cacheKey, user?.isAdmin ? 'true' : 'false');
-    await redis.expire(cacheKey, ADMIN_CACHE_TTL);
+    await redis?.set(cacheKey, user?.isAdmin ? 'true' : 'false');
+    await redis?.expire(cacheKey, ADMIN_CACHE_TTL);
 
     if (!user?.isAdmin) {
       res.status(403).json({ message: "Acesso negado. Apenas administradores podem acessar este recurso." });

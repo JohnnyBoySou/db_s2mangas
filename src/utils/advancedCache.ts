@@ -157,12 +157,12 @@ export async function setL1Cache(key: string, data: any, options: CacheOptions =
       compressed
     };
 
-    await redis.setex(fullKey, ttl, JSON.stringify(cacheEntry));
+    await redis?.setex(fullKey, ttl, JSON.stringify(cacheEntry));
 
     // Associar tags
     for (const tag of tags) {
-      await redis.sadd(CACHE_CONFIG.TAG_PREFIX + tag, fullKey);
-      await redis.expire(CACHE_CONFIG.TAG_PREFIX + tag, ttl + 3600);
+      await redis?.sadd(CACHE_CONFIG.TAG_PREFIX + tag, fullKey);
+      await redis?.expire(CACHE_CONFIG.TAG_PREFIX + tag, ttl + 3600);
     }
 
     logger.debug(`Cache L1 definido: ${key}`);
@@ -175,7 +175,7 @@ export async function getL1Cache(key: string): Promise<any | null> {
   try {
     const redis = getRedisClient();
     const fullKey = CACHE_CONFIG.L1_PREFIX + key;
-    const cached = await redis.get(fullKey);
+    const cached = await redis?.get(fullKey);
     
     if (!cached) return null;
 
@@ -183,7 +183,7 @@ export async function getL1Cache(key: string): Promise<any | null> {
     
     // Verificar se expirou
     if (Date.now() - cacheEntry.timestamp > cacheEntry.ttl * 1000) {
-      await redis.del(fullKey);
+      await redis?.del(fullKey);
       return null;
     }
 
@@ -274,11 +274,11 @@ export async function invalidateByTags(tags: string[]): Promise<void> {
     const redis = getRedisClient();
     for (const tag of tags) {
       const tagKey = CACHE_CONFIG.TAG_PREFIX + tag;
-      const keys = await redis.smembers(tagKey);
+      const keys = await redis?.smembers(tagKey);
       
-      if (keys.length > 0) {
-        await redis.del(...keys);
-        await redis.del(tagKey);
+      if (keys && keys.length > 0) {
+        await redis?.del(...keys);
+        await redis?.del(tagKey);
         logger.info(`Invalidados ${keys.length} caches com tag: ${tag}`);
       }
     }
@@ -292,23 +292,23 @@ export async function cleanupExpiredEntries(): Promise<void> {
   try {
     const redis = getRedisClient();
     const pattern = CACHE_CONFIG.L1_PREFIX + '*';
-    const keys = await redis.keys(pattern);
+    const keys = await redis?.keys(pattern);
     let cleanedCount = 0;
 
-    for (const key of keys) {
-      const cached = await redis.get(key);
+    for (const key of keys || []) {
+      const cached = await redis?.get(key);
       if (!cached) continue;
 
       try {
         const cacheEntry: CacheEntry = JSON.parse(cached);
         if (Date.now() - cacheEntry.timestamp > cacheEntry.ttl * 1000) {
-          await redis.del(key);
+          await redis?.del(key);
           cleanedCount++;
         }
       } catch (error) {
         console.log(error)
         // Entrada corrompida, remover
-        await redis.del(key);
+        await redis?.del(key);
         cleanedCount++;
       }
     }
@@ -364,13 +364,13 @@ export async function cleanupL2Cache(): Promise<void> {
 export async function getStats(): Promise<any> {
   try {
     const redis = getRedisClient();
-    const l1Keys = await redis.keys(CACHE_CONFIG.L1_PREFIX + '*');
+    const l1Keys = await redis?.keys(CACHE_CONFIG.L1_PREFIX + '*');
     const l2Files = await fs.readdir(CACHE_CONFIG.L2_DIR);
-    const redisInfo = await redis.info('memory');
+    const redisInfo = await redis?.info('memory');
     
     return {
       l1: {
-        entries: l1Keys.length,
+        entries: l1Keys?.length || 0,
         memoryUsage: redisInfo
       },
       l2: {

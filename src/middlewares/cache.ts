@@ -12,7 +12,7 @@ export const cacheMiddleware = (ttl: number) => {
     const key = `cache:${req.originalUrl}`;
 
     try {
-      const cachedResponse = await redis.get(key);
+      const cachedResponse = await redis?.get(key);
 
       if (cachedResponse) {
         const data = JSON.parse(cachedResponse);
@@ -23,7 +23,7 @@ export const cacheMiddleware = (ttl: number) => {
       // Intercepta a resposta original
       const originalJson = res.json;
       res.json = function (body: any) {
-        redis.setex(key, ttl, JSON.stringify(body))
+        redis?.setex(key, ttl, JSON.stringify(body))
           .catch(error => logger.error('Erro ao salvar cache:', error));
         
         return originalJson.call(this, body);

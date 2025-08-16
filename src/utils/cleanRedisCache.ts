@@ -10,26 +10,25 @@ export async function cleanRedisCache() {
     const redis = getRedisClient();
     
     // Busca todas as chaves de cache
-    const cacheKeys = await redis.keys('cache:*');
-    const adminKeys = await redis.keys('admin:*');
+    const cacheKeys = await redis?.keys('cache:*');
+    const adminKeys = await redis?.keys('admin:*');
     
     let deletedCount = 0;
     
     // Remove chaves de cache antigas (mais de 24 horas)
-    for (const key of cacheKeys) {
-      const ttl = await redis.ttl(key);
-      // Se TTL é -1 (sem expiração) ou muito baixo, remove
-      if (ttl === -1 || ttl < 3600) { // menos de 1 hora
-        await redis.del(key);
+    for (const key of cacheKeys || []) {
+      const ttl = await redis?.ttl(key);
+      if (ttl === -1 || ttl && ttl < 3600) { 
+        await redis?.del(key);
         deletedCount++;
       }
     }
     
     // Remove chaves de admin cache antigas (mais de 2 horas)
-    for (const key of adminKeys) {
-      const ttl = await redis.ttl(key);
-      if (ttl === -1 || ttl < 1800) { // menos de 30 minutos
-        await redis.del(key);
+    for (const key of adminKeys || []) {
+      const ttl = await redis?.ttl(key);
+      if (ttl === -1 || ttl && ttl < 1800) { 
+        await redis?.del(key);
         deletedCount++;
       }
     }
@@ -46,7 +45,7 @@ export async function cleanRedisCache() {
 export async function flushRedisCache() {
   try {
     const redis = getRedisClient();
-    await redis.flushdb();
+    await redis?.flushdb();
     logger.info('Cache Redis completamente limpo.');
   } catch (error) {
     logger.error('Erro ao limpar completamente o cache Redis:', error);
