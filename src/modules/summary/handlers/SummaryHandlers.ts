@@ -2,7 +2,7 @@ import axios from 'axios';
 import FormData from 'form-data';
 
 // Configuração da URL do microserviço Tesseract
-const TESSERACT_URL = process.env.TESSERACT_SERVICE_URL || 'http://tesseract-s2mangas:8000';
+const TESSERACT_URL = process.env.TESSERACT_SERVICE_URL || 'http://tesseract_s2mangas.railway.internal:8000';
 const REQ_TIMEOUT = Number(process.env.REQUEST_TIMEOUT_MS || 180000);
 
 export async function summarizeHandler({ files = [], imageUrls = [] }: { files: any[], imageUrls: string[] }) {
