@@ -20,12 +20,31 @@ export enum EmailTemplateType {
 
 // Classe para gerenciar templates de email
 export class EmailTemplateManager {
-    private templatesPath: string;
+    private templatesPath: string = '';
     private templateCache: Map<string, string> = new Map();
 
     constructor() {
-        // Usa o diretório raiz do projeto para garantir que o caminho funcione
-        this.templatesPath = path.join(process.cwd(), 'src', 'templates', 'email');
+        // Tenta diferentes caminhos para encontrar os templates
+        const possiblePaths = [
+            path.join(process.cwd(), 'src', 'templates', 'email'),
+            path.join(process.cwd(), 'dist', 'templates', 'email'),
+            path.join(__dirname, '..', 'templates', 'email'),
+            path.join(__dirname, '..', '..', 'templates', 'email'),
+        ];
+
+        for (const templatePath of possiblePaths) {
+            if (fs.existsSync(templatePath)) {
+                this.templatesPath = templatePath;
+                console.log(`Templates encontrados em: ${templatePath}`);
+                break;
+            }
+        }
+
+        if (!this.templatesPath) {
+            console.error('Diretório de templates não encontrado. Caminhos tentados:');
+            possiblePaths.forEach(p => console.error(`  - ${p}`));
+            throw new Error('Diretório de templates não encontrado');
+        }
     }
 
     /**
@@ -39,18 +58,15 @@ export class EmailTemplateManager {
 
         const templatePath = path.join(this.templatesPath, `${templateName}.html`);
         
-        //console.log(`Tentando carregar template: ${templatePath}`);
-        //console.log(`Templates path: ${this.templatesPath}`);
-        
         try {
             const template = fs.readFileSync(templatePath, 'utf8');
             this.templateCache.set(templateName, template);
-            // console.log(`Template ${templateName} carregado com sucesso`);
+            console.log(`Template ${templateName} carregado com sucesso`);
             return template;
         } catch (error) {
-            // console.error(`Erro ao carregar template ${templateName}:`, error);
-            // console.error(`Caminho tentado: ${templatePath}`);
-            // console.error(`Diretório existe: ${fs.existsSync(this.templatesPath)}`);
+            console.error(`Erro ao carregar template ${templateName}:`, error);
+            console.error(`Caminho tentado: ${templatePath}`);
+            console.error(`Diretório existe: ${fs.existsSync(this.templatesPath)}`);
             if (fs.existsSync(this.templatesPath)) {
                 console.error(`Arquivos no diretório:`, fs.readdirSync(this.templatesPath));
             }
@@ -104,8 +120,8 @@ export class EmailTemplateManager {
         templates.forEach(template => {
             try {
                 this.loadTemplate(template);
-            } catch {
-                console.warn(`Aviso: Template ${template} não pôde ser pré-carregado`);
+            } catch (error) {
+                console.warn(`Aviso: Template ${template} não pôde ser pré-carregado:`, error);
             }
         });
     }

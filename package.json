@@ -10,7 +10,7 @@
     "lint": "eslint .",
     "type-check": "tsc --noEmit",
     "dev": "tsx watch src/server.ts",
-    "build": "tsc && tsc-alias",
+    "build": "tsc && tsc-alias && mkdir -p dist/templates/email && cp -r src/templates/email/* dist/templates/email/",
     "build:watch": "tsc -w",
     "build:dev": "tsc && ts-node-dev --respawn --transpile-only src/server.ts",
     "build:prod": "tsx src/server.ts",

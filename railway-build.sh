@@ -26,4 +26,9 @@ npx prisma generate
 echo "🔄 Running database migrations..."
 npx prisma migrate deploy
 
+# Copy email templates to dist directory
+echo "📧 Copying email templates..."
+mkdir -p dist/templates/email
+cp -r src/templates/email/* dist/templates/email/
+
 echo "✅ Build completed successfully!"
