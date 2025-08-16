@@ -53,10 +53,10 @@ class CacheTestSuite {
   async testRedisConnection(): Promise<void> {
     await this.test('Conexão Redis L1', async () => {
       const redis = getRedisClient();
-      await redis.ping();
+      await redis?.ping();
       
       const redisL1 = getRedisL1Client();
-      await redisL1.ping();
+      await redisL1?.ping();
     });
   }
 
