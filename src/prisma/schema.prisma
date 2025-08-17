@@ -24,7 +24,7 @@ model Manga {
   translations   MangaTranslation[]
   reviews        Review[]
   views          View[]
-  collections    Collection[]       @relation("CollectionMangas")
+  collectionMangas CollectionManga[]
   categories     Category[]         @relation("MangaCategories")
   languages      Language[]         @relation("MangaLanguages")
 }
@@ -109,6 +109,7 @@ model User {
   reviews                  Review[]
   reviewVotes              ReviewVote[]
   views                    View[]
+  collectionMangasAdded    CollectionManga[]        @relation("CollectionMangaAddedBy")
   categories               Category[]               @relation("UserCategories")
   languages                Language[]               @relation("UserLanguages")
 }
@@ -125,7 +126,7 @@ model Collection {
   user          User                     @relation(fields: [userId], references: [id])
   collaborators CollectionCollaborator[]
   likes         CollectionLike[]
-  mangas        Manga[]                  @relation("CollectionMangas")
+  collectionMangas CollectionManga[]
 }
 
 model CollectionLike {
@@ -150,6 +151,20 @@ model CollectionCollaborator {
   user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, collectionId])
+}
+
+model CollectionManga {
+  id           String     @id @default(uuid())
+  collectionId String
+  mangaId      String
+  addedBy      String     // ID do usuário que adicionou o mangá
+  createdAt    DateTime   @default(now())
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  manga        Manga      @relation(fields: [mangaId], references: [id], onDelete: Cascade)
+  addedByUser  User       @relation("CollectionMangaAddedBy", fields: [addedBy], references: [id], onDelete: Cascade)
+
+  @@unique([collectionId, mangaId])
+  @@index([addedBy])
 }
 
 model LibraryEntry {

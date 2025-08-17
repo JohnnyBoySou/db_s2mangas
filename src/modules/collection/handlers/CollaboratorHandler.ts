@@ -83,6 +83,15 @@ export const removeCollaborator = async (data: {
     throw new Error('Colaborador não encontrado.');
   }
 
+  // Remover todos os mangás adicionados por este colaborador
+  await prisma.collectionManga.deleteMany({
+    where: {
+      collectionId,
+      addedBy: userId,
+    },
+  });
+
+  // Remover o colaborador
   await prisma.collectionCollaborator.delete({
     where: {
       userId_collectionId: {

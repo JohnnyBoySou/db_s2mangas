@@ -19,14 +19,29 @@ export const createCollection = async (data: {
             cover: cover ?? '',
             description,
             status,
-            mangas: mangaIds && mangaIds.length > 0
+            collectionMangas: mangaIds && mangaIds.length > 0
                 ? {
-                    connect: mangaIds.map((id: string) => ({ id })),
+                    create: mangaIds.map((mangaId: string) => ({
+                        mangaId,
+                        addedBy: userId,
+                    })),
                 }
                 : undefined,
         },
         include: {
-            mangas: true,
+            collectionMangas: {
+                include: {
+                    manga: true,
+                    addedByUser: {
+                        select: {
+                            id: true,
+                            name: true,
+                            username: true,
+                            avatar: true,
+                        }
+                    }
+                }
+            },
             _count: { select: { likes: true } },
         },
     });
@@ -74,7 +89,8 @@ export const listCollections = async (userId: string, page: number, take: number
                 _count: { 
                     select: { 
                         likes: true,
-                        mangas: true 
+                        collectionMangas: true,
+                        collaborators: true
                     } 
                 },
             },
@@ -120,14 +136,26 @@ export const getCollection = async (id: string, userId: string, language: string
     const collection = await prisma.collection.findUnique({
         where: { id },
         include: {
-            mangas: {
-                select: {
-                    id: true,
-                    cover: true,
-                    translations: {
+            collectionMangas: {
+                include: {
+                    manga: {
                         select: {
+                            id: true,
+                            cover: true,
+                            translations: {
+                                select: {
+                                    name: true,
+                                    language: true
+                                }
+                            }
+                        }
+                    },
+                    addedByUser: {
+                        select: {
+                            id: true,
                             name: true,
-                            language: true
+                            username: true,
+                            avatar: true,
                         }
                     }
                 }
@@ -163,13 +191,16 @@ export const getCollection = async (id: string, userId: string, language: string
     // Transforma o array de traduções em um único objeto com o nome do mangá
     const collectionWithMangaNames = {
         ...collection,
-        mangas: collection.mangas.map(manga => {
-            const translationInLanguage = manga.translations.find(t => t.language === language);
+        mangas: collection.collectionMangas.map(collectionManga => {
+            const manga = collectionManga.manga;
+            const translationInLanguage = manga.translations.find((t: any) => t.language === language);
             const translation = translationInLanguage || manga.translations[0];
 
             return {
                 ...manga,
                 name: translation?.name || 'Sem nome',
+                addedBy: collectionManga.addedBy,
+                addedByUser: collectionManga.addedByUser,
                 translations: undefined 
             };
         })
@@ -299,16 +330,16 @@ export const checkMangaInCollections = async (mangaId: string, userId: string, p
                         }
                     }
                 },
-                mangas: {
+                collectionMangas: {
                     where: {
-                        id: mangaId
+                        mangaId: mangaId
                     }
                 },
-                _count: {
-                    select: {
+                                _count: { 
+                    select: { 
                         likes: true,
-                        mangas: true
-                    }
+                        collectionMangas: true
+                    } 
                 }
             },
             skip,
@@ -335,7 +366,7 @@ export const checkMangaInCollections = async (mangaId: string, userId: string, p
 
     const formattedCollections = collections.map(collection => ({
         ...collection,
-        isIncluded: collection.mangas.length > 0,
+        isIncluded: collection.collectionMangas.length > 0,
         mangas: undefined
     }));
 
@@ -359,9 +390,9 @@ export const toggleMangaInCollection = async (collectionId: string, mangaId: str
     const collection = await prisma.collection.findUnique({
         where: { id: collectionId },
         include: {
-            mangas: {
+            collectionMangas: {
                 where: {
-                    id: mangaId
+                    mangaId: mangaId
                 }
             }
         }
@@ -371,21 +402,35 @@ export const toggleMangaInCollection = async (collectionId: string, mangaId: str
         throw new Error('Coleção não encontrada');
     }
 
-    const isMangaInCollection = collection.mangas.length > 0;
+    const isMangaInCollection = collection.collectionMangas.length > 0;
 
     const updatedCollection = await prisma.collection.update({
         where: { id: collectionId },
         data: {
-            mangas: {
-                [isMangaInCollection ? 'disconnect' : 'connect']: { id: mangaId }
+            collectionMangas: {
+                [isMangaInCollection ? 'deleteMany' : 'create']: isMangaInCollection 
+                    ? { mangaId: mangaId }
+                    : { mangaId: mangaId, addedBy: userId }
             }
         },
         include: {
-            mangas: true,
+            collectionMangas: {
+                include: {
+                    manga: true,
+                    addedByUser: {
+                        select: {
+                            id: true,
+                            name: true,
+                            username: true,
+                            avatar: true,
+                        }
+                    }
+                }
+            },
             _count: {
                 select: {
                     likes: true,
-                    mangas: true
+                    collectionMangas: true
                 }
             }
         }
