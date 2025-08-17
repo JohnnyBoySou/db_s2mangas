@@ -30,6 +30,15 @@ export const prismaMock = {
     deleteMany: jest.fn(),
     count: jest.fn()
   },
+  collectionCollaborator: {
+    create: jest.fn(),
+    findMany: jest.fn(),
+    findUnique: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+    deleteMany: jest.fn(),
+    count: jest.fn()
+  },
   review: {
     create: jest.fn(),
     findMany: jest.fn(),
@@ -45,6 +54,7 @@ export const prismaMock = {
     findFirst: jest.fn(),
     update: jest.fn(),
     delete: jest.fn(),
+    deleteMany: jest.fn(),
     count: jest.fn(),
     groupBy: jest.fn()
   },

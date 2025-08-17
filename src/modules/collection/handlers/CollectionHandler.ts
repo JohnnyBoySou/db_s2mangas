@@ -1,5 +1,6 @@
 import { CollectionStatus } from '@prisma/client';
 import prisma from '@/prisma/client';
+import { checkUserCanEdit, checkUserCanView } from './CollaboratorHandler';
 
 export const createCollection = async (data: {
     userId: string;
@@ -34,10 +35,43 @@ export const createCollection = async (data: {
 export const listCollections = async (userId: string, page: number, take: number) => {
     const skip = (page - 1) * take;
 
+    // Buscar coleções onde o usuário é dono ou colaborador
     const [collections, total] = await Promise.all([
         prisma.collection.findMany({
-            where: { userId },
+            where: {
+                OR: [
+                    { userId }, // Coleções do usuário
+                    {
+                        collaborators: {
+                            some: {
+                                userId
+                            }
+                        }
+                    } // Coleções onde é colaborador
+                ]
+            },
             include: {
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                        username: true,
+                        avatar: true,
+                    }
+                },
+                collaborators: {
+                    where: { userId },
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                name: true,
+                                username: true,
+                                avatar: true,
+                            }
+                        }
+                    }
+                },
                 _count: { 
                     select: { 
                         likes: true,
@@ -49,7 +83,20 @@ export const listCollections = async (userId: string, page: number, take: number
             take,
             orderBy: { createdAt: "desc" },
         }),
-        prisma.collection.count({ where: { userId } }),
+        prisma.collection.count({
+            where: {
+                OR: [
+                    { userId },
+                    {
+                        collaborators: {
+                            some: {
+                                userId
+                            }
+                        }
+                    }
+                ]
+            }
+        }),
     ]);
 
     const totalPages = Math.ceil(total / take);
@@ -68,6 +115,9 @@ export const listCollections = async (userId: string, page: number, take: number
 };
 
 export const getCollection = async (id: string, userId: string, language: string = 'pt-BR') => {
+    // Verificar permissões de visualização
+    await checkUserCanView(id, userId);
+
     const collection = await prisma.collection.findUnique({
         where: { id },
         include: {
@@ -92,15 +142,23 @@ export const getCollection = async (id: string, userId: string, language: string
                 }
             },
             likes: true,
+            collaborators: {
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            name: true,
+                            username: true,
+                            avatar: true,
+                        }
+                    }
+                }
+            }
         },
     });
 
     if (!collection) {
         throw new Error('Coleção não encontrada.');
-    }
-
-    if (collection.userId !== userId) {
-        throw new Error('Você não tem permissão para visualizar esta coleção.');
     }
 
     // Transforma o array de traduções em um único objeto com o nome do mangá
@@ -127,16 +185,15 @@ export const updateCollection = async (id: string, userId: string, data: {
     description?: string;
     status?: CollectionStatus;
 }) => {
+    // Verificar permissões de edição
+    await checkUserCanEdit(id, userId);
+
     const collection = await prisma.collection.findUnique({
         where: { id },
     });
 
     if (!collection) {
         throw new Error('Coleção não encontrada.');
-    }
-
-    if (collection.userId !== userId) {
-        throw new Error('Você não tem permissão para editar esta coleção.');
     }
 
     return await prisma.collection.update({
@@ -154,6 +211,7 @@ export const deleteCollection = async (id: string, userId: string) => {
         throw new Error('Coleção não encontrada.');
     }
 
+    // Apenas o dono pode deletar a coleção
     if (collection.userId !== userId) {
         throw new Error('Você não tem permissão para deletar esta coleção.');
     }
@@ -208,8 +266,40 @@ export const checkMangaInCollections = async (mangaId: string, userId: string, p
 
     const [collections, total] = await Promise.all([
         prisma.collection.findMany({
-            where: { userId },
+            where: {
+                OR: [
+                    { userId }, // Coleções do usuário
+                    {
+                        collaborators: {
+                            some: {
+                                userId
+                            }
+                        }
+                    } // Coleções onde é colaborador
+                ]
+            },
             include: {
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                        username: true,
+                        avatar: true,
+                    }
+                },
+                collaborators: {
+                    where: { userId },
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                name: true,
+                                username: true,
+                                avatar: true,
+                            }
+                        }
+                    }
+                },
                 mangas: {
                     where: {
                         id: mangaId
@@ -227,7 +317,18 @@ export const checkMangaInCollections = async (mangaId: string, userId: string, p
             orderBy: { createdAt: "desc" }
         }),
         prisma.collection.count({
-            where: { userId }
+            where: {
+                OR: [
+                    { userId },
+                    {
+                        collaborators: {
+                            some: {
+                                userId
+                            }
+                        }
+                    }
+                ]
+            }
         })
     ]);
 
@@ -253,6 +354,9 @@ export const checkMangaInCollections = async (mangaId: string, userId: string, p
 };
 
 export const toggleMangaInCollection = async (collectionId: string, mangaId: string, userId: string) => {
+    // Verificar permissões de edição
+    await checkUserCanEdit(collectionId, userId);
+
     const collection = await prisma.collection.findUnique({
         where: { id: collectionId },
         include: {
@@ -266,10 +370,6 @@ export const toggleMangaInCollection = async (collectionId: string, mangaId: str
 
     if (!collection) {
         throw new Error('Coleção não encontrada');
-    }
-
-    if (collection.userId !== userId) {
-        throw new Error('Você não tem permissão para modificar esta coleção');
     }
 
     const isMangaInCollection = collection.mangas.length > 0;

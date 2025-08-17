@@ -97,6 +97,7 @@ model User {
   isAdmin               Boolean          @default(false)
   collections           Collection[]
   collectionLikes       CollectionLike[]
+  collectionCollaborations CollectionCollaborator[]
   comments              Comment[]
   libraryEntries        LibraryEntry[]
   likes                 Like[]
@@ -124,6 +125,7 @@ model Collection {
   user        User             @relation(fields: [userId], references: [id])
   likes       CollectionLike[]
   mangas      Manga[]          @relation("CollectionMangas")
+  collaborators CollectionCollaborator[]
 }
 
 model CollectionLike {
@@ -133,6 +135,19 @@ model CollectionLike {
   createdAt    DateTime   @default(now())
   collection   Collection @relation(fields: [collectionId], references: [id])
   user         User       @relation(fields: [userId], references: [id])
+
+  @@unique([userId, collectionId])
+}
+
+model CollectionCollaborator {
+  id           String     @id @default(uuid())
+  userId       String
+  collectionId String
+  role         CollaboratorRole @default(EDITOR)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, collectionId])
 }
@@ -390,4 +405,9 @@ enum MangaListStatus {
   PRIVATE
   PUBLIC
   UNLISTED
+}
+
+enum CollaboratorRole {
+  EDITOR
+  ADMIN
 }
