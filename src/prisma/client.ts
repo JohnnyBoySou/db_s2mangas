@@ -1,28 +1,7 @@
 import { PrismaClient } from '@prisma/client'
+import { createCachedPrismaClient } from '@/utils/prismaCache'
 
-const prisma = new PrismaClient({
-    // Log all queries and errors
-    log: ['query', 'info', 'warn', 'error'],
-
-    // Configure database connection
-    datasources: {
-        db: {
-            url: process.env.DATABASE_URL
-        }
-    },
-
-    // Configure query error handling
-    errorFormat: 'pretty',
-
-    // Configure connection pool
-    /* connection: {
-       pool: {
-         min: 3,
-         max: 10
-       }
-     }
-       */
-})
+const prisma = createCachedPrismaClient()
 
 async function connectWithRetry(retries = 5, delay = 5000) {
     while (retries > 0) {
@@ -45,5 +24,4 @@ async function connectWithRetry(retries = 5, delay = 5000) {
 }
 
 connectWithRetry()
-
 export default prisma

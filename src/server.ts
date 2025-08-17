@@ -6,6 +6,8 @@ import { warmupCache } from '@/middlewares/smartCache';
 import { logger } from '@/utils/logger';
 import { specs } from '@/config/swagger';
 import { setupScalarDocs } from '@/middlewares/scalarDocs';
+import { observabilityMiddleware, errorObservabilityMiddleware } from '@/middlewares/observability';
+import metricsRouter from '@/routes/metrics';
 
 // ✅ Novo padrão de modulos 
 import { DiscoverRouter } from '@/modules/discover/routes/DiscoverRouter'; 
@@ -34,6 +36,9 @@ import { SummaryRouter } from '@/modules/summary/routes/SummaryRouter';
 const uploadsDir = process.env.RAILWAY_VOLUME_MOUNT_PATH || process.env.UPLOAD_DIR || "/data/uploads";
 
 const app = express()
+
+// Middleware de observabilidade (deve vir primeiro)
+app.use(observabilityMiddleware);
 
 // Aumenta o limite para 50MB
 app.use(express.json({ limit: '50mb' }));
@@ -108,6 +113,9 @@ app.use('/docs', swaggerUi.serve, swaggerUi.setup(specs, {
 // Configurar o proxy para a API do MangaDex
 //app.use('/api/mangadx', mangaDexProxy);
 
+// Rotas de métricas e observabilidade
+app.use('/metrics', metricsRouter);
+
 // Healthcheck simples para o Railway
 app.get('/health', (_req, res) => {
   try {
@@ -159,6 +167,9 @@ app.get('/', (_req, res) => {
     }
   })
 })
+
+// Middleware de erro de observabilidade (deve vir por último)
+app.use(errorObservabilityMiddleware);
 
 app.listen(process.env.PORT || 3000, async () => {
   const port = process.env.PORT || 3000;

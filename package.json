@@ -33,6 +33,7 @@
     "railway:diagnose": "ts-node -r tsconfig-paths/register src/scripts/diagnoseDatabase.ts",
     "railway:troubleshoot": "ts-node -r tsconfig-paths/register src/scripts/railwayTroubleshoot.ts",
     "railway:quick-check": "ts-node -r tsconfig-paths/register src/scripts/quickCheck.ts",
+    "observability:test": "ts-node -r tsconfig-paths/register src/scripts/testObservability.ts",
     "postinstall": "npx prisma generate"
   },
   "prisma": {

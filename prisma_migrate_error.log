@@ -1,7 +1,0 @@
-[1m[31mError: [39m[22m[31mP3006
-
-[39m[31mMigration `20250619233236_add_review_votes` failed to apply cleanly to the shadow database. 
-Error code: P1014
-Error:
-The underlying table for model `Review` does not exist.[39m
-

@@ -4,7 +4,7 @@ import prisma from "@/prisma/client";
 import { getRedisClient } from "@/config/redis";
 
 const JWT_SECRET = process.env.JWT_SECRET!;
-const ADMIN_CACHE_TTL = 60 * 60; // 1 hora em segundos
+const ADMIN_CACHE_TTL = 60 * 60;
 
 export const requireAuth: RequestHandler = async (req, res, next) => {
   const token = req.headers.authorization?.split(" ")[1];
@@ -33,21 +33,21 @@ export const requireAdmin: RequestHandler = async (req, res, next) => {
       return;
     }
 
-    const redis = getRedisClient();
+    // const redis = getRedisClient();
 
-    // Tenta buscar do cache primeiro
-    const cacheKey = `admin:${userId}`;
-    const cachedIsAdmin = await redis?.get(cacheKey);
+    // // Tenta buscar do cache primeiro
+    // const cacheKey = `admin:${userId}`;
+    // const cachedIsAdmin = await redis?.get(cacheKey);
 
-    if (cachedIsAdmin !== null) {
-      if (cachedIsAdmin === 'true') {
-        next();
-        return;
-      } else {
-        res.status(403).json({ message: "Acesso negado. Apenas administradores podem acessar este recurso." });
-        return;
-      }
-    }
+    // if (cachedIsAdmin !== null) {
+    //   if (cachedIsAdmin === 'true') {
+    //     next();
+    //     return;
+    //   } else {
+    //     res.status(403).json({ message: "Acesso negado. Apenas administradores podem acessar este recurso." });
+    //     return;
+    //   }
+    // }
 
     // Se não estiver em cache, busca do banco
     const user = await prisma.user.findUnique({
@@ -56,8 +56,8 @@ export const requireAdmin: RequestHandler = async (req, res, next) => {
     });
 
     // Salva no cache
-    await redis?.set(cacheKey, user?.isAdmin ? 'true' : 'false');
-    await redis?.expire(cacheKey, ADMIN_CACHE_TTL);
+    // await redis?.set(cacheKey, user?.isAdmin ? 'true' : 'false');
+    // await redis?.expire(cacheKey, ADMIN_CACHE_TTL);
 
     if (!user?.isAdmin) {
       res.status(403).json({ message: "Acesso negado. Apenas administradores podem acessar este recurso." });
