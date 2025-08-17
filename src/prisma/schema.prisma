@@ -77,55 +77,55 @@ model Language {
 }
 
 model User {
-  id                    String           @id @default(uuid())
-  name                  String
-  email                 String           @unique
-  createdAt             DateTime         @default(now())
-  avatar                String?
-  bio                   String?
-  birthdate             DateTime?
-  coins                 Int              @default(0)
-  cover                 String?
-  password              String
-  updatedAt             DateTime         @updatedAt
-  username              String           @unique
-  resetToken            String?
-  resetTokenExp         DateTime?
-  emailVerificationCode String?
-  emailVerificationExp  DateTime?
-  emailVerified         Boolean          @default(false)
-  isAdmin               Boolean          @default(false)
-  collections           Collection[]
-  collectionLikes       CollectionLike[]
+  id                       String                   @id @default(uuid())
+  name                     String
+  email                    String                   @unique
+  createdAt                DateTime                 @default(now())
+  avatar                   String?
+  bio                      String?
+  birthdate                DateTime?
+  coins                    Int                      @default(0)
+  cover                    String?
+  password                 String
+  updatedAt                DateTime                 @updatedAt
+  username                 String                   @unique
+  resetToken               String?
+  resetTokenExp            DateTime?
+  emailVerificationCode    String?
+  emailVerificationExp     DateTime?
+  emailVerified            Boolean                  @default(false)
+  isAdmin                  Boolean                  @default(false)
+  collections              Collection[]
   collectionCollaborations CollectionCollaborator[]
-  comments              Comment[]
-  libraryEntries        LibraryEntry[]
-  likes                 Like[]
-  mangaListLikes        MangaListLike[]
-  following             ProfileFollow[]  @relation("UserFollowing")
-  followers             ProfileFollow[]  @relation("UserFollowers")
-  profileLikedBy        ProfileLike[]    @relation("ProfileLikedBy")
-  profileLikes          ProfileLike[]    @relation("ProfileLikes")
-  reviews               Review[]
-  reviewVotes           ReviewVote[]
-  views                 View[]
-  categories            Category[]       @relation("UserCategories")
-  languages             Language[]       @relation("UserLanguages")
+  collectionLikes          CollectionLike[]
+  comments                 Comment[]
+  libraryEntries           LibraryEntry[]
+  likes                    Like[]
+  mangaListLikes           MangaListLike[]
+  following                ProfileFollow[]          @relation("UserFollowing")
+  followers                ProfileFollow[]          @relation("UserFollowers")
+  profileLikedBy           ProfileLike[]            @relation("ProfileLikedBy")
+  profileLikes             ProfileLike[]            @relation("ProfileLikes")
+  reviews                  Review[]
+  reviewVotes              ReviewVote[]
+  views                    View[]
+  categories               Category[]               @relation("UserCategories")
+  languages                Language[]               @relation("UserLanguages")
 }
 
 model Collection {
-  id          String           @id @default(uuid())
-  userId      String
-  name        String
-  cover       String
-  description String?
-  status      CollectionStatus @default(PRIVATE)
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-  user        User             @relation(fields: [userId], references: [id])
-  likes       CollectionLike[]
-  mangas      Manga[]          @relation("CollectionMangas")
+  id            String                   @id @default(uuid())
+  userId        String
+  name          String
+  cover         String
+  description   String?
+  status        CollectionStatus         @default(PRIVATE)
+  createdAt     DateTime                 @default(now())
+  updatedAt     DateTime                 @updatedAt
+  user          User                     @relation(fields: [userId], references: [id])
   collaborators CollectionCollaborator[]
+  likes         CollectionLike[]
+  mangas        Manga[]                  @relation("CollectionMangas")
 }
 
 model CollectionLike {
@@ -140,14 +140,14 @@ model CollectionLike {
 }
 
 model CollectionCollaborator {
-  id           String     @id @default(uuid())
+  id           String           @id @default(uuid())
   userId       String
   collectionId String
   role         CollaboratorRole @default(EDITOR)
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
-  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  collection   Collection       @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, collectionId])
 }
@@ -176,7 +176,7 @@ model Notification {
   updatedAt DateTime @updatedAt
   type      String
   data      Json?
-  cover     String?  // URL da imagem de cover da notificação
+  cover     String?
 
   @@index([createdAt])
 }
@@ -262,7 +262,7 @@ model Playlist {
 model Tag {
   id        String        @id @default(uuid())
   name      String        @unique
-  color     String?       // Cor hexadecimal para a tag (opcional)
+  color     String?
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
   playlists PlaylistTag[]

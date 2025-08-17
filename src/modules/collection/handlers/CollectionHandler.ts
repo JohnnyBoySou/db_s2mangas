@@ -60,7 +60,6 @@ export const listCollections = async (userId: string, page: number, take: number
                     }
                 },
                 collaborators: {
-                    where: { userId },
                     include: {
                         user: {
                             select: {
