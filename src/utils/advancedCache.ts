@@ -337,7 +337,7 @@ export async function cleanupL2Cache(): Promise<void> {
     if (l2CacheSize < CACHE_CONFIG.MAX_L2_SIZE) return;
 
     const files = await fs.readdir(CACHE_CONFIG.L2_DIR);
-    const fileStats = [];
+    const fileStats: Array<{ file: string; path: string; mtime: Date; size: number }> = [];
 
     for (const file of files) {
       const filePath = path.join(CACHE_CONFIG.L2_DIR, file);

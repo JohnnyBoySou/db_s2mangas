@@ -8,11 +8,15 @@ export const mangaDexProxy = createProxyMiddleware({
     pathRewrite: {
         '^/api/mangadx': '',
     },
-    onProxyRes: function(proxyRes: any, req: Request, res: Response) {
-        proxyRes.headers['Access-Control-Allow-Origin'] = '*';
-    },
-    onError: function(err: Error, req: Request, res: Response) {
-        logger.error('Erro no proxy:', err);
-        res.status(500).json({ error: 'Erro no proxy' });
+    on: {
+        proxyRes: function(proxyRes: any, req: Request, res: Response) {
+            proxyRes.headers['Access-Control-Allow-Origin'] = '*';
+        },
+        error: function(err: Error, req: Request, res: Response | any) {
+            logger.error('Erro no proxy:', err);
+            if (res && typeof res.status === 'function') {
+                res.status(500).json({ error: 'Erro no proxy' });
+            }
+        }
     }
 });

@@ -1,4 +1,9 @@
-import { CollectionStatus } from '@prisma/client';
+// Define enum locally to avoid Prisma client import issues
+enum CollectionStatus {
+  PRIVATE = 'PRIVATE',
+  PUBLIC = 'PUBLIC'
+}
+
 import prisma from '@/prisma/client';
 import { checkUserCanEdit, checkUserCanView } from './CollaboratorHandler';
 
@@ -7,7 +12,7 @@ export const createCollection = async (data: {
     name: string;
     cover?: string;
     description?: string;
-    status: CollectionStatus;
+    status: 'PRIVATE' | 'PUBLIC';
     mangaIds?: string[];
 }) => {
     const { userId, name, cover, description, status, mangaIds } = data;
@@ -213,7 +218,7 @@ export const updateCollection = async (id: string, userId: string, data: {
     name?: string;
     cover?: string;
     description?: string;
-    status?: CollectionStatus;
+    status?: 'PRIVATE' | 'PUBLIC';
 }) => {
     // Verificar permissões de edição
     await checkUserCanEdit(id, userId);
@@ -256,7 +261,7 @@ export const listPublicCollections = async (page: number, take: number) => {
 
     const [collections, total] = await Promise.all([
         prisma.collection.findMany({
-            where: { status: CollectionStatus.PUBLIC },
+            where: { status: 'PUBLIC' },
             include: {
                 user: {
                     select: {
@@ -272,7 +277,7 @@ export const listPublicCollections = async (page: number, take: number) => {
             take,
         }),
         prisma.collection.count({
-            where: { status: CollectionStatus.PUBLIC },
+            where: { status: 'PUBLIC' },
         }),
     ]);
 

@@ -16,7 +16,7 @@ export async function cleanOrphanFiles() {
     });
 
     // Cria um Set com os IDs dos arquivos no banco
-    const dbFileIds = new Set(dbFiles.map(file => file.id));
+    const dbFileIds = new Set(dbFiles.map((file: any) => file.id));
 
     // Verifica cada arquivo físico
     for (const filename of physicalFiles) {

@@ -20,7 +20,7 @@ interface IntegrityReport {
     issues: string[];
   };
   redis: {
-    status: 'ok' | 'error';
+    status: 'ok' | 'error' | 'warning';
     issues: string[];
   };
   diskSpace: {
@@ -88,10 +88,7 @@ async function checkDatabaseIntegrity(report: IntegrityReport) {
     // Verifica usuários sem email
     const usersWithoutEmail = await prisma.user.count({
       where: {
-        OR: [
-          { email: null },
-          { email: '' }
-        ]
+        email: ''
       }
     });
     
@@ -112,10 +109,12 @@ async function checkDatabaseIntegrity(report: IntegrityReport) {
       issues.push(`${mangasWithoutTranslations} mangás sem traduções`);
     }
     
-    // Verifica capítulos órfãos
+    // Verifica capítulos órfãos (sem manga válido)
     const orphanChapters = await prisma.chapter.count({
       where: {
-        manga: null
+        manga: {
+          is: null
+        }
       }
     });
     
@@ -154,7 +153,7 @@ async function checkFilesIntegrity(report: IntegrityReport) {
       select: { id: true, filename: true }
     });
     
-    const dbFileIds = new Set(dbFiles.map(file => file.id));
+    const dbFileIds = new Set(dbFiles.map((file: any) => file.id));
     
     // Verifica arquivos órfãos (físicos sem registro no banco)
     let orphanCount = 0;
@@ -200,6 +199,12 @@ async function checkRedisIntegrity(report: IntegrityReport) {
   try {
     const { getRedisClient } = await import('@/config/redis');
     const redis = getRedisClient();
+    
+    if (!redis) {
+      report.redis.status = 'warning';
+      report.redis.issues.push('Redis não configurado (REDIS_URL ausente)');
+      return;
+    }
     
     // Testa conexão
     await redis.ping();
@@ -311,13 +316,19 @@ export async function quickHealthCheck() {
     // Testa Redis
     const { getRedisClient } = await import('@/config/redis');
     const redis = getRedisClient();
-    await redis.ping();
+    
+    let redisStatus = 'ok';
+    if (redis) {
+      await redis.ping();
+    } else {
+      redisStatus = 'not_configured';
+    }
     
     return {
       status: 'healthy',
       timestamp: new Date().toISOString(),
       database: 'ok',
-      redis: 'ok'
+      redis: redisStatus
     };
   } catch (error) {
     return {

@@ -122,11 +122,13 @@ export async function generateAnalytics(): Promise<AnalyticsReport> {
     }
 
     // Dados de engajamento
-    const [totalLikes, totalFollows, totalCollections] = await Promise.all([
+    const [totalLikes, totalCollections] = await Promise.all([
       prisma.like.count(),
-  //    prisma.follow.count(),
       prisma.collection.count(),
     ]);
+
+    // TODO: Implementar contagem de follows quando o modelo estiver disponível
+    const totalFollows = 0;
 
     const report: AnalyticsReport = {
       timestamp: now.toISOString(),
@@ -137,9 +139,9 @@ export async function generateAnalytics(): Promise<AnalyticsReport> {
       },
       mangas: {
         total: totalMangas,
-        mostViewed: mostViewedMangas.map((manga) => ({
+        mostViewed: mostViewedMangas.map((manga: any) => ({
           id: manga.id,
-          title: manga.translations[0]?.title || "Sem título",
+          title: manga.translations[0]?.name || "Sem título",
           views: Math.floor(Math.random() * 1000) + 100, // Simulado
         })),
         recentlyAdded: recentMangas,
