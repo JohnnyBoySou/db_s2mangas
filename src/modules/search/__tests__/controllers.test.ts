@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { prismaMock } from '../../../test/mocks/prisma';
 import { MANGA_TYPE } from '@/constants/search';
 
@@ -29,6 +29,7 @@ import * as searchControllers from '../controllers/SearchController';
 describe('Search Controllers', () => {
     let mockReq: Partial<Request>;
     let mockRes: Partial<Response>;
+    let mockNext: NextFunction;
     let jsonSpy: jest.SpyInstance;
     let statusSpy: jest.SpyInstance;
 
@@ -43,10 +44,11 @@ describe('Search Controllers', () => {
 
         jsonSpy = jest.fn();
         statusSpy = jest.fn().mockReturnValue({ json: jsonSpy });
+        mockNext = jest.fn();
         
         mockRes = {
-            status: statusSpy,
-            json: jsonSpy
+            status: statusSpy as any,
+            json: jsonSpy as any
         };
     });
 
@@ -85,7 +87,7 @@ describe('Search Controllers', () => {
             mockReq.params = { lg: 'pt-BR' };
             mockSearchHandlers.searchManga.mockResolvedValue(expectedResult);
 
-            await searchControllers.searchManga(mockReq as Request, mockRes as Response);
+            await searchControllers.searchManga(mockReq as Request, mockRes as Response, mockNext);
 
             expect(mockSearchHandlers.searchManga).toHaveBeenCalledWith({
                 name: 'One Piece',
@@ -117,7 +119,7 @@ describe('Search Controllers', () => {
             mockReq.body = {};
             mockSearchHandlers.searchManga.mockResolvedValue(expectedResult);
 
-            await searchControllers.searchManga(mockReq as Request, mockRes as Response);
+            await searchControllers.searchManga(mockReq as Request, mockRes as Response, mockNext);
 
             expect(mockSearchHandlers.searchManga).toHaveBeenCalledWith({
                 name: undefined,
@@ -138,7 +140,7 @@ describe('Search Controllers', () => {
             mockReq.body = { name: 'Test' };
             mockSearchHandlers.searchManga.mockResolvedValue(expectedResult);
 
-            await searchControllers.searchManga(mockReq as Request, mockRes as Response);
+            await searchControllers.searchManga(mockReq as Request, mockRes as Response, mockNext);
 
             expect(mockSearchHandlers.searchManga).toHaveBeenCalledWith(
                 expect.objectContaining({
@@ -152,7 +154,7 @@ describe('Search Controllers', () => {
             mockReq.body = { name: 'Test' };
             mockSearchHandlers.searchManga.mockRejectedValue(error);
 
-            await searchControllers.searchManga(mockReq as Request, mockRes as Response);
+            await searchControllers.searchManga(mockReq as Request, mockRes as Response, mockNext);
 
             expect(mockHandleZodError).toHaveBeenCalledWith(error, mockRes);
         });
@@ -167,7 +169,7 @@ describe('Search Controllers', () => {
 
             mockSearchHandlers.listCategories.mockResolvedValue(expectedCategories);
 
-            await searchControllers.listCategories(mockReq as Request, mockRes as Response);
+            await searchControllers.listCategories(mockReq as Request, mockRes as Response, mockNext);
 
             expect(mockSearchHandlers.listCategories).toHaveBeenCalled();
             expect(statusSpy).toHaveBeenCalledWith(200);
@@ -178,7 +180,7 @@ describe('Search Controllers', () => {
             const error = new Error('Database error');
             mockSearchHandlers.listCategories.mockRejectedValue(error);
 
-            await searchControllers.listCategories(mockReq as Request, mockRes as Response);
+            await searchControllers.listCategories(mockReq as Request, mockRes as Response, mockNext);
 
             expect(mockHandleZodError).toHaveBeenCalledWith(error, mockRes);
         });
@@ -212,7 +214,7 @@ describe('Search Controllers', () => {
             mockReq.params = { lg: 'pt-BR' };
             mockSearchHandlers.searchCategories.mockResolvedValue(expectedResult);
 
-            await searchControllers.searchCategories(mockReq as Request, mockRes as Response);
+            await searchControllers.searchCategories(mockReq as Request, mockRes as Response, mockNext);
 
             expect(mockSearchHandlers.searchCategories).toHaveBeenCalledWith(
                 'Ação',
@@ -232,7 +234,7 @@ describe('Search Controllers', () => {
             mockReq.body = searchData;
             mockSearchHandlers.searchCategories.mockResolvedValue(expectedResult);
 
-            await searchControllers.searchCategories(mockReq as Request, mockRes as Response);
+            await searchControllers.searchCategories(mockReq as Request, mockRes as Response, mockNext);
 
             expect(mockSearchHandlers.searchCategories).toHaveBeenCalledWith(
                 'Ação',
@@ -245,7 +247,7 @@ describe('Search Controllers', () => {
         it('deve retornar erro 400 quando nome não for fornecido', async () => {
             mockReq.body = {};
 
-            await searchControllers.searchCategories(mockReq as Request, mockRes as Response);
+            await searchControllers.searchCategories(mockReq as Request, mockRes as Response, mockNext);
 
             expect(statusSpy).toHaveBeenCalledWith(400);
             expect(jsonSpy).toHaveBeenCalledWith({
@@ -256,7 +258,7 @@ describe('Search Controllers', () => {
         it('deve retornar erro 400 quando nome não for string', async () => {
             mockReq.body = { name: 123 };
 
-            await searchControllers.searchCategories(mockReq as Request, mockRes as Response);
+            await searchControllers.searchCategories(mockReq as Request, mockRes as Response, mockNext);
 
             expect(statusSpy).toHaveBeenCalledWith(400);
             expect(jsonSpy).toHaveBeenCalledWith({
@@ -269,7 +271,7 @@ describe('Search Controllers', () => {
             mockReq.body = { name: 'Ação' };
             mockSearchHandlers.searchCategories.mockRejectedValue(error);
 
-            await searchControllers.searchCategories(mockReq as Request, mockRes as Response);
+            await searchControllers.searchCategories(mockReq as Request, mockRes as Response, mockNext);
 
             expect(mockHandleZodError).toHaveBeenCalledWith(error, mockRes);
         });
@@ -325,7 +327,7 @@ describe('Search Controllers', () => {
 
             mockSearchHandlers.searchManga.mockResolvedValue(expectedResult);
 
-            await searchAdvanced(mockReq as Request, mockRes as Response);
+            await searchAdvanced(mockReq as Request, mockRes as Response, mockNext);
 
             expect(mockSearchHandlers.searchManga).toHaveBeenCalledWith({
                 ...validatedData,
@@ -351,7 +353,7 @@ describe('Search Controllers', () => {
                 advancedSearchSchema: { parse: mockParse }
             }));
 
-            await searchAdvanced(mockReq as Request, mockRes as Response);
+            await searchAdvanced(mockReq as Request, mockRes as Response, mockNext);
 
             expect(mockHandleZodError).toHaveBeenCalledWith(error, mockRes);
         });
@@ -361,7 +363,7 @@ describe('Search Controllers', () => {
         it('deve listar todos os tipos de mangá', async () => {
             const expectedTypes = Object.values(MANGA_TYPE);
 
-            await searchControllers.listTypes(mockReq as Request, mockRes as Response);
+            await searchControllers.listTypes(mockReq as Request, mockRes as Response, mockNext);
 
             expect(statusSpy).toHaveBeenCalledWith(200);
             expect(jsonSpy).toHaveBeenCalledWith(expectedTypes);
@@ -374,7 +376,7 @@ describe('Search Controllers', () => {
                 throw new Error('Object error');
             });
 
-            await searchControllers.listTypes(mockReq as Request, mockRes as Response);
+            await searchControllers.listTypes(mockReq as Request, mockRes as Response, mockNext);
 
             expect(mockHandleZodError).toHaveBeenCalled();
 
@@ -392,7 +394,7 @@ describe('Search Controllers', () => {
 
             mockSearchHandlers.listLanguages.mockResolvedValue(expectedLanguages);
 
-            await searchControllers.listLanguages(mockReq as Request, mockRes as Response);
+            await searchControllers.listLanguages(mockReq as Request, mockRes as Response, mockNext);
 
             expect(mockSearchHandlers.listLanguages).toHaveBeenCalled();
             expect(statusSpy).toHaveBeenCalledWith(200);
@@ -403,7 +405,7 @@ describe('Search Controllers', () => {
             const error = new Error('Database error');
             mockSearchHandlers.listLanguages.mockRejectedValue(error);
 
-            await searchControllers.listLanguages(mockReq as Request, mockRes as Response);
+            await searchControllers.listLanguages(mockReq as Request, mockRes as Response, mockNext);
 
             expect(mockHandleZodError).toHaveBeenCalledWith(error, mockRes);
         });

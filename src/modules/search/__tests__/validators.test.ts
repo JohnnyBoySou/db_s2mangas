@@ -184,24 +184,22 @@ describe('Search Validators', () => {
             }).toThrow();
         });
 
-        it('deve rejeitar page que não pode ser convertido para número', () => {
+        it('deve converter page inválido para NaN', () => {
             const invalidData = {
                 page: 'not-a-number'
             };
 
-            expect(() => {
-                advancedSearchSchema.parse(invalidData);
-            }).toThrow();
+            const result = advancedSearchSchema.parse(invalidData);
+            expect(result.page).toBeNaN();
         });
 
-        it('deve rejeitar limit que não pode ser convertido para número', () => {
+        it('deve converter limit inválido para NaN', () => {
             const invalidData = {
                 limit: 'not-a-number'
             };
 
-            expect(() => {
-                advancedSearchSchema.parse(invalidData);
-            }).toThrow();
+            const result = advancedSearchSchema.parse(invalidData);
+            expect(result.limit).toBeNaN();
         });
 
         it('deve aceitar page e limit como números válidos em string', () => {

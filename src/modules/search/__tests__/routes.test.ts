@@ -1,6 +1,5 @@
 import request from 'supertest';
 import express from 'express';
-import { SearchRouter } from '../routes/SearchRouter';
 
 // Mock dos middlewares
 const mockRequireAuth = jest.fn((req, res, next) => {
@@ -26,16 +25,18 @@ jest.mock('@/config/redis', () => ({
 }));
 
 // Mock dos controllers
-const mockControllers = {
+jest.mock('../controllers/SearchController', () => ({
     searchManga: jest.fn((req, res) => res.status(200).json({ data: [], pagination: {} })),
     searchAdvanced: jest.fn((req, res) => res.status(200).json({ data: [], pagination: {} })),
     listTypes: jest.fn((req, res) => res.status(200).json(['Manga', 'Manhwa'])),
     searchCategories: jest.fn((req, res) => res.status(200).json({ data: [], pagination: {} })),
     listCategories: jest.fn((req, res) => res.status(200).json([])),
     listLanguages: jest.fn((req, res) => res.status(200).json([]))
-};
+}));
 
-jest.mock('../controllers/SearchController', () => mockControllers);
+// Get the mocked controllers and import SearchRouter after mocks
+const mockControllers = require('../controllers/SearchController');
+import { SearchRouter } from '../routes/SearchRouter';
 
 describe('Search Router', () => {
     let app: express.Application;

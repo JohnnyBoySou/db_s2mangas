@@ -67,8 +67,8 @@ describe('Search Handlers', () => {
             const mockResult = [mockManga];
             const mockCount = 1;
 
-            prismaMock.manga.findMany.mockResolvedValue(mockResult);
-            prismaMock.manga.count.mockResolvedValue(mockCount);
+            (prismaMock.manga.findMany as jest.Mock).mockResolvedValue(mockResult);
+            (prismaMock.manga.count as jest.Mock).mockResolvedValue(mockCount);
 
             const result = await searchHandlers.searchManga({
                 name: 'One Piece',
@@ -163,8 +163,8 @@ describe('Search Handlers', () => {
             const mockResult = [mockManga];
             const mockCount = 1;
 
-            prismaMock.manga.findMany.mockResolvedValue(mockResult);
-            prismaMock.manga.count.mockResolvedValue(mockCount);
+            (prismaMock.manga.findMany as jest.Mock).mockResolvedValue(mockResult);
+            (prismaMock.manga.count as jest.Mock).mockResolvedValue(mockCount);
 
             const result = await searchHandlers.searchManga({
                 category: 'Ação',
@@ -195,8 +195,8 @@ describe('Search Handlers', () => {
             const mockResult = [mockManga];
             const mockCount = 1;
 
-            prismaMock.manga.findMany.mockResolvedValue(mockResult);
-            prismaMock.manga.count.mockResolvedValue(mockCount);
+            (prismaMock.manga.findMany as jest.Mock).mockResolvedValue(mockResult);
+            (prismaMock.manga.count as jest.Mock).mockResolvedValue(mockCount);
 
             const result = await searchHandlers.searchManga({
                 status: MANGA_STATUS.ONGOING,
@@ -223,8 +223,8 @@ describe('Search Handlers', () => {
             const mockResult = [mockManga];
             const mockCount = 1;
 
-            prismaMock.manga.findMany.mockResolvedValue(mockResult);
-            prismaMock.manga.count.mockResolvedValue(mockCount);
+            (prismaMock.manga.findMany as jest.Mock).mockResolvedValue(mockResult);
+            (prismaMock.manga.count as jest.Mock).mockResolvedValue(mockCount);
 
             const result = await searchHandlers.searchManga({
                 type: MANGA_TYPE.MANGA,
@@ -251,8 +251,8 @@ describe('Search Handlers', () => {
             const mockResult = [mockManga];
             const mockCount = 25;
 
-            prismaMock.manga.findMany.mockResolvedValue(mockResult);
-            prismaMock.manga.count.mockResolvedValue(mockCount);
+            (prismaMock.manga.findMany as jest.Mock).mockResolvedValue(mockResult);
+            (prismaMock.manga.count as jest.Mock).mockResolvedValue(mockCount);
 
             const result = await searchHandlers.searchManga({
                 page: 3,
@@ -278,8 +278,8 @@ describe('Search Handlers', () => {
             const mockResult = [mockManga];
             const mockCount = 1;
 
-            prismaMock.manga.findMany.mockResolvedValue(mockResult);
-            prismaMock.manga.count.mockResolvedValue(mockCount);
+            (prismaMock.manga.findMany as jest.Mock).mockResolvedValue(mockResult);
+            (prismaMock.manga.count as jest.Mock).mockResolvedValue(mockCount);
 
             const result = await searchHandlers.searchManga({});
 
@@ -308,8 +308,8 @@ describe('Search Handlers', () => {
             const mockResult = [mockManga];
             const mockCount = 1;
 
-            prismaMock.manga.findMany.mockResolvedValue(mockResult);
-            prismaMock.manga.count.mockResolvedValue(mockCount);
+            (prismaMock.manga.findMany as jest.Mock).mockResolvedValue(mockResult);
+            (prismaMock.manga.count as jest.Mock).mockResolvedValue(mockCount);
 
             await searchHandlers.searchManga({
                 limit: 100 // Acima do limite máximo
@@ -323,8 +323,8 @@ describe('Search Handlers', () => {
         });
 
         it('deve lidar com resultados vazios', async () => {
-            prismaMock.manga.findMany.mockResolvedValue([]);
-            prismaMock.manga.count.mockResolvedValue(0);
+            (prismaMock.manga.findMany as jest.Mock).mockResolvedValue([]);
+            (prismaMock.manga.count as jest.Mock).mockResolvedValue(0);
 
             const result = await searchHandlers.searchManga({
                 name: 'mangá inexistente'
@@ -343,7 +343,7 @@ describe('Search Handlers', () => {
                 { ...mockCategory, id: 'cat-456', name: 'Romance' }
             ];
 
-            prismaMock.category.findMany.mockResolvedValue(mockCategories);
+            (prismaMock.category.findMany as jest.Mock).mockResolvedValue(mockCategories);
 
             const result = await searchHandlers.listCategories();
 
@@ -357,7 +357,7 @@ describe('Search Handlers', () => {
         });
 
         it('deve retornar array vazio quando não há categorias', async () => {
-            prismaMock.category.findMany.mockResolvedValue([]);
+            (prismaMock.category.findMany as jest.Mock).mockResolvedValue([]);
 
             const result = await searchHandlers.listCategories();
 
@@ -370,8 +370,8 @@ describe('Search Handlers', () => {
             const mockResult = [mockManga];
             const mockCount = 1;
 
-            prismaMock.manga.findMany.mockResolvedValue(mockResult);
-            prismaMock.manga.count.mockResolvedValue(mockCount);
+            (prismaMock.manga.findMany as jest.Mock).mockResolvedValue(mockResult);
+            (prismaMock.manga.count as jest.Mock).mockResolvedValue(mockCount);
 
             const result = await searchHandlers.searchCategories('Ação', 1, 10, 'pt-BR');
 
@@ -418,8 +418,8 @@ describe('Search Handlers', () => {
             const mockResult = [mockManga];
             const mockCount = 15;
 
-            prismaMock.manga.findMany.mockResolvedValue(mockResult);
-            prismaMock.manga.count.mockResolvedValue(mockCount);
+            (prismaMock.manga.findMany as jest.Mock).mockResolvedValue(mockResult);
+            (prismaMock.manga.count as jest.Mock).mockResolvedValue(mockCount);
 
             const result = await searchHandlers.searchCategories('Ação', 2, 5, 'pt-BR');
 
@@ -455,7 +455,7 @@ describe('Search Handlers', () => {
                 { ...mockLanguage, id: 'lang-456', name: 'English', code: 'en' }
             ];
 
-            prismaMock.language.findMany.mockResolvedValue(mockLanguages);
+            (prismaMock.language.findMany as jest.Mock).mockResolvedValue(mockLanguages);
 
             const result = await searchHandlers.listLanguages();
 
@@ -469,7 +469,7 @@ describe('Search Handlers', () => {
         });
 
         it('deve retornar array vazio quando não há linguagens', async () => {
-            prismaMock.language.findMany.mockResolvedValue([]);
+            (prismaMock.language.findMany as jest.Mock).mockResolvedValue([]);
 
             const result = await searchHandlers.listLanguages();
 

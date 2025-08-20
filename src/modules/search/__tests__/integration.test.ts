@@ -85,8 +85,8 @@ describe('Search Integration Tests', () => {
 
     describe('POST /search/ - Busca básica de mangás', () => {
         it('deve realizar busca básica com sucesso', async () => {
-            prismaMock.manga.findMany.mockResolvedValue([mockManga]);
-            prismaMock.manga.count.mockResolvedValue(1);
+            (prismaMock.manga.findMany as jest.Mock).mockResolvedValue([mockManga]);
+            (prismaMock.manga.count as jest.Mock).mockResolvedValue(1);
 
             const response = await request(app)
                 .post('/search/')
@@ -115,8 +115,8 @@ describe('Search Integration Tests', () => {
         });
 
         it('deve retornar resultados vazios quando não encontrar mangás', async () => {
-            prismaMock.manga.findMany.mockResolvedValue([]);
-            prismaMock.manga.count.mockResolvedValue(0);
+            (prismaMock.manga.findMany as jest.Mock).mockResolvedValue([]);
+            (prismaMock.manga.count as jest.Mock).mockResolvedValue(0);
 
             const response = await request(app)
                 .post('/search/')
@@ -135,8 +135,8 @@ describe('Search Integration Tests', () => {
         });
 
         it('deve filtrar por status corretamente', async () => {
-            prismaMock.manga.findMany.mockResolvedValue([mockManga]);
-            prismaMock.manga.count.mockResolvedValue(1);
+            (prismaMock.manga.findMany as jest.Mock).mockResolvedValue([mockManga]);
+            (prismaMock.manga.count as jest.Mock).mockResolvedValue(1);
 
             await request(app)
                 .post('/search/')
@@ -158,8 +158,8 @@ describe('Search Integration Tests', () => {
         });
 
         it('deve filtrar por tipo corretamente', async () => {
-            prismaMock.manga.findMany.mockResolvedValue([mockManga]);
-            prismaMock.manga.count.mockResolvedValue(1);
+            (prismaMock.manga.findMany as jest.Mock).mockResolvedValue([mockManga]);
+            (prismaMock.manga.count as jest.Mock).mockResolvedValue(1);
 
             await request(app)
                 .post('/search/')
@@ -181,13 +181,13 @@ describe('Search Integration Tests', () => {
         });
     });
 
-    describe('GET /search/advanced - Busca avançada', () => {
+    describe('GET /search/advenced - Busca avançada', () => {
         it('deve realizar busca avançada com múltiplos filtros', async () => {
-            prismaMock.manga.findMany.mockResolvedValue([mockManga]);
-            prismaMock.manga.count.mockResolvedValue(1);
+            (prismaMock.manga.findMany as jest.Mock).mockResolvedValue([mockManga]);
+            (prismaMock.manga.count as jest.Mock).mockResolvedValue(1);
 
             const response = await request(app)
-                .get('/search/advanced')
+                .get('/search/advenced')
                 .query({
                     name: 'One Piece',
                     status: MANGA_STATUS.ONGOING,
@@ -220,7 +220,7 @@ describe('Search Integration Tests', () => {
 
         it('deve validar parâmetros de query', async () => {
             const response = await request(app)
-                .get('/search/advanced')
+                .get('/search/advenced')
                 .query({
                     status: 'Status Inválido',
                     type: 'Tipo Inválido'
@@ -233,11 +233,11 @@ describe('Search Integration Tests', () => {
         });
 
         it('deve usar valores padrão para parâmetros opcionais', async () => {
-            prismaMock.manga.findMany.mockResolvedValue([]);
-            prismaMock.manga.count.mockResolvedValue(0);
+            (prismaMock.manga.findMany as jest.Mock).mockResolvedValue([]);
+            (prismaMock.manga.count as jest.Mock).mockResolvedValue(0);
 
             await request(app)
-                .get('/search/advanced')
+                .get('/search/advenced')
                 .expect(200);
 
             expect(prismaMock.manga.findMany).toHaveBeenCalledWith(
@@ -259,7 +259,7 @@ describe('Search Integration Tests', () => {
                 { id: 'cat-2', name: 'Romance', createdAt: new Date(), updatedAt: new Date() }
             ];
 
-            prismaMock.category.findMany.mockResolvedValue(mockCategories);
+            (prismaMock.category.findMany as jest.Mock).mockResolvedValue(mockCategories);
 
             const response = await request(app)
                 .get('/search/categories')
@@ -276,8 +276,8 @@ describe('Search Integration Tests', () => {
 
     describe('POST /search/categories - Buscar por categoria', () => {
         it('deve buscar mangás por categoria', async () => {
-            prismaMock.manga.findMany.mockResolvedValue([mockManga]);
-            prismaMock.manga.count.mockResolvedValue(1);
+            (prismaMock.manga.findMany as jest.Mock).mockResolvedValue([mockManga]);
+            (prismaMock.manga.count as jest.Mock).mockResolvedValue(1);
 
             const response = await request(app)
                 .post('/search/categories')
@@ -359,7 +359,7 @@ describe('Search Integration Tests', () => {
                 { id: 'lang-2', name: 'English', code: 'en', createdAt: new Date(), updatedAt: new Date() }
             ];
 
-            prismaMock.language.findMany.mockResolvedValue(mockLanguages);
+            (prismaMock.language.findMany as jest.Mock).mockResolvedValue(mockLanguages);
 
             const response = await request(app)
                 .get('/search/languages')
@@ -376,7 +376,7 @@ describe('Search Integration Tests', () => {
 
     describe('Fluxos de erro', () => {
         it('deve tratar erros de banco de dados na busca de mangás', async () => {
-            prismaMock.manga.findMany.mockRejectedValue(new Error('Database error'));
+            (prismaMock.manga.findMany as jest.Mock).mockRejectedValue(new Error('Database error'));
 
             const response = await request(app)
                 .post('/search/')
@@ -389,7 +389,7 @@ describe('Search Integration Tests', () => {
         });
 
         it('deve tratar erros de banco de dados na listagem de categorias', async () => {
-            prismaMock.category.findMany.mockRejectedValue(new Error('Database error'));
+            (prismaMock.category.findMany as jest.Mock).mockRejectedValue(new Error('Database error'));
 
             const response = await request(app)
                 .get('/search/categories')
@@ -401,7 +401,7 @@ describe('Search Integration Tests', () => {
         });
 
         it('deve tratar erros de banco de dados na listagem de linguagens', async () => {
-            prismaMock.language.findMany.mockRejectedValue(new Error('Database error'));
+            (prismaMock.language.findMany as jest.Mock).mockRejectedValue(new Error('Database error'));
 
             const response = await request(app)
                 .get('/search/languages')
@@ -421,8 +421,8 @@ describe('Search Integration Tests', () => {
                 title: `Manga ${i}`
             }));
 
-            prismaMock.manga.findMany.mockResolvedValue(mangaList);
-            prismaMock.manga.count.mockResolvedValue(25);
+            (prismaMock.manga.findMany as jest.Mock).mockResolvedValue(mangaList);
+            (prismaMock.manga.count as jest.Mock).mockResolvedValue(25);
 
             const response = await request(app)
                 .post('/search/')
@@ -450,8 +450,8 @@ describe('Search Integration Tests', () => {
         });
 
         it('deve limitar o número máximo de itens por página', async () => {
-            prismaMock.manga.findMany.mockResolvedValue([]);
-            prismaMock.manga.count.mockResolvedValue(0);
+            (prismaMock.manga.findMany as jest.Mock).mockResolvedValue([]);
+            (prismaMock.manga.count as jest.Mock).mockResolvedValue(0);
 
             await request(app)
                 .post('/search/')
@@ -478,10 +478,10 @@ describe('Search Integration Tests', () => {
             ];
 
             // Mock de categorias e linguagens para rotas que precisam
-            prismaMock.category.findMany.mockResolvedValue([]);
-            prismaMock.language.findMany.mockResolvedValue([]);
-            prismaMock.manga.findMany.mockResolvedValue([]);
-            prismaMock.manga.count.mockResolvedValue(0);
+            (prismaMock.category.findMany as jest.Mock).mockResolvedValue([]);
+            (prismaMock.language.findMany as jest.Mock).mockResolvedValue([]);
+            (prismaMock.manga.findMany as jest.Mock).mockResolvedValue([]);
+            (prismaMock.manga.count as jest.Mock).mockResolvedValue(0);
 
             for (const route of publicRoutes) {
                 const response = route.method === 'get' 
