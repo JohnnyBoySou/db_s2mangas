@@ -89,10 +89,6 @@ app.get('/api-docs.json', (_req, res) => {
   res.send(specs);
 });
 
-// Configurar Scalar docs de forma assíncrona
-setupScalarDocs(app).catch(error => {
-  console.warn('⚠️ Erro ao configurar Scalar docs:', error);
-});
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(specs, {
   customCss: '.swagger-ui .topbar { display: none }',
   customSiteTitle: 'S2Mangas API Documentation',
@@ -171,18 +167,34 @@ app.get('/', (_req, res) => {
 // Middleware de erro de observabilidade (deve vir por último)
 app.use(errorObservabilityMiddleware);
 
-app.listen(process.env.PORT || 3000, async () => {
-  const port = process.env.PORT || 3000;
-  console.log(`✅ Servidor inciado com sucesso! \n✅ Rodando em http://localhost:${port}`)
-  
-  // Inicializar cache warming
+// Configurar Scalar docs antes de iniciar o servidor
+async function startServer() {
   try {
-    logger.info('Iniciando cache warming...');
-    await warmupCache();
-    logger.info('Cache warming concluído');
+    // Configurar Scalar docs
+    await setupScalarDocs(app);
+    console.log('✅ Scalar docs configurado com sucesso');
   } catch (error) {
-    logger.error('Erro no cache warming:', error);
+    console.warn('⚠️ Erro ao configurar Scalar docs:', error);
   }
-})
+
+  app.listen(process.env.PORT || 3000, async () => {
+    const port = process.env.PORT || 3000;
+    console.log(`✅ Servidor inciado com sucesso! \n✅ Rodando em http://localhost:${port}`)
+    
+    // Inicializar cache warming
+    try {
+      logger.info('Iniciando cache warming...');
+      await warmupCache();
+      logger.info('Cache warming concluído');
+    } catch (error) {
+      logger.error('Erro no cache warming:', error);
+    }
+  })
+}
+
+// Iniciar servidor apenas se este arquivo for executado diretamente
+if (require.main === module) {
+  startServer();
+}
 
 export default app;
