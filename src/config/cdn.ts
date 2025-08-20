@@ -72,10 +72,18 @@ export const cdnMiddleware = (type: keyof typeof CONTENT_TYPES) => {
       // Para imagens, tentar servir do cache otimizado
       if (type === 'images' && req.params.id) {
         const { resolution = 'medium', format = 'webp' } = req.query;
+        
+        // Validar parâmetros de entrada
+        const validResolutions = ['small', 'medium', 'large'];
+        const validFormats = ['jpeg', 'jpg', 'png', 'webp', 'avif'];
+        
+        const safeResolution = validResolutions.includes(resolution as string) ? resolution as string : 'medium';
+        const safeFormat = validFormats.includes(format as string) ? format as string : 'webp';
+        
         const cachedImage = await getCachedImage(
           req.params.id,
-          resolution as string,
-          format as string
+          safeResolution,
+          safeFormat
         );
 
         if (cachedImage) {
@@ -188,6 +196,12 @@ export const imageOptimizationMiddleware = () => {
       } else {
         req.query.format = 'jpeg';
       }
+    } else {
+      // Validar formato fornecido
+      const validFormats = ['jpeg', 'jpg', 'png', 'webp', 'avif'];
+      if (!validFormats.includes(req.query.format as string)) {
+        req.query.format = 'webp';
+      }
     }
     
     if (!req.query.resolution) {
@@ -195,6 +209,12 @@ export const imageOptimizationMiddleware = () => {
         req.query.resolution = isRetina ? 'medium' : 'small';
       } else {
         req.query.resolution = isRetina ? 'large' : 'medium';
+      }
+    } else {
+      // Validar resolução fornecida
+      const validResolutions = ['small', 'medium', 'large'];
+      if (!validResolutions.includes(req.query.resolution as string)) {
+        req.query.resolution = 'medium';
       }
     }
     
