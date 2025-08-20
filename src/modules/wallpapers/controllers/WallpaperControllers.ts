@@ -600,7 +600,7 @@ export const getWallpapers: RequestHandler = async (req, res) => {
   } catch (error) {
     console.error("Erro ao buscar wallpapers no controller:", error);
     if (error instanceof Error) {
-      res.status(500).json({ error: error.message });
+      return res.status(500).json({ error: error.message });
     }
     res.status(500).json({ error: 'Erro interno ao buscar wallpapers' });
   }
@@ -614,7 +614,7 @@ export const getWallpaperById: RequestHandler = async (req, res) => {
     res.json(wallpaper);
   } catch (error) {
     if (error instanceof Error && error.message === 'Wallpaper não encontrado') {
-      res.status(404).json({ error: error.message });
+      return res.status(404).json({ error: error.message });
     }
     handleZodError(error, res);
   }
@@ -668,7 +668,7 @@ export const toggleWallpaperImage: RequestHandler = async (req, res) => {
   const { image } = req.body;
 
   if (!image) {
-    res.status(400).json({ error: 'URL da imagem é obrigatória' });
+    return res.status(400).json({ error: 'URL da imagem é obrigatória' });
   }
 
   try {
@@ -676,7 +676,7 @@ export const toggleWallpaperImage: RequestHandler = async (req, res) => {
     res.json(result);
   } catch (error) {
     if (error instanceof Error && error.message === 'Wallpaper não encontrado') {
-      res.status(404).json({ error: error.message });
+      return res.status(404).json({ error: error.message });
     }
     handleZodError(error, res);
   }
@@ -687,7 +687,7 @@ export const importPinterestWallpaper: RequestHandler = async (req, res) => {
     const { pinterestUrl } = req.body;
 
     if (!pinterestUrl) {
-      res.status(400).json({
+      return res.status(400).json({
         success: false,
         message: 'URL do Pinterest é obrigatória'
       });
@@ -699,7 +699,7 @@ export const importPinterestWallpaper: RequestHandler = async (req, res) => {
     console.error('Erro no controller importPinterestWallpaper:', error);
     res.status(500).json({
       success: false,
-      message: error.message ?? 'Erro ao importar wallpaper do Pinterest'
+      message: error.message || 'Erro ao importar wallpaper do Pinterest'
     });
   }
 };
