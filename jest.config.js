@@ -18,8 +18,8 @@ module.exports = {
     'src/modules/**/routers/**/*.{ts,tsx}',
     'src/modules/**/handlers/**/*.{ts,tsx}',
     'src/modules/**/controllers/**/*.{ts,tsx}',
-    'src/middlewares/**/*.{ts,tsx}',
-    'src/utils/**/*.{ts,tsx}',
+   // 'src/middlewares/**/*.{ts,tsx}',
+    //'src/utils/**/*.{ts,tsx}',
     '!src/**/*.d.ts',
     '!src/**/__tests__/**',
     '!src/**/*.test.{ts,tsx}'

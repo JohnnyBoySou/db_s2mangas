@@ -785,7 +785,6 @@ export const getPlaylistsByTags: RequestHandler = async (req, res) => {
     const take = Number(req.query.limit) || 10;
     const tagIds = req.query.tagIds as string;
 
-    console.log(tagIds)
     if (!tagIds) {
       res.status(400).json({ error: "IDs das tags são obrigatórios" });
       return;

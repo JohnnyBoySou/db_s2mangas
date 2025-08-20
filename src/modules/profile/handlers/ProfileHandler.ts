@@ -53,8 +53,7 @@ export const getProfileData = async (username: string, authenticatedUserId: stri
           updatedAt: true,
           _count: {
             select: {
-              likes: true,
-              mangas: true
+              likes: true
             }
           }
         }
