@@ -40,9 +40,9 @@ export class EmailTemplateManager {
         }
 
         if (!this.templatesPath) {
-            console.error('Diretório de templates não encontrado. Caminhos tentados:');
-            possiblePaths.forEach(p => console.error(`  - ${p}`));
-            throw new Error('Diretório de templates não encontrado');
+            const pathList = possiblePaths.map(p => `  - ${p}`).join('\n');
+            const errorMessage = `Diretório de templates não encontrado. Caminhos tentados:\n${pathList}`;
+            throw new Error(errorMessage);
         }
     }
 

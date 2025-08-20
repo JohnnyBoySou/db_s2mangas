@@ -104,8 +104,8 @@ export const create: RequestHandler = async (req, res) => {
 
 export const list: RequestHandler = async (req, res) => {
     const language = req.query.lg as string || 'en';
-    const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
-    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 10;
+    const page = req.query.page ? Math.max(1, parseInt(req.query.page as string, 10) || 1) : 1;
+    const limit = req.query.limit ? Math.min(100, Math.max(1, parseInt(req.query.limit as string, 10) || 10)) : 10;
     
     try {
         const mangas = await mangaHandler.listMangas(language, page, limit);
@@ -310,8 +310,8 @@ export const chapters: RequestHandler = async (req, res) => {
     const { id } = req.params;
     const lg = req.query.lg as string || 'pt-br';
     const order = req.query.order as string || 'desc';
-    const page = Math.max(1, parseInt(req.query.page as string || '1'));
-    const limit = parseInt(req.query.limit as string || '20');
+    const page = Math.max(1, parseInt(req.query.page as string || '1', 10) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string || '20', 10) || 20));
 
     try {
         const result = await mangaHandler.getMangaChapters(id, lg, order, page, limit);
@@ -357,7 +357,7 @@ export const clearMangaTable: RequestHandler = async (req, res) => {
 
 export const similar: RequestHandler = async (req, res) => {
     const { id } = req.params;
-    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 5;
+    const limit = req.query.limit ? Math.min(20, Math.max(1, parseInt(req.query.limit as string, 10) || 5)) : 5;
 
     try {
         const similarMangas = await mangaHandler.getSimilarMangas(id, limit);

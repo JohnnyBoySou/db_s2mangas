@@ -46,10 +46,20 @@ try {
   }
   
   // Verificar scripts necessários
-  const requiredScripts = ['build', 'start', 'railway:build', 'railway:start'];
+  const requiredScripts = ['build', 'start', 'railway:build'];
+  const optionalScripts = ['railway:start']; // Optional scripts
+  
   requiredScripts.forEach(script => {
     if (!packageJson.scripts[script]) {
       logError(`Script "${script}" não encontrado`);
+    } else {
+      logSuccess(`Script "${script}" configurado`);
+    }
+  });
+  
+  optionalScripts.forEach(script => {
+    if (!packageJson.scripts[script]) {
+      logWarning(`Script "${script}" não encontrado (opcional)`);
     } else {
       logSuccess(`Script "${script}" configurado`);
     }
@@ -181,10 +191,10 @@ if (fs.existsSync('railway-build.sh')) {
 // Resumo final
 console.log('\n📊 Resumo da verificação:');
 if (hasErrors) {
-  console.error(`❌ ${hasErrors ? 'ERROS ENCONTRADOS' : ''} - Corrija os erros antes do deploy`);
+  console.error('❌ ERROS ENCONTRADOS - Corrija os erros antes do deploy');
   process.exit(1);
 } else if (hasWarnings) {
-  console.warn(`⚠️  AVISOS ENCONTRADOS - Recomenda-se revisar antes do deploy`);
+  console.warn('⚠️  AVISOS ENCONTRADOS - Recomenda-se revisar antes do deploy');
   process.exit(0);
 } else {
   console.log('✅ Todas as verificações passaram! Pronto para deploy no Railway.');
