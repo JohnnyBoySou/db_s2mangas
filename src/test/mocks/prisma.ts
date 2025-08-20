@@ -39,6 +39,15 @@ export const prismaMock = {
     deleteMany: jest.fn(),
     count: jest.fn()
   },
+  collectionManga: {
+    create: jest.fn(),
+    findMany: jest.fn(),
+    findUnique: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+    deleteMany: jest.fn(),
+    count: jest.fn()
+  },
   review: {
     create: jest.fn(),
     findMany: jest.fn(),

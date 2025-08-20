@@ -35,7 +35,6 @@ export class EmailTemplateManager {
         for (const templatePath of possiblePaths) {
             if (fs.existsSync(templatePath)) {
                 this.templatesPath = templatePath;
-                console.log(`Templates encontrados em: ${templatePath}`);
                 break;
             }
         }
@@ -61,7 +60,6 @@ export class EmailTemplateManager {
         try {
             const template = fs.readFileSync(templatePath, 'utf8');
             this.templateCache.set(templateName, template);
-            console.log(`Template ${templateName} carregado com sucesso`);
             return template;
         } catch (error) {
             console.error(`Erro ao carregar template ${templateName}:`, error);
