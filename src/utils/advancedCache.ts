@@ -41,6 +41,7 @@ const CACHE_CONFIG = {
 // Estado global para o cache L2
 let l2CacheSize = 0;
 let cleanupSchedulerStarted = false;
+let cleanupTimer: NodeJS.Timeout | null = null;
 
 // Inicialização do cache L2
 export async function initializeL2Cache(): Promise<void> {
@@ -74,12 +75,21 @@ export async function calculateL2CacheSize(): Promise<void> {
 export function startCleanupScheduler(): void {
   if (cleanupSchedulerStarted) return;
   
-  setInterval(() => {
+  cleanupTimer = setInterval(() => {
     cleanupExpiredEntries();
     cleanupL2Cache();
   }, CACHE_CONFIG.CLEANUP_INTERVAL);
   
   cleanupSchedulerStarted = true;
+}
+
+// Parar agendador de limpeza
+export function stopCleanupScheduler(): void {
+  if (cleanupTimer) {
+    clearInterval(cleanupTimer);
+    cleanupTimer = null;
+    cleanupSchedulerStarted = false;
+  }
 }
 
 // Gera chave de cache baseada em parâmetros
@@ -327,7 +337,7 @@ export async function cleanupL2Cache(): Promise<void> {
     if (l2CacheSize < CACHE_CONFIG.MAX_L2_SIZE) return;
 
     const files = await fs.readdir(CACHE_CONFIG.L2_DIR);
-    const fileStats = [];
+    const fileStats: Array<{ file: string; path: string; mtime: Date; size: number }> = [];
 
     for (const file of files) {
       const filePath = path.join(CACHE_CONFIG.L2_DIR, file);
