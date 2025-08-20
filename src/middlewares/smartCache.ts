@@ -215,7 +215,7 @@ export const imageCacheMiddleware = (resolutions: string[] = ['thumbnail', 'medi
     
     if (!resolutions.includes(resolution as string)) {
       res.status(400).json({ error: 'Resolução não suportada' });
-      return 
+      return;
     }
 
     const cacheKey = `image:${req.params.id}:${resolution}`;
@@ -232,7 +232,7 @@ export const imageCacheMiddleware = (resolutions: string[] = ['thumbnail', 'medi
         });
         
         res.send(Buffer.from(cachedImage.data, 'base64'));
-        return 
+        return;
       }
       
       // Interceptar resposta de imagem

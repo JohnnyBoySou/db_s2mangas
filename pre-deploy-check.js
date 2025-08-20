@@ -181,10 +181,10 @@ if (fs.existsSync('railway-build.sh')) {
 // Resumo final
 console.log('\n📊 Resumo da verificação:');
 if (hasErrors) {
-  console.error(`❌ ${hasErrors ? 'ERROS ENCONTRADOS' : ''} - Corrija os erros antes do deploy`);
+  console.error('❌ ERROS ENCONTRADOS - Corrija os erros antes do deploy');
   process.exit(1);
 } else if (hasWarnings) {
-  console.warn(`⚠️  AVISOS ENCONTRADOS - Recomenda-se revisar antes do deploy`);
+  console.warn('⚠️  AVISOS ENCONTRADOS - Recomenda-se revisar antes do deploy');
   process.exit(0);
 } else {
   console.log('✅ Todas as verificações passaram! Pronto para deploy no Railway.');
