@@ -287,7 +287,7 @@ class CacheTestSuite {
 
   async testConcurrency(): Promise<void> {
     await this.test('Concorrência', async () => {
-      const promises = [];
+      const promises: Promise<void>[] = [];
       const numOperations = 50;
       
       // Executar múltiplas operações simultaneamente
@@ -300,7 +300,7 @@ class CacheTestSuite {
       await Promise.all(promises);
       
       // Verificar que todas foram armazenadas
-      const checkPromises = [];
+      const checkPromises: Promise<any>[] = [];
       for (let i = 0; i < numOperations; i++) {
         checkPromises.push(advancedCache.get(`concurrent:${i}`));
       }

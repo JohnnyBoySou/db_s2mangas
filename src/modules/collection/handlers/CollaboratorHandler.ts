@@ -1,10 +1,15 @@
-import { CollaboratorRole } from '@prisma/client';
+// Define enum locally to avoid Prisma client import issues
+enum CollaboratorRole {
+  EDITOR = 'EDITOR',
+  ADMIN = 'ADMIN'
+}
+
 import prisma from '@/prisma/client';
 
 export const addCollaborator = async (data: {
   collectionId: string;
   userId: string;
-  role: CollaboratorRole;
+  role: 'EDITOR' | 'ADMIN';
 }) => {
   const { collectionId, userId, role } = data;
 
@@ -107,7 +112,7 @@ export const removeCollaborator = async (data: {
 export const updateCollaboratorRole = async (data: {
   collectionId: string;
   userId: string;
-  role: CollaboratorRole;
+  role: 'EDITOR' | 'ADMIN';
 }) => {
   const { collectionId, userId, role } = data;
 
