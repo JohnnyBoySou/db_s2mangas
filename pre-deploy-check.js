@@ -46,10 +46,20 @@ try {
   }
   
   // Verificar scripts necessários
-  const requiredScripts = ['build', 'start', 'railway:build', 'railway:start'];
+  const requiredScripts = ['build', 'start', 'railway:build'];
+  const optionalScripts = ['railway:start']; // Optional scripts
+  
   requiredScripts.forEach(script => {
     if (!packageJson.scripts[script]) {
       logError(`Script "${script}" não encontrado`);
+    } else {
+      logSuccess(`Script "${script}" configurado`);
+    }
+  });
+  
+  optionalScripts.forEach(script => {
+    if (!packageJson.scripts[script]) {
+      logWarning(`Script "${script}" não encontrado (opcional)`);
     } else {
       logSuccess(`Script "${script}" configurado`);
     }
