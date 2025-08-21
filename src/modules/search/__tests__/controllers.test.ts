@@ -410,4 +410,96 @@ describe('Search Controllers', () => {
             expect(mockHandleZodError).toHaveBeenCalledWith(error, mockRes);
         });
     });
+
+    describe('smartSearch', () => {
+        it('deve realizar busca inteligente com sucesso', async () => {
+            const queryData = {
+                name: 'One Piece',
+                page: '1',
+                limit: '10'
+            };
+
+            const expectedResult = {
+                data: [{ id: 'manga-123', title: 'One Piece' }],
+                total: 1,
+                searchType: 'sql',
+                pagination: { page: 1, limit: 10, total: 1, totalPages: 1, next: false, prev: false },
+                performance: { elasticsearchAvailable: false, responseTime: 100 }
+            };
+
+            mockReq.query = queryData;
+            mockReq.params = { lg: 'pt-BR' };
+
+            // Mock SmartSearchHandler
+            jest.doMock('../handlers/SmartSearchHandler', () => {
+                return jest.fn().mockImplementation(() => ({
+                    intelligentSearch: jest.fn().mockResolvedValue(expectedResult)
+                }));
+            });
+
+            await searchControllers.smartSearch(mockReq as Request, mockRes as Response, mockNext);
+
+            expect(statusSpy).toHaveBeenCalledWith(200);
+            expect(jsonSpy).toHaveBeenCalledWith(expectedResult);
+        });
+    });
+
+    describe('autocomplete', () => {
+        it('deve retornar sugestões com sucesso', async () => {
+            const expectedResult = {
+                suggestions: [
+                    { text: 'One Piece', score: 0.95, type: 'title' }
+                ],
+                total: 1
+            };
+
+            mockReq.query = { q: 'One' };
+            mockReq.params = { lg: 'pt-BR' };
+
+            // Mock SmartSearchHandler
+            jest.doMock('../handlers/SmartSearchHandler', () => {
+                return jest.fn().mockImplementation(() => ({
+                    getAutocompleteSuggestions: jest.fn().mockResolvedValue(expectedResult.suggestions)
+                }));
+            });
+
+            await searchControllers.autocomplete(mockReq as Request, mockRes as Response, mockNext);
+
+            expect(statusSpy).toHaveBeenCalledWith(200);
+            expect(jsonSpy).toHaveBeenCalledWith(expectedResult);
+        });
+
+        it('deve retornar erro 400 quando query não for fornecida', async () => {
+            mockReq.query = {};
+
+            await searchControllers.autocomplete(mockReq as Request, mockRes as Response, mockNext);
+
+            expect(statusSpy).toHaveBeenCalledWith(400);
+            expect(jsonSpy).toHaveBeenCalledWith({
+                error: 'Query parameter \'q\' é obrigatório'
+            });
+        });
+    });
+
+    describe('searchHealth', () => {
+        it('deve retornar status de saúde da busca', async () => {
+            const expectedHealth = {
+                elasticsearch: false,
+                sql: true,
+                recommendedSearchType: 'sql'
+            };
+
+            // Mock SmartSearchHandler
+            jest.doMock('../handlers/SmartSearchHandler', () => {
+                return jest.fn().mockImplementation(() => ({
+                    getSearchHealth: jest.fn().mockResolvedValue(expectedHealth)
+                }));
+            });
+
+            await searchControllers.searchHealth(mockReq as Request, mockRes as Response, mockNext);
+
+            expect(statusSpy).toHaveBeenCalledWith(200);
+            expect(jsonSpy).toHaveBeenCalledWith(expectedHealth);
+        });
+    });
 });
