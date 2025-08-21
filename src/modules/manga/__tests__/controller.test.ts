@@ -12,6 +12,7 @@ jest.mock('../handlers/MangaHandler', () => ({
     getMangaByCategory: jest.fn(),
     getMangaCovers: jest.fn(),
     importMangaFromMangaDex: jest.fn(),
+    importMangaFromJSON: jest.fn(),
     importMangaFromFile: jest.fn(),
     getMangaChapters: jest.fn(),
     getChapterPages: jest.fn(),
@@ -25,7 +26,7 @@ jest.mock('../../../utils/zodError');
 const mockMangaHandlers = require('../handlers/MangaHandler');
 const mockHandleZodError = handleZodError as jest.MockedFunction<typeof handleZodError>;
 
-import { MangaController } from '../controllers/MangaController';
+import * as MangaController from '../controllers/MangaController';
 
 describe('Controllers Manga', () => {
     let mockReq: Partial<Request>;
@@ -38,9 +39,9 @@ describe('Controllers Manga', () => {
         mockReq = {
             body: {},
             params: {},
-            query: {},
-            user: { id: 'user-123' }
+            query: {}
         };
+        (mockReq as any).user = { id: 'user-123' };
         
         jsonSpy = jest.fn().mockReturnThis();
         statusSpy = jest.fn().mockReturnValue({ json: jsonSpy });
@@ -83,14 +84,11 @@ describe('Controllers Manga', () => {
 
             mockMangaHandlers.createManga.mockResolvedValue(mockMangaData);
 
-            await MangaController.createManga(mockReq as Request, mockRes as Response, mockNext);
+            await MangaController.create(mockReq as Request, mockRes as Response, mockNext);
 
             expect(mockMangaHandlers.createManga).toHaveBeenCalledWith(mockReq.body);
             expect(statusSpy).toHaveBeenCalledWith(201);
-            expect(jsonSpy).toHaveBeenCalledWith({
-                success: true,
-                data: mockMangaData
-            });
+            expect(jsonSpy).toHaveBeenCalledWith(mockMangaData);
         });
 
         it('deve tratar erro de validação', async () => {
@@ -99,28 +97,22 @@ describe('Controllers Manga', () => {
 
             mockMangaHandlers.createManga.mockRejectedValue(zodError);
             mockHandleZodError.mockReturnValue({
-                success: false,
                 message: 'Dados inválidos',
                 errors: []
-            });
+            } as any);
 
-            await MangaController.createManga(mockReq as Request, mockRes as Response, mockNext);
+            await MangaController.create(mockReq as Request, mockRes as Response, mockNext);
 
-            expect(mockHandleZodError).toHaveBeenCalledWith(zodError);
-            expect(statusSpy).toHaveBeenCalledWith(400);
+            expect(mockHandleZodError).toHaveBeenCalledWith(zodError, mockRes);
         });
 
         it('deve tratar erro interno do servidor', async () => {
             const error = new Error('Database error');
             mockMangaHandlers.createManga.mockRejectedValue(error);
 
-            await MangaController.createManga(mockReq as Request, mockRes as Response, mockNext);
+            await MangaController.create(mockReq as Request, mockRes as Response, mockNext);
 
-            expect(statusSpy).toHaveBeenCalledWith(500);
-            expect(jsonSpy).toHaveBeenCalledWith({
-                success: false,
-                message: 'Erro interno do servidor'
-            });
+            expect(mockHandleZodError).toHaveBeenCalledWith(error, mockRes);
         });
     });
 
@@ -146,15 +138,10 @@ describe('Controllers Manga', () => {
 
             mockMangaHandlers.listMangas.mockResolvedValue(mockResponse);
 
-            await MangaController.listMangas(mockReq as Request, mockRes as Response, mockNext);
+            await MangaController.list(mockReq as Request, mockRes as Response, mockNext);
 
-            expect(mockMangaHandlers.listMangas).toHaveBeenCalledWith('pt', 1, 10);
-            expect(statusSpy).toHaveBeenCalledWith(200);
-            expect(jsonSpy).toHaveBeenCalledWith({
-                success: true,
-                data: mockResponse.data,
-                pagination: mockResponse.pagination
-            });
+            expect(mockMangaHandlers.listMangas).toHaveBeenCalledWith('en', 1, 10);
+            expect(jsonSpy).toHaveBeenCalledWith(mockResponse);
         });
 
         it('deve usar valores padrão para parâmetros opcionais', async () => {
@@ -174,9 +161,9 @@ describe('Controllers Manga', () => {
 
             mockMangaHandlers.listMangas.mockResolvedValue(mockResponse);
 
-            await MangaController.listMangas(mockReq as Request, mockRes as Response, mockNext);
+            await MangaController.list(mockReq as Request, mockRes as Response, mockNext);
 
-            expect(mockMangaHandlers.listMangas).toHaveBeenCalledWith('pt-br', 1, 10);
+            expect(mockMangaHandlers.listMangas).toHaveBeenCalledWith('en', 1, 10);
         });
     });
 
@@ -187,14 +174,10 @@ describe('Controllers Manga', () => {
 
             mockMangaHandlers.getMangaById.mockResolvedValue(mockMangaData);
 
-            await MangaController.getMangaById(mockReq as Request, mockRes as Response, mockNext);
+            await MangaController.get(mockReq as Request, mockRes as Response, mockNext);
 
-            expect(mockMangaHandlers.getMangaById).toHaveBeenCalledWith('manga-123', 'pt', 'user-123');
-            expect(statusSpy).toHaveBeenCalledWith(200);
-            expect(jsonSpy).toHaveBeenCalledWith({
-                success: true,
-                data: mockMangaData
-            });
+            expect(mockMangaHandlers.getMangaById).toHaveBeenCalledWith('manga-123', 'en', 'user-123');
+            expect(jsonSpy).toHaveBeenCalledWith(mockMangaData);
         });
 
         it('deve tratar mangá não encontrado', async () => {
@@ -203,12 +186,11 @@ describe('Controllers Manga', () => {
             const error = new Error('Mangá não encontrado');
             mockMangaHandlers.getMangaById.mockRejectedValue(error);
 
-            await MangaController.getMangaById(mockReq as Request, mockRes as Response, mockNext);
+            await MangaController.get(mockReq as Request, mockRes as Response, mockNext);
 
             expect(statusSpy).toHaveBeenCalledWith(404);
             expect(jsonSpy).toHaveBeenCalledWith({
-                success: false,
-                message: 'Mangá não encontrado'
+                error: 'Mangá não encontrado'
             });
         });
     });
@@ -229,14 +211,10 @@ describe('Controllers Manga', () => {
 
             mockMangaHandlers.updateManga.mockResolvedValue(mockMangaData);
 
-            await MangaController.updateManga(mockReq as Request, mockRes as Response, mockNext);
+            await MangaController.update(mockReq as Request, mockRes as Response, mockNext);
 
             expect(mockMangaHandlers.updateManga).toHaveBeenCalledWith('manga-123', mockReq.body);
-            expect(statusSpy).toHaveBeenCalledWith(200);
-            expect(jsonSpy).toHaveBeenCalledWith({
-                success: true,
-                data: mockMangaData
-            });
+            expect(jsonSpy).toHaveBeenCalledWith(mockMangaData);
         });
     });
 
@@ -249,14 +227,10 @@ describe('Controllers Manga', () => {
 
             mockMangaHandlers.patchManga.mockResolvedValue(mockMangaData);
 
-            await MangaController.patchManga(mockReq as Request, mockRes as Response, mockNext);
+            await MangaController.patch(mockReq as Request, mockRes as Response, mockNext);
 
             expect(mockMangaHandlers.patchManga).toHaveBeenCalledWith('manga-123', mockReq.body);
-            expect(statusSpy).toHaveBeenCalledWith(200);
-            expect(jsonSpy).toHaveBeenCalledWith({
-                success: true,
-                data: mockMangaData
-            });
+            expect(jsonSpy).toHaveBeenCalledWith(mockMangaData);
         });
     });
 
@@ -270,111 +244,280 @@ describe('Controllers Manga', () => {
 
             mockMangaHandlers.deleteManga.mockResolvedValue(mockDeleteResponse);
 
-            await MangaController.deleteManga(mockReq as Request, mockRes as Response, mockNext);
+            await MangaController.remove(mockReq as Request, mockRes as Response, mockNext);
 
             expect(mockMangaHandlers.deleteManga).toHaveBeenCalledWith('manga-123');
-            expect(statusSpy).toHaveBeenCalledWith(200);
             expect(jsonSpy).toHaveBeenCalledWith({
-                success: true,
-                ...mockDeleteResponse
+                message: 'Mangá deletado com sucesso'
             });
         });
     });
 
     describe('getMangaByCategory', () => {
         it('deve retornar mangás por categoria', async () => {
-            mockReq.params = { category: 'Ação' };
-            mockReq.query = { page: '1', limit: '10' };
+            mockReq.query = { category: 'action', page: '1', limit: '10' };
 
-            const mockResponse = {
+            const mockCategoryResult = {
                 data: [mockMangaData],
                 pagination: {
                     total: 1,
                     page: 1,
                     limit: 10,
-                    totalPages: 1,
-                    next: false,
-                    prev: false
+                    totalPages: 1
                 }
             };
 
-            mockMangaHandlers.getMangaByCategory.mockResolvedValue(mockResponse);
+            mockMangaHandlers.getMangaByCategory.mockResolvedValue(mockCategoryResult);
 
-            await MangaController.getMangaByCategory(mockReq as Request, mockRes as Response, mockNext);
+            await MangaController.category(mockReq as Request, mockRes as Response, mockNext);
 
-            expect(mockMangaHandlers.getMangaByCategory).toHaveBeenCalledWith('Ação', 1, 10);
-            expect(statusSpy).toHaveBeenCalledWith(200);
-            expect(jsonSpy).toHaveBeenCalledWith({
-                success: true,
-                data: mockResponse.data,
-                pagination: mockResponse.pagination
-            });
+            expect(mockMangaHandlers.getMangaByCategory).toHaveBeenCalledWith('action', 1, 10);
+            expect(jsonSpy).toHaveBeenCalledWith(mockCategoryResult);
+        });
+
+        it('deve tratar erro quando categoria não encontrada', async () => {
+            mockReq.query = { category: 'invalid-category', page: '1', limit: '10' };
+
+            const error = new Error('Categoria não encontrada');
+            mockMangaHandlers.getMangaByCategory.mockRejectedValue(error);
+
+            await MangaController.category(mockReq as Request, mockRes as Response, mockNext);
+
+            expect(mockHandleZodError).toHaveBeenCalledWith(error, mockRes);
         });
     });
 
     describe('getMangaCovers', () => {
-        it('deve retornar covers do mangá', async () => {
+        it('deve retornar capas do mangá', async () => {
             mockReq.params = { id: 'manga-123' };
 
-            const mockCovers = [
+            const mockCoversResult = [
                 {
-                    img: 'https://example.com/cover1.jpg',
-                    volume: '1',
-                    id: 'cover-123'
+                    id: 'cover-123',
+                    img: 'https://example.com/cover.jpg',
+                    volume: '1'
                 }
             ];
 
-            mockMangaHandlers.getMangaCovers.mockResolvedValue(mockCovers);
+            mockMangaHandlers.getMangaCovers.mockResolvedValue(mockCoversResult);
 
-            await MangaController.getMangaCovers(mockReq as Request, mockRes as Response, mockNext);
+            await MangaController.covers(mockReq as Request, mockRes as Response, mockNext);
 
             expect(mockMangaHandlers.getMangaCovers).toHaveBeenCalledWith('manga-123');
-            expect(statusSpy).toHaveBeenCalledWith(200);
-            expect(jsonSpy).toHaveBeenCalledWith({
-                success: true,
-                data: mockCovers
-            });
+            expect(jsonSpy).toHaveBeenCalledWith(mockCoversResult);
+        });
+
+        it('deve tratar erro ao buscar capas', async () => {
+            mockReq.params = { id: 'manga-123' };
+
+            const error = new Error('UUID do mangá não encontrado');
+            mockMangaHandlers.getMangaCovers.mockRejectedValue(error);
+
+            await MangaController.covers(mockReq as Request, mockRes as Response, mockNext);
+
+            expect(statusSpy).toHaveBeenCalledWith(404);
+            expect(jsonSpy).toHaveBeenCalledWith({ error: 'UUID do mangá não encontrado' });
         });
     });
 
-    describe('importMangaFromMangaDex', () => {
+    describe('importFromMangaDex', () => {
         it('deve importar mangá do MangaDex', async () => {
-            mockReq.params = { mangaId: 'uuid-123' };
-
-            mockMangaHandlers.importMangaFromMangaDex.mockResolvedValue(mockMangaData);
-
-            await MangaController.importMangaFromMangaDex(mockReq as Request, mockRes as Response, mockNext);
-
-            expect(mockMangaHandlers.importMangaFromMangaDex).toHaveBeenCalledWith('uuid-123');
-            expect(statusSpy).toHaveBeenCalledWith(201);
-            expect(jsonSpy).toHaveBeenCalledWith({
-                success: true,
-                data: mockMangaData
-            });
-        });
-    });
-
-    describe('importMangaFromFile', () => {
-        it('deve importar mangás de arquivo', async () => {
-            mockReq.body = { filename: 'mangas.json' };
+            mockReq.params = { mangaId: 'mangadex-123' };
 
             const mockImportResult = {
-                total: 10,
-                success: 8,
-                errors: ['Erro 1', 'Erro 2'],
-                imported: []
+                message: 'Mangá importado com sucesso',
+                manga: mockMangaData
             };
 
-            mockMangaHandlers.importMangaFromFile.mockResolvedValue(mockImportResult);
+            mockMangaHandlers.importMangaFromMangaDex.mockResolvedValue(mockImportResult);
 
-            await MangaController.importMangaFromFile(mockReq as Request, mockRes as Response, mockNext);
+            await MangaController.importFromMangaDex(mockReq as Request, mockRes as Response, mockNext);
 
-            expect(mockMangaHandlers.importMangaFromFile).toHaveBeenCalledWith('mangas.json');
-            expect(statusSpy).toHaveBeenCalledWith(200);
-            expect(jsonSpy).toHaveBeenCalledWith({
-                success: true,
-                data: mockImportResult
+            expect(mockMangaHandlers.importMangaFromMangaDex).toHaveBeenCalledWith('mangadex-123');
+            expect(statusSpy).toHaveBeenCalledWith(201);
+            expect(jsonSpy).toHaveBeenCalledWith(mockImportResult);
+        });
+
+        it('deve tratar erro na importação do MangaDex', async () => {
+            mockReq.params = { mangaId: 'invalid-id' };
+
+            const error = new Error('Mangá não encontrado no MangaDex');
+            mockMangaHandlers.importMangaFromMangaDex.mockRejectedValue(error);
+
+            await MangaController.importFromMangaDex(mockReq as Request, mockRes as Response, mockNext);
+
+            expect(statusSpy).toHaveBeenCalledWith(500);
+            expect(jsonSpy).toHaveBeenCalledWith({ error: 'Erro ao importar mangá do MangaDex' });
+        });
+    });
+
+    describe('importFromJSON', () => {
+        it('deve importar mangás do JSON', async () => {
+            mockReq.body = {
+                mangas: [
+                    {
+                        title: 'Manga 1',
+                        description: 'Descrição 1'
+                    },
+                    {
+                        title: 'Manga 2',
+                        description: 'Descrição 2'
+                    }
+                ]
+            };
+
+            const mockImportResult = {
+                message: 'Importação concluída. 2 de 2 mangás importados com sucesso.',
+                results: {
+                    success: 2,
+                    failed: 0,
+                    errors: []
+                }
+            };
+
+            mockMangaHandlers.importMangaFromJSON.mockResolvedValue(mockImportResult);
+
+            await MangaController.importFromJSON(mockReq as Request, mockRes as Response, mockNext);
+
+            expect(mockMangaHandlers.importMangaFromJSON).toHaveBeenCalledWith(mockReq.body);
+            expect(statusSpy).toHaveBeenCalledWith(201);
+            expect(jsonSpy).toHaveBeenCalledWith(mockImportResult);
+        });
+
+        it('deve tratar erro na importação do JSON', async () => {
+            mockReq.body = { mangas: [] };
+
+            const error = new Error('Dados inválidos');
+            mockMangaHandlers.importMangaFromJSON.mockRejectedValue(error);
+
+            await MangaController.importFromJSON(mockReq as Request, mockRes as Response, mockNext);
+
+            expect(statusSpy).toHaveBeenCalledWith(500);
+            expect(jsonSpy).toHaveBeenCalledWith({ 
+                error: 'Erro ao importar mangá do JSON',
+                details: 'Dados inválidos'
             });
+        });
+    });
+
+    describe('patchManga', () => {
+        it('deve atualizar parcialmente o mangá', async () => {
+            mockReq.params = { id: 'manga-123' };
+            mockReq.body = { status: 'completed' };
+
+            const mockUpdatedManga = {
+                ...mockMangaData,
+                status: 'completed'
+            };
+
+            mockMangaHandlers.patchManga.mockResolvedValue(mockUpdatedManga);
+
+            await MangaController.patch(mockReq as Request, mockRes as Response, mockNext);
+
+            expect(mockMangaHandlers.patchManga).toHaveBeenCalledWith('manga-123', { status: 'completed' });
+            expect(jsonSpy).toHaveBeenCalledWith(mockUpdatedManga);
+        });
+
+        it('deve tratar erro ao atualizar mangá', async () => {
+            mockReq.params = { id: 'manga-123' };
+            mockReq.body = { status: 'completed' };
+
+            const error = new Error('Mangá não encontrado');
+            mockMangaHandlers.patchManga.mockRejectedValue(error);
+
+            await MangaController.patch(mockReq as Request, mockRes as Response, mockNext);
+
+            expect(statusSpy).toHaveBeenCalledWith(404);
+            expect(jsonSpy).toHaveBeenCalledWith({ error: 'Mangá não encontrado' });
+        });
+    });
+
+    describe('deleteManga', () => {
+        it('deve deletar mangá com sucesso', async () => {
+            mockReq.params = { id: 'manga-123' };
+
+            const mockDeleteResult = { message: 'Mangá deletado com sucesso' };
+            mockMangaHandlers.deleteManga.mockResolvedValue(mockDeleteResult);
+
+            await MangaController.remove(mockReq as Request, mockRes as Response, mockNext);
+
+            expect(mockMangaHandlers.deleteManga).toHaveBeenCalledWith('manga-123');
+            expect(jsonSpy).toHaveBeenCalledWith(mockDeleteResult);
+        });
+
+        it('deve tratar erro ao deletar mangá', async () => {
+            mockReq.params = { id: 'manga-123' };
+
+            const error = new Error('Mangá não encontrado');
+            mockMangaHandlers.deleteManga.mockRejectedValue(error);
+
+            await MangaController.remove(mockReq as Request, mockRes as Response, mockNext);
+
+            expect(statusSpy).toHaveBeenCalledWith(404);
+            expect(jsonSpy).toHaveBeenCalledWith({ error: 'Mangá não encontrado' });
+        });
+    });
+
+    describe('getMangaById', () => {
+        it('deve retornar mangá por ID', async () => {
+            mockReq.params = { id: 'manga-123' };
+            mockReq.query = { lg: 'en' };
+
+            mockMangaHandlers.getMangaById.mockResolvedValue(mockMangaData);
+
+            await MangaController.get(mockReq as Request, mockRes as Response, mockNext);
+
+            expect(mockMangaHandlers.getMangaById).toHaveBeenCalledWith('manga-123', 'en', 'user-123');
+            expect(jsonSpy).toHaveBeenCalledWith(mockMangaData);
+        });
+
+        it('deve tratar erro quando mangá não encontrado', async () => {
+            mockReq.params = { id: 'manga-123' };
+            mockReq.query = { lg: 'en' };
+
+            const error = new Error('Mangá não encontrado');
+            mockMangaHandlers.getMangaById.mockRejectedValue(error);
+
+            await MangaController.get(mockReq as Request, mockRes as Response, mockNext);
+
+            expect(statusSpy).toHaveBeenCalledWith(404);
+            expect(jsonSpy).toHaveBeenCalledWith({ error: 'Mangá não encontrado' });
+        });
+    });
+
+    describe('updateManga', () => {
+        it('deve atualizar mangá com sucesso', async () => {
+            mockReq.params = { id: 'manga-123' };
+            mockReq.body = {
+                title: 'Manga Atualizado',
+                description: 'Nova descrição'
+            };
+
+            const mockUpdatedManga = {
+                ...mockMangaData,
+                title: 'Manga Atualizado',
+                description: 'Nova descrição'
+            };
+
+            mockMangaHandlers.updateManga.mockResolvedValue(mockUpdatedManga);
+
+            await MangaController.update(mockReq as Request, mockRes as Response, mockNext);
+
+            expect(mockMangaHandlers.updateManga).toHaveBeenCalledWith('manga-123', mockReq.body);
+            expect(jsonSpy).toHaveBeenCalledWith(mockUpdatedManga);
+        });
+
+        it('deve tratar erro ao atualizar mangá', async () => {
+            mockReq.params = { id: 'manga-123' };
+            mockReq.body = { title: 'Manga Atualizado' };
+
+            const error = new Error('Mangá não encontrado');
+            mockMangaHandlers.updateManga.mockRejectedValue(error);
+
+            await MangaController.update(mockReq as Request, mockRes as Response, mockNext);
+
+            expect(statusSpy).toHaveBeenCalledWith(404);
+            expect(jsonSpy).toHaveBeenCalledWith({ error: 'Mangá não encontrado' });
         });
     });
 
@@ -402,14 +545,10 @@ describe('Controllers Manga', () => {
 
             mockMangaHandlers.getMangaChapters.mockResolvedValue(mockChapters);
 
-            await MangaController.getMangaChapters(mockReq as Request, mockRes as Response, mockNext);
+            await MangaController.chapters(mockReq as Request, mockRes as Response, mockNext);
 
             expect(mockMangaHandlers.getMangaChapters).toHaveBeenCalledWith('manga-123', 'pt', 'asc', 1, 10);
-            expect(statusSpy).toHaveBeenCalledWith(200);
-            expect(jsonSpy).toHaveBeenCalledWith({
-                success: true,
-                data: mockChapters
-            });
+            expect(jsonSpy).toHaveBeenCalledWith(mockChapters);
         });
     });
 
@@ -427,43 +566,14 @@ describe('Controllers Manga', () => {
 
             mockMangaHandlers.getChapterPages.mockResolvedValue(mockPages);
 
-            await MangaController.getChapterPages(mockReq as Request, mockRes as Response, mockNext);
+            await MangaController.pages(mockReq as Request, mockRes as Response, mockNext);
 
             expect(mockMangaHandlers.getChapterPages).toHaveBeenCalledWith('chapter-123', 'high');
-            expect(statusSpy).toHaveBeenCalledWith(200);
-            expect(jsonSpy).toHaveBeenCalledWith({
-                success: true,
-                data: mockPages
-            });
+            expect(jsonSpy).toHaveBeenCalledWith(mockPages);
         });
     });
 
-    describe('getAdjacentChapters', () => {
-        it('deve retornar capítulos adjacentes', async () => {
-            mockReq.params = { mangaId: 'manga-123', currentChapter: '1' };
 
-            const mockAdjacent = {
-                previous: null,
-                next: {
-                    id: 'chapter-2',
-                    chapter: '2',
-                    title: 'Capítulo 2',
-                    volume: '1'
-                }
-            };
-
-            mockMangaHandlers.getAdjacentChapters.mockResolvedValue(mockAdjacent);
-
-            await MangaController.getAdjacentChapters(mockReq as Request, mockRes as Response, mockNext);
-
-            expect(mockMangaHandlers.getAdjacentChapters).toHaveBeenCalledWith('manga-123', '1');
-            expect(statusSpy).toHaveBeenCalledWith(200);
-            expect(jsonSpy).toHaveBeenCalledWith({
-                success: true,
-                data: mockAdjacent
-            });
-        });
-    });
 
     describe('getSimilarMangas', () => {
         it('deve retornar mangás similares', async () => {
@@ -480,14 +590,10 @@ describe('Controllers Manga', () => {
 
             mockMangaHandlers.getSimilarMangas.mockResolvedValue(mockSimilar);
 
-            await MangaController.getSimilarMangas(mockReq as Request, mockRes as Response, mockNext);
+            await MangaController.similar(mockReq as Request, mockRes as Response, mockNext);
 
             expect(mockMangaHandlers.getSimilarMangas).toHaveBeenCalledWith('manga-123', 5);
-            expect(statusSpy).toHaveBeenCalledWith(200);
-            expect(jsonSpy).toHaveBeenCalledWith({
-                success: true,
-                data: mockSimilar
-            });
+            expect(jsonSpy).toHaveBeenCalledWith(mockSimilar);
         });
     });
 
@@ -503,11 +609,7 @@ describe('Controllers Manga', () => {
             await MangaController.clearMangaTable(mockReq as Request, mockRes as Response, mockNext);
 
             expect(mockMangaHandlers.clearMangaTable).toHaveBeenCalled();
-            expect(statusSpy).toHaveBeenCalledWith(200);
-            expect(jsonSpy).toHaveBeenCalledWith({
-                success: true,
-                data: mockClearResult
-            });
+            expect(jsonSpy).toHaveBeenCalledWith(mockClearResult);
         });
     });
 });

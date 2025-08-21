@@ -14,9 +14,9 @@ describe('Manga Validators', () => {
             status: 'ongoing',
             type: 'manga',
             releaseDate: new Date('2023-01-01'),
-            manga_uuid: 'uuid-123',
-            languageIds: ['lang-123', 'lang-456'],
-            categoryIds: ['cat-123'],
+            manga_uuid: '550e8400-e29b-41d4-a716-446655440000',
+            languageIds: ['550e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440002'],
+            categoryIds: ['550e8400-e29b-41d4-a716-446655440003'],
             translations: [
                 {
                     language: 'pt',
@@ -38,7 +38,7 @@ describe('Manga Validators', () => {
         it('deve aceitar dados mínimos obrigatórios', () => {
             const minimalData = {
                 cover: 'https://example.com/cover.jpg',
-                languageIds: ['lang-123'],
+                languageIds: ['550e8400-e29b-41d4-a716-446655440001'],
                 translations: [
                     {
                         language: 'pt',
@@ -175,8 +175,8 @@ describe('Manga Validators', () => {
             status: 'completed',
             type: 'manhwa',
             releaseDate: new Date('2024-01-01'),
-            languageIds: ['lang-123'],
-            categoryIds: ['cat-123', 'cat-456'],
+            languageIds: ['550e8400-e29b-41d4-a716-446655440001'],
+            categoryIds: ['550e8400-e29b-41d4-a716-446655440003', '550e8400-e29b-41d4-a716-446655440004'],
             translations: [
                 {
                     language: 'pt',
@@ -193,7 +193,7 @@ describe('Manga Validators', () => {
 
         it('deve aceitar apenas languageIds e translations obrigatórios', () => {
             const minimalUpdateData = {
-                languageIds: ['lang-123'],
+                languageIds: ['550e8400-e29b-41d4-a716-446655440001'],
                 translations: [
                     {
                         language: 'pt',
@@ -316,7 +316,7 @@ describe('Manga Validators', () => {
                 cover: 'https://example.com/new-cover.jpg',
                 status: 'completed',
                 type: 'manhwa',
-                languageIds: ['lang-123'],
+                languageIds: ['550e8400-e29b-41d4-a716-446655440001'],
                 translations: [
                     {
                         language: 'pt',
@@ -427,7 +427,7 @@ describe('Manga Validators', () => {
         it('deve inferir tipos corretamente para CreateMangaInput', () => {
             const createData: CreateMangaInput = {
                 cover: 'https://example.com/cover.jpg',
-                languageIds: ['lang-123'],
+                languageIds: ['550e8400-e29b-41d4-a716-446655440001'],
                 translations: [
                     {
                         language: 'pt',

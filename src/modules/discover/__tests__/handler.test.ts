@@ -402,5 +402,355 @@ describe('Handlers Discover', () => {
             expect(result.data[0].title).toBe('Sem título');
             expect(result.data[0].description).toBe('Sem descrição');
         });
+
+        it('deve usar primeira tradução quando não encontrar tradução específica', async () => {
+            const mangaWithMultipleTranslations = {
+                ...mockMangaData,
+                translations: [
+                    {
+                        language: 'en',
+                        name: 'English Title',
+                        description: 'English Description'
+                    },
+                    {
+                        language: 'es',
+                        name: 'Spanish Title',
+                        description: 'Spanish Description'
+                    }
+                ]
+            };
+
+            mockMangaFindMany.mockResolvedValue([mangaWithMultipleTranslations]);
+            mockMangaCount.mockResolvedValue(1);
+
+            const result = await getRecentMangas({
+                page: 1,
+                take: 10,
+                language: 'pt-BR'
+            });
+
+            expect(result.data[0].title).toBe('English Title');
+            expect(result.data[0].description).toBe('English Description');
+        });
+    });
+
+    describe('Paginação e casos edge', () => {
+        it('deve lidar com paginação múltipla páginas', async () => {
+            const mockMangas = [mockMangaData];
+            mockMangaFindMany.mockResolvedValue(mockMangas);
+            mockMangaCount.mockResolvedValue(25);
+
+            const result = await getRecentMangas({
+                page: 2,
+                take: 10,
+                language: 'pt-BR'
+            });
+
+            expect(result.pagination).toEqual({
+                total: 25,
+                page: 2,
+                limit: 10,
+                totalPages: 3,
+                next: true,
+                prev: true
+            });
+        });
+
+        it('deve lidar com primeira página', async () => {
+            const mockMangas = [mockMangaData];
+            mockMangaFindMany.mockResolvedValue(mockMangas);
+            mockMangaCount.mockResolvedValue(5);
+
+            const result = await getRecentMangas({
+                page: 1,
+                take: 10,
+                language: 'pt-BR'
+            });
+
+            expect(result.pagination).toEqual({
+                total: 5,
+                page: 1,
+                limit: 10,
+                totalPages: 1,
+                next: false,
+                prev: false
+            });
+        });
+
+        it('deve lidar com última página', async () => {
+            const mockMangas = [mockMangaData];
+            mockMangaFindMany.mockResolvedValue(mockMangas);
+            mockMangaCount.mockResolvedValue(25);
+
+            const result = await getRecentMangas({
+                page: 3,
+                take: 10,
+                language: 'pt-BR'
+            });
+
+            expect(result.pagination).toEqual({
+                total: 25,
+                page: 3,
+                limit: 10,
+                totalPages: 3,
+                next: false,
+                prev: true
+            });
+        });
+
+        it('deve usar valores padrão quando opções não são fornecidas', async () => {
+            const mockMangas = [mockMangaData];
+            mockMangaFindMany.mockResolvedValue(mockMangas);
+            mockMangaCount.mockResolvedValue(1);
+
+            const result = await getRecentMangas();
+
+            expect(result.pagination).toEqual({
+                total: 1,
+                page: 1,
+                limit: 10,
+                totalPages: 1,
+                next: false,
+                prev: false
+            });
+
+            expect(prismaMock.manga.findMany).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    skip: 0,
+                    take: 10
+                })
+            );
+        });
+
+        it('deve usar valores padrão quando opções parciais são fornecidas', async () => {
+            const mockMangas = [mockMangaData];
+            mockMangaFindMany.mockResolvedValue(mockMangas);
+            mockMangaCount.mockResolvedValue(1);
+
+            const result = await getRecentMangas({
+                page: 2
+            });
+
+            expect(result.pagination).toEqual({
+                total: 1,
+                page: 2,
+                limit: 10,
+                totalPages: 1,
+                next: false,
+                prev: true
+            });
+
+            expect(prismaMock.manga.findMany).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    skip: 10,
+                    take: 10
+                })
+            );
+        });
+    });
+
+    describe('getMostViewedMangas - casos edge', () => {
+        it('deve lidar com mangás sem visualizações', async () => {
+            const mangaWithoutViews = {
+                ...mockMangaData,
+                _count: {
+                    views: 0,
+                    likes: 0,
+                    chapters: 0
+                }
+            };
+
+            mockMangaFindMany.mockResolvedValue([mangaWithoutViews]);
+            mockMangaCount.mockResolvedValue(1);
+
+            const result = await getMostViewedMangas({
+                page: 1,
+                take: 10,
+                language: 'pt-BR'
+            });
+
+            expect(result.data[0].views_count).toBe(0);
+            expect(result.data[0].likes_count).toBe(0);
+            expect(result.data[0].chapters_count).toBe(0);
+        });
+
+        it('deve usar valores padrão quando opções não são fornecidas', async () => {
+            const mockMangas = [mockMangaData];
+            mockMangaFindMany.mockResolvedValue(mockMangas);
+            mockMangaCount.mockResolvedValue(1);
+
+            const result = await getMostViewedMangas();
+
+            expect(result.pagination).toEqual({
+                total: 1,
+                page: 1,
+                limit: 10,
+                totalPages: 1,
+                next: false,
+                prev: false
+            });
+        });
+    });
+
+    describe('getMostLikedMangas - casos edge', () => {
+        it('deve lidar com mangás sem likes', async () => {
+            const mangaWithoutLikes = {
+                ...mockMangaData,
+                _count: {
+                    views: 100,
+                    likes: 0,
+                    chapters: 5
+                }
+            };
+
+            mockMangaFindMany.mockResolvedValue([mangaWithoutLikes]);
+            mockMangaCount.mockResolvedValue(1);
+
+            const result = await getMostLikedMangas({
+                page: 1,
+                take: 10,
+                language: 'pt-BR'
+            });
+
+            expect(result.data[0].likes_count).toBe(0);
+        });
+
+        it('deve usar valores padrão quando opções não são fornecidas', async () => {
+            const mockMangas = [mockMangaData];
+            mockMangaFindMany.mockResolvedValue(mockMangas);
+            mockMangaCount.mockResolvedValue(1);
+
+            const result = await getMostLikedMangas();
+
+            expect(result.pagination).toEqual({
+                total: 1,
+                page: 1,
+                limit: 10,
+                totalPages: 1,
+                next: false,
+                prev: false
+            });
+        });
+    });
+
+    describe('getFeedForUser - casos edge', () => {
+        it('deve lidar com usuário sem preferências', async () => {
+            const mockMangas = [mockMangaData];
+            mockMangaFindMany.mockResolvedValue(mockMangas);
+            mockMangaCount.mockResolvedValue(1);
+
+            const result = await getFeedForUser('user-123', {
+                page: 1,
+                take: 10,
+                language: 'pt-BR'
+            });
+
+            expect(result.data).toHaveLength(1);
+            expect(result.pagination.total).toBe(1);
+        });
+
+        it('deve usar valores padrão quando opções não são fornecidas', async () => {
+            const mockMangas = [mockMangaData];
+            mockMangaFindMany.mockResolvedValue(mockMangas);
+            mockMangaCount.mockResolvedValue(1);
+
+            const result = await getFeedForUser('user-123');
+
+            expect(result.pagination).toEqual({
+                total: 1,
+                page: 1,
+                limit: 10,
+                totalPages: 1,
+                next: false,
+                prev: false
+            });
+        });
+    });
+
+    describe('getMangasByCategories - casos edge', () => {
+        it('deve lidar com categorias vazias', async () => {
+            const mockMangas = [mockMangaData];
+            mockMangaFindMany.mockResolvedValue(mockMangas);
+            mockMangaCount.mockResolvedValue(1);
+
+            const result = await getMangasByCategories([], {
+                page: 1,
+                take: 10,
+                language: 'pt-BR'
+            });
+
+            expect(result.data).toHaveLength(1);
+            expect(result.pagination.total).toBe(1);
+        });
+
+        it('deve usar valores padrão quando opções não são fornecidas', async () => {
+            const mockMangas = [mockMangaData];
+            mockMangaFindMany.mockResolvedValue(mockMangas);
+            mockMangaCount.mockResolvedValue(1);
+
+            const result = await getMangasByCategories(['cat-1']);
+
+            expect(result.pagination).toEqual({
+                total: 1,
+                page: 1,
+                limit: 10,
+                totalPages: 1,
+                next: false,
+                prev: false
+            });
+        });
+    });
+
+    describe('getDiscoverStats - casos edge', () => {
+        it('deve lidar com estatísticas vazias', async () => {
+            mockMangaCount.mockResolvedValue(0);
+            mockCategoryCount.mockResolvedValue(0);
+
+            const result = await getDiscoverStats('pt-BR');
+
+            expect(result).toEqual({
+                totalMangas: 0,
+                totalCategories: 0,
+                totalViews: 0,
+                totalLikes: 0,
+                averageMangasPerCategory: 0,
+                language: 'pt-BR'
+            });
+        });
+
+        it('deve lidar com apenas mangás sem categorias', async () => {
+            mockMangaCount.mockResolvedValue(10);
+            mockCategoryCount.mockResolvedValue(0);
+
+            const result = await getDiscoverStats('pt-BR');
+
+            expect(result.averageMangasPerCategory).toBe(0);
+        });
+
+        it('deve usar valores padrão quando language não é fornecida', async () => {
+            mockMangaCount.mockResolvedValue(100);
+            mockCategoryCount.mockResolvedValue(10);
+
+            const result = await getDiscoverStats();
+
+            expect(result.language).toBe('pt-BR');
+        });
+    });
+
+    describe('Tratamento de erros', () => {
+        it('deve propagar erros do banco de dados', async () => {
+            const dbError = new Error('Database connection failed');
+            mockMangaFindMany.mockRejectedValue(dbError);
+
+            await expect(getRecentMangas()).rejects.toThrow('Database connection failed');
+        });
+
+        it('deve propagar erros de contagem', async () => {
+            const countError = new Error('Count query failed');
+            mockMangaFindMany.mockResolvedValue([]);
+            mockMangaCount.mockRejectedValue(countError);
+
+            await expect(getRecentMangas()).rejects.toThrow('Count query failed');
+        });
     });
 });

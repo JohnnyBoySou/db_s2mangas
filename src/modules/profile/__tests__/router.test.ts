@@ -181,4 +181,146 @@ describe('ProfileRouter', () => {
             expect(mockedRequireAuth).toHaveBeenCalledTimes(6);
         });
     });
+
+    describe('Error handling', () => {
+        it('should handle controller errors gracefully', async () => {
+            // Given
+            mockedProfileController.getProfile.mockImplementation((req, res) => {
+                res.status(500).json({ error: 'Internal server error' });
+            });
+
+            // When & Then
+            const response = await request(app)
+                .get('/profiles/testuser')
+                .expect(500);
+
+            expect(response.body).toEqual({ error: 'Internal server error' });
+        });
+
+        it('should handle missing parameters', async () => {
+            // Given
+            mockedProfileController.getProfile.mockImplementation((req, res) => {
+                res.status(400).json({ error: 'Username is required' });
+            });
+
+            // When & Then
+            const response = await request(app)
+                .get('/profiles/nonexistent')
+                .expect(400);
+
+            expect(response.body).toEqual({ error: 'Username is required' });
+        });
+
+        it('should handle invalid route parameters', async () => {
+            // Given
+            mockedProfileController.getSimilarProfiles.mockImplementation((req, res) => {
+                res.status(400).json({ error: 'Invalid userId' });
+            });
+
+            // When & Then
+            const response = await request(app)
+                .get('/profiles/invalid-user/similar')
+                .expect(400);
+
+            expect(response.body).toEqual({ error: 'Invalid userId' });
+        });
+    });
+
+    describe('Route parameter validation', () => {
+        it('should handle empty username parameter', async () => {
+            // Given
+            mockedProfileController.getProfile.mockImplementation((req, res) => {
+                res.status(400).json({ error: 'Username cannot be empty' });
+            });
+
+            // When & Then
+            const response = await request(app)
+                .get('/profiles/empty')
+                .expect(400);
+
+            expect(response.body).toEqual({ error: 'Username cannot be empty' });
+        });
+
+        it('should handle special characters in username', async () => {
+            // Given
+            mockedProfileController.getProfile.mockImplementation((req, res) => {
+                res.status(200).json({ profile: { username: 'user@123' } });
+            });
+
+            // When & Then
+            const response = await request(app)
+                .get('/profiles/user%40123')
+                .expect(200);
+
+            expect(response.body).toEqual({ profile: { username: 'user@123' } });
+        });
+
+        it('should handle long usernames', async () => {
+            // Given
+            const longUsername = 'a'.repeat(100);
+            mockedProfileController.getProfile.mockImplementation((req, res) => {
+                res.status(200).json({ profile: { username: longUsername } });
+            });
+
+            // When & Then
+            const response = await request(app)
+                .get(`/profiles/${longUsername}`)
+                .expect(200);
+
+            expect(response.body).toEqual({ profile: { username: longUsername } });
+        });
+    });
+
+    describe('Query parameter handling', () => {
+        it('should handle search with special characters', async () => {
+            // Given
+            mockedProfileController.searchProfiles.mockImplementation((req, res) => {
+                res.status(200).json({ 
+                    profiles: [],
+                    query: 'test@user.com',
+                    total: 0
+                });
+            });
+
+            // When & Then
+            const response = await request(app)
+                .get('/profiles/search?q=test%40user.com')
+                .expect(200);
+
+            expect(response.body.query).toBe('test@user.com');
+        });
+
+        it('should handle pagination parameters', async () => {
+            // Given
+            mockedProfileController.listProfiles.mockImplementation((req, res) => {
+                res.status(200).json({ 
+                    profiles: [],
+                    currentPage: 2,
+                    totalPages: 5
+                });
+            });
+
+            // When & Then
+            const response = await request(app)
+                .get('/profiles?page=2&limit=5')
+                .expect(200);
+
+            expect(response.body.currentPage).toBe(2);
+            expect(response.body.totalPages).toBe(5);
+        });
+
+        it('should handle invalid pagination parameters', async () => {
+            // Given
+            mockedProfileController.listProfiles.mockImplementation((req, res) => {
+                res.status(400).json({ error: 'Invalid pagination parameters' });
+            });
+
+            // When & Then
+            const response = await request(app)
+                .get('/profiles?page=-1&limit=0')
+                .expect(400);
+
+            expect(response.body).toEqual({ error: 'Invalid pagination parameters' });
+        });
+    });
 });

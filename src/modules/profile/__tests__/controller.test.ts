@@ -249,6 +249,108 @@ describe('Profile Controller', () => {
         });
     });
 
+    describe('getSimilarProfiles', () => {
+        it('should get similar profiles successfully', async () => {
+            // Given
+            const mockResult = [{
+                id: 'profile-1',
+                username: 'user1',
+                name: 'User One',
+                createdAt: new Date(),
+                avatar: null,
+                bio: null,
+                _count: {
+                    likes: 0,
+                    libraryEntries: 0,
+                    following: 0,
+                    followers: 0,
+                    profileLikedBy: 0
+                },
+                isFollowing: false,
+                isLiked: false
+            }];
+
+            mockRequest.params = { userId: '123e4567-e89b-12d3-a456-426614174000' };
+            mockRequest.query = { limit: '5' };
+            mockedProfileHandler.getSimilarProfiles.mockResolvedValue(mockResult);
+
+            // When
+            await profileController.getSimilarProfiles(mockRequest as AuthenticatedRequest, mockResponse as Response, jest.fn());
+
+            // Then
+            expect(mockedProfileHandler.getSimilarProfiles).toHaveBeenCalledWith({
+                userId: '123e4567-e89b-12d3-a456-426614174000',
+                authenticatedUserId: 'user-id',
+                limit: 5
+            });
+            expect(mockResponse.json).toHaveBeenCalledWith({ profiles: mockResult });
+        });
+
+        it('should return 400 when user not authenticated', async () => {
+            // Given
+            mockRequest.user = undefined;
+            mockRequest.params = { userId: 'invalid-uuid' };
+
+            // When
+            await profileController.getSimilarProfiles(mockRequest as AuthenticatedRequest, mockResponse as Response, jest.fn());
+
+            // Then
+            expect(mockStatus).toHaveBeenCalledWith(400);
+            expect(mockJson).toHaveBeenCalledWith({ 
+                error: 'Dados inválidos', 
+                details: ['ID do usuário inválido']
+            });
+        });
+
+        it('should return 400 when userId is missing', async () => {
+            // Given
+            mockRequest.params = {};
+
+            // When
+            await profileController.getSimilarProfiles(mockRequest as AuthenticatedRequest, mockResponse as Response, jest.fn());
+
+            // Then
+            expect(mockStatus).toHaveBeenCalledWith(400);
+            expect(mockJson).toHaveBeenCalledWith({ 
+                error: 'Dados inválidos', 
+                details: ['Required']
+            });
+        });
+
+        it('should handle default limit value', async () => {
+            // Given
+            const mockResult: any[] = [];
+
+            mockRequest.params = { userId: '123e4567-e89b-12d3-a456-426614174000' };
+            mockRequest.query = {};
+            mockedProfileHandler.getSimilarProfiles.mockResolvedValue(mockResult);
+
+            // When
+            await profileController.getSimilarProfiles(mockRequest as AuthenticatedRequest, mockResponse as Response, jest.fn());
+
+            // Then
+            expect(mockedProfileHandler.getSimilarProfiles).toHaveBeenCalledWith({
+                userId: '123e4567-e89b-12d3-a456-426614174000',
+                authenticatedUserId: 'user-id',
+                limit: 10
+            });
+            expect(mockResponse.json).toHaveBeenCalledWith({ profiles: mockResult });
+        });
+
+        it('should handle handler errors', async () => {
+            // Given
+            mockRequest.params = { userId: '123e4567-e89b-12d3-a456-426614174000' };
+            mockedProfileHandler.getSimilarProfiles.mockRejectedValue(new Error('Erro interno'));
+
+            // When
+            await profileController.getSimilarProfiles(mockRequest as AuthenticatedRequest, mockResponse as Response, jest.fn());
+
+            // Then
+            expect(mockStatus).toHaveBeenCalledWith(500);
+            expect(mockJson).toHaveBeenCalledWith({ error: 'Erro interno' });
+        });
+    });
+
     describe('listProfiles', () => {
         it('should list profiles successfully', async () => {
             // Given
@@ -361,6 +463,285 @@ describe('Profile Controller', () => {
             // Then
             expect(mockStatus).toHaveBeenCalledWith(400);
             expect(mockJson).toHaveBeenCalledWith({ error: 'Usuário não autenticado' });
+        });
+    });
+
+    describe('unlikeProfile', () => {
+        it('should unlike profile successfully', async () => {
+            // Given
+            const mockResult = { 
+                id: 'like-id',
+                userId: 'user-id',
+                targetId: 'target-id',
+                createdAt: new Date()
+            };
+            mockRequest.params = { username: 'testuser' };
+            mockedProfileHandler.unlikeProfile.mockResolvedValue(mockResult);
+
+            // When
+            await profileController.unlikeProfile(mockRequest as AuthenticatedRequest, mockResponse as Response, jest.fn());
+
+            // Then
+            expect(mockedProfileHandler.unlikeProfile).toHaveBeenCalledWith('user-id', 'testuser');
+            expect(mockStatus).toHaveBeenCalledWith(204);
+        });
+
+        it('should return 400 when user not authenticated', async () => {
+            // Given
+            mockRequest.user = undefined;
+            mockRequest.params = { username: 'testuser' };
+
+            // When
+            await profileController.unlikeProfile(mockRequest as AuthenticatedRequest, mockResponse as Response, jest.fn());
+
+            // Then
+            expect(mockStatus).toHaveBeenCalledWith(401);
+            expect(mockJson).toHaveBeenCalledWith({ error: 'Usuário não autenticado' });
+        });
+
+
+
+        it('should handle handler errors', async () => {
+            // Given
+            mockRequest.params = { username: 'testuser' };
+            mockedProfileHandler.unlikeProfile.mockRejectedValue(new Error('Erro interno'));
+
+            // When
+            await profileController.unlikeProfile(mockRequest as AuthenticatedRequest, mockResponse as Response, jest.fn());
+
+            // Then
+            expect(mockStatus).toHaveBeenCalledWith(400);
+            expect(mockJson).toHaveBeenCalledWith({ error: 'Erro interno' });
+        });
+    });
+
+    describe('getFollowers', () => {
+        it('should get followers successfully', async () => {
+            // Given
+            const mockResult = {
+                followers: [
+                    {
+                        id: 'follower-1',
+                        name: 'Follower 1',
+                        username: 'follower1',
+                        avatar: 'avatar1.jpg',
+                        bio: 'Bio 1',
+                        createdAt: new Date(),
+                        isFollowing: false,
+                        isLiked: false,
+                        _count: {
+                            libraryEntries: 0,
+                            following: 0,
+                            followers: 0,
+                            profileLikedBy: 0
+                        }
+                    }
+                ],
+                total: 1,
+                totalPages: 1,
+                currentPage: 1
+            };
+
+            mockRequest.params = { userId: '123e4567-e89b-12d3-a456-426614174000' };
+            mockRequest.query = { page: '1', limit: '10' };
+            mockedProfileHandler.getFollowers.mockResolvedValue(mockResult);
+
+            // When
+            await profileController.getFollowers(mockRequest as AuthenticatedRequest, mockResponse as Response, jest.fn());
+
+            // Then
+            expect(mockedProfileHandler.getFollowers).toHaveBeenCalledWith({
+                userId: '123e4567-e89b-12d3-a456-426614174000',
+                page: 1,
+                limit: 10,
+                authenticatedUserId: 'user-id'
+            });
+            expect(mockResponse.json).toHaveBeenCalledWith(mockResult);
+        });
+
+        it('should return 400 when user not authenticated', async () => {
+            // Given
+            mockRequest.user = undefined;
+            mockRequest.params = { userId: 'invalid-uuid' };
+
+            // When
+            await profileController.getFollowers(mockRequest as AuthenticatedRequest, mockResponse as Response, jest.fn());
+
+            // Then
+            expect(mockStatus).toHaveBeenCalledWith(400);
+            expect(mockJson).toHaveBeenCalledWith({ 
+                error: 'Dados inválidos', 
+                details: ['ID do usuário inválido']
+            });
+        });
+
+        it('should return 400 when userId is missing', async () => {
+            // Given
+            mockRequest.params = {};
+
+            // When
+            await profileController.getFollowers(mockRequest as AuthenticatedRequest, mockResponse as Response, jest.fn());
+
+            // Then
+            expect(mockStatus).toHaveBeenCalledWith(400);
+            expect(mockJson).toHaveBeenCalledWith({ 
+                error: 'Dados inválidos', 
+                details: ['Required']
+            });
+        });
+
+        it('should handle default pagination values', async () => {
+            // Given
+            const mockResult = {
+                followers: [],
+                total: 0,
+                totalPages: 0,
+                currentPage: 1
+            };
+
+            mockRequest.params = { userId: '123e4567-e89b-12d3-a456-426614174000' };
+            mockRequest.query = {};
+            mockedProfileHandler.getFollowers.mockResolvedValue(mockResult);
+
+            // When
+            await profileController.getFollowers(mockRequest as AuthenticatedRequest, mockResponse as Response, jest.fn());
+
+            // Then
+            expect(mockedProfileHandler.getFollowers).toHaveBeenCalledWith({
+                userId: '123e4567-e89b-12d3-a456-426614174000',
+                page: 1,
+                limit: 10,
+                authenticatedUserId: 'user-id'
+            });
+            expect(mockResponse.json).toHaveBeenCalledWith(mockResult);
+        });
+
+        it('should handle handler errors', async () => {
+            // Given
+            mockRequest.params = { userId: '123e4567-e89b-12d3-a456-426614174000' };
+            mockedProfileHandler.getFollowers.mockRejectedValue(new Error('Erro interno'));
+
+            // When
+            await profileController.getFollowers(mockRequest as AuthenticatedRequest, mockResponse as Response, jest.fn());
+
+            // Then
+            expect(mockStatus).toHaveBeenCalledWith(500);
+            expect(mockJson).toHaveBeenCalledWith({ error: 'Erro interno' });
+        });
+    });
+
+    describe('getFollowing', () => {
+        it('should get following successfully', async () => {
+            // Given
+            const mockResult = {
+                following: [
+                    {
+                        id: 'following-1',
+                        name: 'Following 1',
+                        username: 'following1',
+                        avatar: 'avatar1.jpg',
+                        bio: 'Bio 1',
+                        createdAt: new Date(),
+                        isFollowing: true,
+                        isLiked: false,
+                        _count: {
+                            libraryEntries: 0,
+                            following: 0,
+                            followers: 0,
+                            profileLikedBy: 0
+                        }
+                    }
+                ],
+                total: 1,
+                totalPages: 1,
+                currentPage: 1
+            };
+
+            mockRequest.params = { userId: '123e4567-e89b-12d3-a456-426614174000' };
+            mockRequest.query = { page: '1', limit: '10' };
+            mockedProfileHandler.getFollowing.mockResolvedValue(mockResult);
+
+            // When
+            await profileController.getFollowing(mockRequest as AuthenticatedRequest, mockResponse as Response, jest.fn());
+
+            // Then
+            expect(mockedProfileHandler.getFollowing).toHaveBeenCalledWith({
+                userId: '123e4567-e89b-12d3-a456-426614174000',
+                page: 1,
+                limit: 10,
+                authenticatedUserId: 'user-id'
+            });
+            expect(mockResponse.json).toHaveBeenCalledWith(mockResult);
+        });
+
+        it('should return 400 when user not authenticated', async () => {
+            // Given
+            mockRequest.user = undefined;
+            mockRequest.params = { userId: 'invalid-uuid' };
+
+            // When
+            await profileController.getFollowing(mockRequest as AuthenticatedRequest, mockResponse as Response, jest.fn());
+
+            // Then
+            expect(mockStatus).toHaveBeenCalledWith(400);
+            expect(mockJson).toHaveBeenCalledWith({ 
+                error: 'Dados inválidos', 
+                details: ['ID do usuário inválido']
+            });
+        });
+
+        it('should return 400 when userId is missing', async () => {
+            // Given
+            mockRequest.params = {};
+
+            // When
+            await profileController.getFollowing(mockRequest as AuthenticatedRequest, mockResponse as Response, jest.fn());
+
+            // Then
+            expect(mockStatus).toHaveBeenCalledWith(400);
+            expect(mockJson).toHaveBeenCalledWith({ 
+                error: 'Dados inválidos', 
+                details: ['Required']
+            });
+        });
+
+        it('should handle default pagination values', async () => {
+            // Given
+            const mockResult = {
+                following: [],
+                total: 0,
+                totalPages: 0,
+                currentPage: 1
+            };
+
+            mockRequest.params = { userId: '123e4567-e89b-12d3-a456-426614174000' };
+            mockRequest.query = {};
+            mockedProfileHandler.getFollowing.mockResolvedValue(mockResult);
+
+            // When
+            await profileController.getFollowing(mockRequest as AuthenticatedRequest, mockResponse as Response, jest.fn());
+
+            // Then
+            expect(mockedProfileHandler.getFollowing).toHaveBeenCalledWith({
+                userId: '123e4567-e89b-12d3-a456-426614174000',
+                page: 1,
+                limit: 10,
+                authenticatedUserId: 'user-id'
+            });
+            expect(mockResponse.json).toHaveBeenCalledWith(mockResult);
+        });
+
+        it('should handle handler errors', async () => {
+            // Given
+            mockRequest.params = { userId: '123e4567-e89b-12d3-a456-426614174000' };
+            mockedProfileHandler.getFollowing.mockRejectedValue(new Error('Erro interno'));
+
+            // When
+            await profileController.getFollowing(mockRequest as AuthenticatedRequest, mockResponse as Response, jest.fn());
+
+            // Then
+            expect(mockStatus).toHaveBeenCalledWith(500);
+            expect(mockJson).toHaveBeenCalledWith({ error: 'Erro interno' });
         });
     });
 });

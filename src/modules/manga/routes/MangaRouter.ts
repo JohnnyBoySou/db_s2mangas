@@ -20,7 +20,7 @@ AdminMangaRouter.put("/:id", requireAuth, requireAdmin, cacheInvalidationMiddlew
 AdminMangaRouter.patch("/:id", requireAuth, requireAdmin, cacheInvalidationMiddleware(['manga', 'discover']), patch);
 AdminMangaRouter.delete("/:id", requireAuth, requireAdmin, cacheInvalidationMiddleware(['manga', 'discover', 'images']), remove);
 AdminMangaRouter.delete("/clear", requireAuth, requireAdmin, cacheInvalidationMiddleware(['manga', 'discover', 'images']), clearMangaTable);
-AdminMangaRouter.post('/import', requireAuth, importFromMangaDex);
+AdminMangaRouter.post('/import', requireAuth, requireAdmin, importFromMangaDex);
 AdminMangaRouter.post('/import_json/file/:filename', requireAuth, importFromFile);
 
 export { AdminMangaRouter, MangaRouter }

@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals';
 
-export const prismaMock = {
+export const prismaMock: any = {
   manga: {
     create: jest.fn(),
     findMany: jest.fn(),

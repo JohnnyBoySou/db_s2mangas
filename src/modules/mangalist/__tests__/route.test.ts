@@ -346,8 +346,18 @@ describe('MangaList Routes', () => {
                 next();
             });
 
+            // Mock requireAdmin to return 403 for non-admin users
+            requireAdmin.mockImplementation((req, res, next) => {
+                if (req.user?.role === 'admin') {
+                    next();
+                } else {
+                    res.status(403).json({ success: false, message: 'Admin required' });
+                }
+            });
+
             await request(adminApp)
-                .get('/admin/mangalists')
+                .post('/admin/mangalists')
+                .send({ name: 'Test List' })
                 .expect(403);
 
             expect(requireAdmin).toHaveBeenCalled();
@@ -444,11 +454,11 @@ describe('MangaList Routes', () => {
 
             const complexReorderData = {
                 items: [
-                    { id: 'item-1', order: 0 },
-                    { id: 'item-2', order: 1 },
-                    { id: 'item-3', order: 2 },
-                    { id: 'item-4', order: 3 },
-                    { id: 'item-5', order: 4 }
+                    { id: '550e8400-e29b-41d4-a716-446655440000', order: 0 },
+                    { id: '550e8400-e29b-41d4-a716-446655440001', order: 1 },
+                    { id: '550e8400-e29b-41d4-a716-446655440002', order: 2 },
+                    { id: '550e8400-e29b-41d4-a716-446655440003', order: 3 },
+                    { id: '550e8400-e29b-41d4-a716-446655440004', order: 4 }
                 ]
             };
 

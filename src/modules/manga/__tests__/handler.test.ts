@@ -53,8 +53,8 @@ describe('Manga Handlers', () => {
         type: 'manga',
         releaseDate: new Date('2023-01-01'),
         manga_uuid: 'uuid-123',
-        languageIds: ['lang-123'],
-        categoryIds: ['cat-123'],
+        languageIds: ['550e8400-e29b-41d4-a716-446655440000'],
+        categoryIds: ['550e8400-e29b-41d4-a716-446655440001'],
         translations: [
             {
                 language: 'pt',
@@ -273,7 +273,7 @@ describe('Manga Handlers', () => {
 
             const updateData = {
                 cover: 'https://example.com/new-cover.jpg',
-                languageIds: ['lang-123'],
+                languageIds: ['550e8400-e29b-41d4-a716-446655440000'],
                 translations: [
                     {
                         language: 'pt',
@@ -310,8 +310,10 @@ describe('Manga Handlers', () => {
         it('deve falhar para mangá não encontrado', async () => {
             prismaMock.manga.findUnique.mockResolvedValue(null);
 
-            await expect(MangaHandler.updateManga('invalid-id', {}))
-                .rejects.toThrow('Mangá não encontrado');
+            await expect(MangaHandler.updateManga('invalid-id', {
+                languageIds: ['550e8400-e29b-41d4-a716-446655440000'],
+                translations: [{ language: 'pt', name: 'Test' }]
+            })).rejects.toThrow('Mangá não encontrado');
         });
     });
 
@@ -344,7 +346,7 @@ describe('Manga Handlers', () => {
         it('deve falhar para mangá não encontrado', async () => {
             prismaMock.manga.findUnique.mockResolvedValue(null);
 
-            await expect(MangaHandler.patchManga('invalid-id', { cover: 'test' }))
+            await expect(MangaHandler.patchManga('invalid-id', { status: 'completed' }))
                 .rejects.toThrow('Mangá não encontrado');
         });
     });
@@ -441,7 +443,7 @@ describe('Manga Handlers', () => {
 
             const result = await MangaHandler.getMangaCovers('manga-123');
 
-            expect(mockedAxios.get).toHaveBeenCalledWith('https://api.mangadx.org/cover', {
+            expect(mockedAxios.get).toHaveBeenCalledWith('https://api.mangadex.org/cover', {
                 params: {
                     manga: ['uuid-123']
                 }
@@ -449,7 +451,7 @@ describe('Manga Handlers', () => {
 
             expect(result).toEqual([
                 {
-                    img: 'https://uploads.mangadx.org/covers/uuid-123/cover.jpg',
+                    img: 'https://uploads.mangadex.org/covers/uuid-123/cover.jpg',
                     volume: '1',
                     id: 'cover-123'
                 }
@@ -457,7 +459,7 @@ describe('Manga Handlers', () => {
         });
 
         it('deve falhar se UUID não encontrado', async () => {
-            prismaMock.manga.findUnique.mockResolvedValue(null);
+            prismaMock.manga.findUnique.mockResolvedValue(null as any);
 
             await expect(MangaHandler.getMangaCovers('invalid-id'))
                 .rejects.toThrow('UUID do mangá não encontrado');
@@ -537,6 +539,245 @@ describe('Manga Handlers', () => {
             expect(prismaMock.$transaction).toHaveBeenCalled();
             expect(result.message).toContain('limpas com sucesso');
             expect(result.timestamp).toBeInstanceOf(Date);
+        });
+    });
+
+    describe('importMangaFromMangaDex', () => {
+        it('deve importar mangá do MangaDex com sucesso', async () => {
+            const mockMangaDxResponse = {
+                data: {
+                    data: {
+                        attributes: {
+                            title: { en: 'Test Manga', pt: 'Manga Teste' },
+                            description: { en: 'Test description', pt: 'Descrição teste' },
+                            status: 'ongoing',
+                            type: 'manga',
+                            year: 2023,
+                            availableTranslatedLanguages: ['en', 'pt'],
+                            coverArt: { fileName: 'cover.jpg' }
+                        },
+                        relationships: [
+                            { type: 'tag', id: 'tag-123' }
+                        ]
+                    }
+                }
+            };
+
+            mockedAxios.get.mockResolvedValue(mockMangaDxResponse);
+            prismaMock.manga.create.mockResolvedValue(mockMangaData);
+
+            const result = await MangaHandler.importMangaFromMangaDex('test-uuid');
+
+            expect(mockedAxios.get).toHaveBeenCalledWith('https://api.mangadex.org/manga/test-uuid');
+            expect(prismaMock.manga.create).toHaveBeenCalledWith({
+                data: expect.objectContaining({
+                    manga_uuid: 'test-uuid',
+                    status: 'ongoing',
+                    type: 'manga'
+                }),
+                include: {
+                    translations: true,
+                    languages: true,
+                    categories: true
+                }
+            });
+            expect(result).toEqual(mockMangaData);
+        });
+
+        it('deve falhar quando API do MangaDx retorna erro', async () => {
+            mockedAxios.get.mockRejectedValue(new Error('API Error'));
+
+            await expect(MangaHandler.importMangaFromMangaDex('invalid-uuid'))
+                .rejects.toThrow('API Error');
+        });
+    });
+
+    describe('getMangaChapters', () => {
+        it('deve retornar capítulos do mangá com paginação', async () => {
+            prismaMock.manga.findUnique.mockResolvedValue({
+                manga_uuid: 'uuid-123'
+            });
+
+            const mockChaptersResponse = {
+                status: 200,
+                data: {
+                    data: [
+                        {
+                            id: 'chapter-123',
+                            attributes: {
+                                title: 'Capítulo 1',
+                                chapter: '1',
+                                volume: '1',
+                                pages: 20,
+                                publishAt: '2023-01-01T00:00:00Z',
+                                translatedLanguage: 'pt'
+                            }
+                        }
+                    ],
+                    total: 1
+                }
+            };
+
+            mockedAxios.get.mockResolvedValue(mockChaptersResponse);
+
+            const result = await MangaHandler.getMangaChapters('manga-123', 'pt', 'asc', 1, 10);
+
+            expect(prismaMock.manga.findUnique).toHaveBeenCalledWith({
+                where: { id: 'manga-123' },
+                select: { manga_uuid: true }
+            });
+
+            expect(result.current_page).toBe(1);
+            expect(result.total).toBe(1);
+            expect(result.data).toHaveLength(1);
+            expect(result.data[0].title).toBe('Capítulo 1');
+        });
+
+        it('deve falhar quando mangá não é encontrado', async () => {
+            prismaMock.manga.findUnique.mockResolvedValue(null);
+
+            await expect(MangaHandler.getMangaChapters('invalid-id', 'pt', 'asc', 1, 10))
+                .rejects.toThrow('Mangá não encontrado ou UUID não disponível');
+        });
+
+        it('deve retornar estrutura vazia quando não há capítulos', async () => {
+            prismaMock.manga.findUnique.mockResolvedValue({
+                manga_uuid: 'uuid-123'
+            });
+
+            mockedAxios.get.mockResolvedValue({
+                status: 200,
+                data: {
+                    data: [],
+                    total: 0
+                }
+            });
+
+            const result = await MangaHandler.getMangaChapters('manga-123', 'pt', 'asc', 1, 10);
+
+            expect(result.total).toBe(0);
+            expect(result.data).toEqual([]);
+        });
+    });
+
+    describe('getChapterPages', () => {
+        it('deve retornar páginas do capítulo com qualidade alta', async () => {
+            const mockPagesResponse = {
+                status: 200,
+                data: {
+                    baseUrl: 'https://uploads.mangadx.org',
+                    chapter: {
+                        hash: 'chapter-hash',
+                        data: ['page1.jpg', 'page2.jpg'],
+                        dataSaver: ['page1_low.jpg', 'page2_low.jpg']
+                    }
+                }
+            };
+
+            mockedAxios.get.mockResolvedValue(mockPagesResponse);
+
+            const result = await MangaHandler.getChapterPages('chapter-123', 'high');
+
+            expect(result.pages).toEqual([
+                'https://uploads.mangadx.org/data/chapter-hash/page1.jpg',
+                'https://uploads.mangadx.org/data/chapter-hash/page2.jpg'
+            ]);
+            expect(result.total).toBe(2);
+            expect(result.quality).toBe('high');
+        });
+
+        it('deve retornar páginas com qualidade baixa', async () => {
+            const mockPagesResponse = {
+                status: 200,
+                data: {
+                    baseUrl: 'https://uploads.mangadx.org',
+                    chapter: {
+                        hash: 'chapter-hash',
+                        data: ['page1.jpg', 'page2.jpg'],
+                        dataSaver: ['page1_low.jpg', 'page2_low.jpg']
+                    }
+                }
+            };
+
+            mockedAxios.get.mockResolvedValue(mockPagesResponse);
+
+            const result = await MangaHandler.getChapterPages('chapter-123', 'low');
+
+            expect(result.pages).toEqual([
+                'https://uploads.mangadx.org/data/chapter-hash/page1_low.jpg',
+                'https://uploads.mangadx.org/data/chapter-hash/page2_low.jpg'
+            ]);
+            expect(result.quality).toBe('low');
+        });
+
+        it('deve falhar quando não há dados de imagem', async () => {
+            mockedAxios.get.mockResolvedValue({
+                status: 200,
+                data: {
+                    baseUrl: 'https://uploads.mangadx.org',
+                    chapter: {
+                        hash: 'chapter-hash',
+                        data: [],
+                        dataSaver: []
+                    }
+                }
+            });
+
+            await expect(MangaHandler.getChapterPages('chapter-123', 'high'))
+                .rejects.toThrow('No images found for this chapter');
+        });
+    });
+
+    describe('getAdjacentChapters', () => {
+        it('deve retornar capítulos anterior e próximo', async () => {
+            const mockChapters = [
+                { id: 'ch1', chapter: '1', title: 'Capítulo 1', volume: '1' },
+                { id: 'ch2', chapter: '2', title: 'Capítulo 2', volume: '1' },
+                { id: 'ch3', chapter: '3', title: 'Capítulo 3', volume: '1' }
+            ];
+
+            prismaMock.chapter.findMany.mockResolvedValue(mockChapters);
+
+            const result = await MangaHandler.getAdjacentChapters('manga-123', '2');
+
+            expect(result.previous).toEqual({
+                id: 'ch1',
+                chapter: '1',
+                title: 'Capítulo 1',
+                volume: '1'
+            });
+            expect(result.next).toEqual({
+                id: 'ch3',
+                chapter: '3',
+                title: 'Capítulo 3',
+                volume: '1'
+            });
+        });
+
+        it('deve retornar null para anterior quando é o primeiro capítulo', async () => {
+            const mockChapters = [
+                { id: 'ch1', chapter: '1', title: 'Capítulo 1', volume: '1' },
+                { id: 'ch2', chapter: '2', title: 'Capítulo 2', volume: '1' }
+            ];
+
+            prismaMock.chapter.findMany.mockResolvedValue(mockChapters);
+
+            const result = await MangaHandler.getAdjacentChapters('manga-123', '1');
+
+            expect(result.previous).toBeNull();
+            expect(result.next).toEqual({
+                id: 'ch2',
+                chapter: '2',
+                title: 'Capítulo 2',
+                volume: '1'
+            });
+        });
+
+        it('deve falhar quando capítulo não é encontrado', async () => {
+            prismaMock.chapter.findMany.mockResolvedValue([]);
+
+            await expect(MangaHandler.getAdjacentChapters('manga-123', '999'))
+                .rejects.toThrow('Capítulo não encontrado');
         });
     });
 });

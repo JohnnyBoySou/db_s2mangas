@@ -15,14 +15,14 @@ describe('MangaList Handlers', () => {
     });
 
     const mockMangaListData = {
-        id: 'list-123',
+        id: '550e8400-e29b-41d4-a716-446655440000',
         name: 'Minha Lista',
         cover: 'https://example.com/cover.jpg',
         mood: 'Ação',
         description: 'Lista de mangás de ação',
         status: 'PUBLIC',
         isDefault: false,
-        userId: 'user-123',
+        userId: '550e8400-e29b-41d4-a716-446655440001',
         createdAt: new Date('2023-01-01'),
         updatedAt: new Date('2023-01-01'),
         _count: {
@@ -32,21 +32,21 @@ describe('MangaList Handlers', () => {
     };
 
     const mockMangaListItem = {
-        id: 'item-123',
-        listId: 'list-123',
-        mangaId: 'manga-123',
+        id: '550e8400-e29b-41d4-a716-446655440002',
+        listId: '550e8400-e29b-41d4-a716-446655440000',
+        mangaId: '550e8400-e29b-41d4-a716-446655440003',
         order: 0,
         note: 'Ótimo mangá',
         manga: {
-            id: 'manga-123',
+            id: '550e8400-e29b-41d4-a716-446655440003',
             cover: 'https://example.com/manga-cover.jpg',
             status: 'ongoing',
             translations: [
                 {
-                    id: 'trans-123',
+                    id: '550e8400-e29b-41d4-a716-446655440004',
                     name: 'Manga Teste',
                     language: 'pt-BR',
-                    mangaId: 'manga-123'
+                    mangaId: '550e8400-e29b-41d4-a716-446655440003'
                 }
             ]
         }
@@ -63,7 +63,7 @@ describe('MangaList Handlers', () => {
 
     describe('createMangaList', () => {
         it('deve criar uma lista de mangás com sucesso', async () => {
-            prismaMock.mangaList.create.mockResolvedValue(mockMangaListData);
+            (prismaMock.mangaList.create as any).mockResolvedValue(mockMangaListData);
 
             const result = await MangaListHandler.createMangaList(validCreateData);
 
@@ -92,14 +92,14 @@ describe('MangaList Handlers', () => {
         it('deve criar lista com mangás iniciais', async () => {
             const dataWithMangas = {
                 ...validCreateData,
-                mangaIds: ['manga-123', 'manga-456']
+                mangaIds: ['550e8400-e29b-41d4-a716-446655440003', '550e8400-e29b-41d4-a716-446655440005']
             };
 
-            prismaMock.mangaList.create.mockResolvedValue(mockMangaListData);
-            prismaMock.manga.findUnique.mockResolvedValue({ id: 'manga-123' });
-            prismaMock.mangaListItem.create
-                .mockResolvedValueOnce({ id: 'item-1', listId: 'list-123', mangaId: 'manga-123', order: 0 })
-                .mockResolvedValueOnce({ id: 'item-2', listId: 'list-123', mangaId: 'manga-456', order: 1 });
+            (prismaMock.mangaList.create as any).mockResolvedValue(mockMangaListData);
+            (prismaMock.manga.findUnique as any).mockResolvedValue({ id: '550e8400-e29b-41d4-a716-446655440003' });
+            (prismaMock.mangaListItem.create as any)
+                .mockResolvedValueOnce({ id: '550e8400-e29b-41d4-a716-446655440006', listId: '550e8400-e29b-41d4-a716-446655440000', mangaId: '550e8400-e29b-41d4-a716-446655440003', order: 0 })
+                .mockResolvedValueOnce({ id: '550e8400-e29b-41d4-a716-446655440007', listId: '550e8400-e29b-41d4-a716-446655440000', mangaId: '550e8400-e29b-41d4-a716-446655440005', order: 1 });
 
             const result = await MangaListHandler.createMangaList(dataWithMangas);
 
@@ -111,11 +111,11 @@ describe('MangaList Handlers', () => {
         it('deve falhar se mangá não existir', async () => {
             const dataWithInvalidManga = {
                 ...validCreateData,
-                mangaIds: ['invalid-manga-id']
+                mangaIds: ['550e8400-e29b-41d4-a716-446655440011']
             };
 
-            prismaMock.mangaList.create.mockResolvedValue(mockMangaListData);
-            prismaMock.manga.findUnique.mockResolvedValue(null);
+            (prismaMock.mangaList.create as any).mockResolvedValue(mockMangaListData);
+            (prismaMock.manga.findUnique as any).mockResolvedValue(null);
 
             await expect(MangaListHandler.createMangaList(dataWithInvalidManga))
                 .rejects.toThrow(MangaListHandler.MangaNotFoundError);
@@ -138,21 +138,23 @@ describe('MangaList Handlers', () => {
             const mockLists = [mockMangaListData];
             const mockTotal = 1;
 
-            prismaMock.mangaList.findMany.mockResolvedValue(mockLists);
-            prismaMock.mangaList.count.mockResolvedValue(mockTotal);
+            (prismaMock.mangaList.findMany as any).mockResolvedValue(mockLists);
+            (prismaMock.mangaList.count as any).mockResolvedValue(mockTotal);
 
             const filters = {
-                userId: 'user-123',
+                userId: '550e8400-e29b-41d4-a716-446655440001',
                 status: 'PUBLIC' as const,
                 page: 1,
-                limit: 20
+                limit: 20,
+                sortBy: 'createdAt' as const,
+                sortOrder: 'desc' as const
             };
 
             const result = await MangaListHandler.getMangaLists(filters);
 
             expect(prismaMock.mangaList.findMany).toHaveBeenCalledWith({
                 where: {
-                    userId: 'user-123',
+                    userId: '550e8400-e29b-41d4-a716-446655440001',
                     status: 'PUBLIC'
                 },
                 include: {
@@ -177,13 +179,15 @@ describe('MangaList Handlers', () => {
         });
 
         it('deve aplicar filtro de busca', async () => {
-            prismaMock.mangaList.findMany.mockResolvedValue([]);
-            prismaMock.mangaList.count.mockResolvedValue(0);
+            (prismaMock.mangaList.findMany as any).mockResolvedValue([]);
+            (prismaMock.mangaList.count as any).mockResolvedValue(0);
 
             const filters = {
-                search: 'aventura',
+                search: 'test',
                 page: 1,
-                limit: 20
+                limit: 10,
+                sortBy: 'createdAt' as const,
+                sortOrder: 'desc' as const
             };
 
             await MangaListHandler.getMangaLists(filters);
@@ -191,20 +195,27 @@ describe('MangaList Handlers', () => {
             expect(prismaMock.mangaList.findMany).toHaveBeenCalledWith({
                 where: {
                     OR: [
-                        { name: { contains: 'aventura', mode: 'insensitive' } },
-                        { description: { contains: 'aventura', mode: 'insensitive' } }
+                        { name: { contains: 'test', mode: 'insensitive' } },
+                        { description: { contains: 'test', mode: 'insensitive' } }
                     ]
                 },
-                include: expect.any(Object),
+                include: {
+                    _count: {
+                        select: {
+                            items: true,
+                            likes: true
+                        }
+                    }
+                },
                 orderBy: { createdAt: 'desc' },
                 skip: 0,
-                take: 20
+                take: 10
             });
         });
 
         it('deve aplicar ordenação por likes', async () => {
-            prismaMock.mangaList.findMany.mockResolvedValue([]);
-            prismaMock.mangaList.count.mockResolvedValue(0);
+            (prismaMock.mangaList.findMany as any).mockResolvedValue([]);
+            (prismaMock.mangaList.count as any).mockResolvedValue(0);
 
             const filters = {
                 sortBy: 'likesCount' as const,
@@ -227,10 +238,10 @@ describe('MangaList Handlers', () => {
 
     describe('getPublicMangaLists', () => {
         it('deve retornar apenas listas públicas', async () => {
-            prismaMock.mangaList.findMany.mockResolvedValue([mockMangaListData]);
-            prismaMock.mangaList.count.mockResolvedValue(1);
+            (prismaMock.mangaList.findMany as any).mockResolvedValue([mockMangaListData]);
+            (prismaMock.mangaList.count as any).mockResolvedValue(1);
 
-            const filters = { page: 1, limit: 20 };
+            const filters = { page: 1, limit: 20, sortBy: 'createdAt' as const, sortOrder: 'desc' as const };
 
             await MangaListHandler.getPublicMangaLists(filters);
 
@@ -251,12 +262,12 @@ describe('MangaList Handlers', () => {
                 items: [mockMangaListItem]
             };
 
-            prismaMock.mangaList.findUnique.mockResolvedValue(mockListWithItems);
+            (prismaMock.mangaList.findUnique as any).mockResolvedValue(mockListWithItems);
 
-            const result = await MangaListHandler.getMangaListById('list-123');
+            const result = await MangaListHandler.getMangaListById('550e8400-e29b-41d4-a716-446655440000');
 
             expect(prismaMock.mangaList.findUnique).toHaveBeenCalledWith({
-                where: { id: 'list-123' },
+                where: { id: '550e8400-e29b-41d4-a716-446655440000' },
                 include: {
                     items: {
                         include: {
@@ -284,7 +295,7 @@ describe('MangaList Handlers', () => {
         });
 
         it('deve falhar para lista não encontrada', async () => {
-            prismaMock.mangaList.findUnique.mockResolvedValue(null);
+            (prismaMock.mangaList.findUnique as any).mockResolvedValue(null);
 
             await expect(MangaListHandler.getMangaListById('invalid-id'))
                 .rejects.toThrow(MangaListHandler.MangaListNotFoundError);
@@ -298,17 +309,17 @@ describe('MangaList Handlers', () => {
                 description: 'Nova descrição'
             };
 
-            prismaMock.mangaList.findUnique.mockResolvedValue(mockMangaListData);
-            prismaMock.mangaList.update.mockResolvedValue({ ...mockMangaListData, ...updateData });
+            (prismaMock.mangaList.findUnique as any).mockResolvedValue(mockMangaListData);
+            (prismaMock.mangaList.update as any).mockResolvedValue({ ...mockMangaListData, ...updateData });
 
-            const result = await MangaListHandler.updateMangaList('list-123', updateData);
+            const result = await MangaListHandler.updateMangaList('550e8400-e29b-41d4-a716-446655440000', updateData);
 
             expect(prismaMock.mangaList.findUnique).toHaveBeenCalledWith({
-                where: { id: 'list-123' }
+                where: { id: '550e8400-e29b-41d4-a716-446655440000' }
             });
 
             expect(prismaMock.mangaList.update).toHaveBeenCalledWith({
-                where: { id: 'list-123' },
+                where: { id: '550e8400-e29b-41d4-a716-446655440000' },
                 data: updateData,
                 include: {
                     _count: {
@@ -324,7 +335,7 @@ describe('MangaList Handlers', () => {
         });
 
         it('deve falhar para lista não encontrada', async () => {
-            prismaMock.mangaList.findUnique.mockResolvedValue(null);
+            (prismaMock.mangaList.findUnique as any).mockResolvedValue(null);
 
             await expect(MangaListHandler.updateMangaList('invalid-id', { name: 'Teste' }))
                 .rejects.toThrow(MangaListHandler.MangaListNotFoundError);
@@ -333,24 +344,24 @@ describe('MangaList Handlers', () => {
 
     describe('deleteMangaList', () => {
         it('deve deletar lista existente', async () => {
-            prismaMock.mangaList.findUnique.mockResolvedValue(mockMangaListData);
-            prismaMock.mangaList.delete.mockResolvedValue(mockMangaListData);
+            (prismaMock.mangaList.findUnique as any).mockResolvedValue(mockMangaListData);
+            (prismaMock.mangaList.delete as any).mockResolvedValue(mockMangaListData);
 
-            const result = await MangaListHandler.deleteMangaList('list-123');
+            const result = await MangaListHandler.deleteMangaList('550e8400-e29b-41d4-a716-446655440000');
 
             expect(prismaMock.mangaList.findUnique).toHaveBeenCalledWith({
-                where: { id: 'list-123' }
+                where: { id: '550e8400-e29b-41d4-a716-446655440000' }
             });
 
             expect(prismaMock.mangaList.delete).toHaveBeenCalledWith({
-                where: { id: 'list-123' }
+                where: { id: '550e8400-e29b-41d4-a716-446655440000' }
             });
 
             expect(result.message).toBe('Lista deletada com sucesso');
         });
 
         it('deve falhar para lista não encontrada', async () => {
-            prismaMock.mangaList.findUnique.mockResolvedValue(null);
+            (prismaMock.mangaList.findUnique as any).mockResolvedValue(null);
 
             await expect(MangaListHandler.deleteMangaList('invalid-id'))
                 .rejects.toThrow(MangaListHandler.MangaListNotFoundError);
@@ -360,22 +371,22 @@ describe('MangaList Handlers', () => {
     describe('addMangaToList', () => {
         it('deve adicionar mangá à lista', async () => {
             const addData = {
-                mangaId: 'manga-123',
+                mangaId: '550e8400-e29b-41d4-a716-446655440003',
                 note: 'Ótimo mangá'
             };
 
-            prismaMock.mangaList.findUnique.mockResolvedValue(mockMangaListData);
-            prismaMock.manga.findUnique.mockResolvedValue({ id: 'manga-123' });
-            prismaMock.mangaListItem.findFirst.mockResolvedValue(null); // Não existe na lista
-            prismaMock.mangaListItem.findFirst.mockResolvedValueOnce(null); // Para maxOrder
-            prismaMock.mangaListItem.create.mockResolvedValue(mockMangaListItem);
+            (prismaMock.mangaList.findUnique as any).mockResolvedValue(mockMangaListData);
+            (prismaMock.manga.findUnique as any).mockResolvedValue({ id: '550e8400-e29b-41d4-a716-446655440003' });
+            (prismaMock.mangaListItem.findFirst as any).mockResolvedValue(null); // Não existe na lista
+            (prismaMock.mangaListItem.findFirst as any).mockResolvedValueOnce(null); // Para maxOrder
+            (prismaMock.mangaListItem.create as any).mockResolvedValue(mockMangaListItem);
 
-            const result = await MangaListHandler.addMangaToList('list-123', addData);
+            const result = await MangaListHandler.addMangaToList('550e8400-e29b-41d4-a716-446655440000', addData);
 
             expect(prismaMock.mangaListItem.create).toHaveBeenCalledWith({
                 data: {
-                    listId: 'list-123',
-                    mangaId: 'manga-123',
+                    listId: '550e8400-e29b-41d4-a716-446655440000',
+                    mangaId: '550e8400-e29b-41d4-a716-446655440003',
                     order: 0,
                     note: 'Ótimo mangá'
                 },
@@ -395,46 +406,46 @@ describe('MangaList Handlers', () => {
         });
 
         it('deve falhar se lista não existir', async () => {
-            prismaMock.mangaList.findUnique.mockResolvedValue(null);
+            (prismaMock.mangaList.findUnique as any).mockResolvedValue(null);
 
-            await expect(MangaListHandler.addMangaToList('invalid-list', { mangaId: 'manga-123' }))
+            await expect(MangaListHandler.addMangaToList('550e8400-e29b-41d4-a716-446655440008', { mangaId: '550e8400-e29b-41d4-a716-446655440003' }))
                 .rejects.toThrow(MangaListHandler.MangaListNotFoundError);
         });
 
         it('deve falhar se mangá não existir', async () => {
-            prismaMock.mangaList.findUnique.mockResolvedValue(mockMangaListData);
-            prismaMock.manga.findUnique.mockResolvedValue(null);
+            (prismaMock.mangaList.findUnique as any).mockResolvedValue(mockMangaListData);
+            (prismaMock.manga.findUnique as any).mockResolvedValue(null);
 
-            await expect(MangaListHandler.addMangaToList('list-123', { mangaId: 'invalid-manga' }))
+            await expect(MangaListHandler.addMangaToList('550e8400-e29b-41d4-a716-446655440000', { mangaId: '550e8400-e29b-41d4-a716-446655440009' }))
                 .rejects.toThrow(MangaListHandler.MangaNotFoundError);
         });
 
         it('deve falhar se mangá já estiver na lista', async () => {
-            prismaMock.mangaList.findUnique.mockResolvedValue(mockMangaListData);
-            prismaMock.manga.findUnique.mockResolvedValue({ id: 'manga-123' });
-            prismaMock.mangaListItem.findFirst.mockResolvedValue(mockMangaListItem); // Já existe
+            (prismaMock.mangaList.findUnique as any).mockResolvedValue(mockMangaListData);
+            (prismaMock.manga.findUnique as any).mockResolvedValue({ id: '550e8400-e29b-41d4-a716-446655440003' });
+            (prismaMock.mangaListItem.findFirst as any).mockResolvedValue(mockMangaListItem); // Já existe
 
-            await expect(MangaListHandler.addMangaToList('list-123', { mangaId: 'manga-123' }))
+            await expect(MangaListHandler.addMangaToList('550e8400-e29b-41d4-a716-446655440000', { mangaId: '550e8400-e29b-41d4-a716-446655440003' }))
                 .rejects.toThrow(MangaListHandler.MangaAlreadyInListError);
         });
 
         it('deve usar ordem especificada', async () => {
             const addData = {
-                mangaId: 'manga-123',
+                mangaId: '550e8400-e29b-41d4-a716-446655440003',
                 order: 5
             };
 
-            prismaMock.mangaList.findUnique.mockResolvedValue(mockMangaListData);
-            prismaMock.manga.findUnique.mockResolvedValue({ id: 'manga-123' });
-            prismaMock.mangaListItem.findFirst.mockResolvedValue(null);
-            prismaMock.mangaListItem.create.mockResolvedValue(mockMangaListItem);
+            (prismaMock.mangaList.findUnique as any).mockResolvedValue(mockMangaListData);
+            (prismaMock.manga.findUnique as any).mockResolvedValue({ id: '550e8400-e29b-41d4-a716-446655440003' });
+            (prismaMock.mangaListItem.findFirst as any).mockResolvedValue(null);
+            (prismaMock.mangaListItem.create as any).mockResolvedValue(mockMangaListItem);
 
-            await MangaListHandler.addMangaToList('list-123', addData);
+            await MangaListHandler.addMangaToList('550e8400-e29b-41d4-a716-446655440000', addData);
 
             expect(prismaMock.mangaListItem.create).toHaveBeenCalledWith({
                 data: {
-                    listId: 'list-123',
-                    mangaId: 'manga-123',
+                    listId: '550e8400-e29b-41d4-a716-446655440000',
+                    mangaId: '550e8400-e29b-41d4-a716-446655440003',
                     order: 5,
                     note: undefined
                 },
@@ -445,41 +456,41 @@ describe('MangaList Handlers', () => {
 
     describe('removeMangaFromList', () => {
         it('deve remover item da lista', async () => {
-            prismaMock.mangaList.findUnique.mockResolvedValue(mockMangaListData);
-            prismaMock.mangaListItem.findUnique.mockResolvedValue(mockMangaListItem);
-            prismaMock.mangaListItem.delete.mockResolvedValue(mockMangaListItem);
+            (prismaMock.mangaList.findUnique as any).mockResolvedValue(mockMangaListData);
+            (prismaMock.mangaListItem.findUnique as any).mockResolvedValue(mockMangaListItem);
+            (prismaMock.mangaListItem.delete as any).mockResolvedValue(mockMangaListItem);
 
-            const result = await MangaListHandler.removeMangaFromList('list-123', 'item-123');
+            const result = await MangaListHandler.removeMangaFromList('550e8400-e29b-41d4-a716-446655440000', '550e8400-e29b-41d4-a716-446655440002');
 
             expect(prismaMock.mangaListItem.delete).toHaveBeenCalledWith({
-                where: { id: 'item-123' }
+                where: { id: '550e8400-e29b-41d4-a716-446655440002' }
             });
 
             expect(result.message).toBe('Mangá removido da lista com sucesso');
         });
 
         it('deve falhar se lista não existir', async () => {
-            prismaMock.mangaList.findUnique.mockResolvedValue(null);
+            (prismaMock.mangaList.findUnique as any).mockResolvedValue(null);
 
             await expect(MangaListHandler.removeMangaFromList('invalid-list', 'item-123'))
                 .rejects.toThrow(MangaListHandler.MangaListNotFoundError);
         });
 
         it('deve falhar se item não existir', async () => {
-            prismaMock.mangaList.findUnique.mockResolvedValue(mockMangaListData);
-            prismaMock.mangaListItem.findUnique.mockResolvedValue(null);
+            (prismaMock.mangaList.findUnique as any).mockResolvedValue(mockMangaListData);
+            (prismaMock.mangaListItem.findUnique as any).mockResolvedValue(null);
 
-            await expect(MangaListHandler.removeMangaFromList('list-123', 'invalid-item'))
+            await expect(MangaListHandler.removeMangaFromList('550e8400-e29b-41d4-a716-446655440000', '550e8400-e29b-41d4-a716-446655440010'))
                 .rejects.toThrow(MangaListHandler.MangaListItemNotFoundError);
         });
 
         it('deve falhar se item não pertencer à lista', async () => {
             const itemFromDifferentList = { ...mockMangaListItem, listId: 'other-list' };
             
-            prismaMock.mangaList.findUnique.mockResolvedValue(mockMangaListData);
-            prismaMock.mangaListItem.findUnique.mockResolvedValue(itemFromDifferentList);
+            (prismaMock.mangaList.findUnique as any).mockResolvedValue(mockMangaListData);
+            (prismaMock.mangaListItem.findUnique as any).mockResolvedValue(itemFromDifferentList);
 
-            await expect(MangaListHandler.removeMangaFromList('list-123', 'item-123'))
+            await expect(MangaListHandler.removeMangaFromList('550e8400-e29b-41d4-a716-446655440000', '550e8400-e29b-41d4-a716-446655440002'))
                 .rejects.toThrow(MangaListHandler.MangaListItemNotFoundError);
         });
     });

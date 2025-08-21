@@ -525,7 +525,9 @@ describe('MangaList Validators', () => {
             const createData: CreateMangaListInput = {
                 name: 'Test List',
                 cover: 'https://example.com/cover.jpg',
-                mood: 'Action'
+                mood: 'Action',
+                status: 'PUBLIC',
+                isDefault: false
             };
 
             expect(createData.name).toBe('Test List');
