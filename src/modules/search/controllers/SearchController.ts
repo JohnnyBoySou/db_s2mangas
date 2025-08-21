@@ -1,8 +1,12 @@
 import { RequestHandler } from 'express';
 import { handleZodError } from '@/utils/zodError';
 import * as searchHandlers from '../handlers/SearchHandler';
+import SmartSearchHandler from '../handlers/SmartSearchHandler';
 import { advancedSearchSchema } from '../validators/SearchValidator';
 import { MANGA_TYPE } from '@/constants/search';
+
+// Initialize smart search handler
+const smartSearchHandler = new SmartSearchHandler();
 
 /**
  * @swagger
@@ -540,6 +544,216 @@ export const listLanguages: RequestHandler = async (_req, res) => {
     try {
         const languages = await searchHandlers.listLanguages();
         res.status(200).json(languages);
+    } catch (err) {
+        handleZodError(err, res);
+    }
+};
+
+/**
+ * @swagger
+ * /search/smart:
+ *   get:
+ *     summary: Busca inteligente
+ *     description: Realiza busca usando Elasticsearch quando disponível, com fallback para SQL
+ *     tags: [Busca]
+ *     parameters:
+ *       - in: path
+ *         name: lg
+ *         schema:
+ *           type: string
+ *           default: "pt-BR"
+ *         description: Idioma da busca
+ *       - in: query
+ *         name: name
+ *         schema:
+ *           type: string
+ *         description: Nome do mangá
+ *       - in: query
+ *         name: categories
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *         description: Lista de categorias
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *         description: Status do mangá
+ *       - in: query
+ *         name: type
+ *         schema:
+ *           type: string
+ *         description: Tipo do mangá
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: string
+ *           default: "1"
+ *         description: Número da página
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: string
+ *           default: "10"
+ *         description: Número de itens por página
+ *     responses:
+ *       200:
+ *         description: Busca inteligente realizada com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Manga'
+ *                 total:
+ *                   type: number
+ *                 took:
+ *                   type: number
+ *                   description: Tempo de resposta em ms
+ *                 searchType:
+ *                   type: string
+ *                   enum: ["elasticsearch", "sql"]
+ *                   description: Tipo de busca utilizada
+ *                 pagination:
+ *                   type: object
+ *                 performance:
+ *                   type: object
+ *                   properties:
+ *                     elasticsearchAvailable:
+ *                       type: boolean
+ *                     responseTime:
+ *                       type: number
+ *       400:
+ *         description: Dados inválidos
+ *       500:
+ *         description: Erro interno do servidor
+ */
+export const smartSearch: RequestHandler = async (req, res) => {
+    try {
+        const validatedData = advancedSearchSchema.parse(req.query);
+        const result = await smartSearchHandler.intelligentSearch({
+            ...validatedData,
+            language: req.params.lg || 'pt-BR'
+        });
+        res.status(200).json(result);
+    } catch (err) {
+        handleZodError(err, res);
+    }
+};
+
+/**
+ * @swagger
+ * /search/autocomplete:
+ *   get:
+ *     summary: Autocomplete de busca
+ *     description: Retorna sugestões em tempo real para autocomplete
+ *     tags: [Busca]
+ *     parameters:
+ *       - in: path
+ *         name: lg
+ *         schema:
+ *           type: string
+ *           default: "pt-BR"
+ *         description: Idioma da busca
+ *       - in: query
+ *         name: q
+ *         required: true
+ *         schema:
+ *           type: string
+ *           minLength: 1
+ *         description: Texto para buscar sugestões
+ *         example: "one p"
+ *     responses:
+ *       200:
+ *         description: Sugestões retornadas com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 suggestions:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       text:
+ *                         type: string
+ *                         description: Texto da sugestão
+ *                         example: "One Piece"
+ *                       score:
+ *                         type: number
+ *                         description: Score de relevância
+ *                         example: 0.95
+ *                       type:
+ *                         type: string
+ *                         enum: ["title", "category"]
+ *                         description: Tipo da sugestão
+ *                         example: "title"
+ *                 total:
+ *                   type: number
+ *                   description: Total de sugestões
+ *                   example: 5
+ *       400:
+ *         description: Query parameter 'q' é obrigatório
+ *       500:
+ *         description: Erro interno do servidor
+ */
+export const autocomplete: RequestHandler = async (req, res) => {
+    const query = req.query.q as string;
+    const language = req.params.lg || 'pt-BR';
+    
+    if (!query || typeof query !== 'string' || query.trim().length === 0) {
+        res.status(400).json({ error: 'Query parameter \'q\' é obrigatório' });
+        return;
+    }
+    
+    try {
+        const suggestions = await smartSearchHandler.getAutocompleteSuggestions(query.trim(), language);
+        res.status(200).json({
+            suggestions,
+            total: suggestions.length
+        });
+    } catch (err) {
+        handleZodError(err, res);
+    }
+};
+
+/**
+ * @swagger
+ * /search/health:
+ *   get:
+ *     summary: Status da busca
+ *     description: Retorna informações sobre a saúde do sistema de busca
+ *     tags: [Busca]
+ *     responses:
+ *       200:
+ *         description: Status retornado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 elasticsearch:
+ *                   type: boolean
+ *                   description: Se Elasticsearch está disponível
+ *                 sql:
+ *                   type: boolean
+ *                   description: Se busca SQL está disponível
+ *                 recommendedSearchType:
+ *                   type: string
+ *                   enum: ["elasticsearch", "sql"]
+ *                   description: Tipo de busca recomendado
+ *       500:
+ *         description: Erro interno do servidor
+ */
+export const searchHealth: RequestHandler = async (_req, res) => {
+    try {
+        const health = await smartSearchHandler.getSearchHealth();
+        res.status(200).json(health);
     } catch (err) {
         handleZodError(err, res);
     }
