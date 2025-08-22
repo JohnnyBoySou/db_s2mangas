@@ -1,3 +1,6 @@
+// Sentry must be imported and initialized before other modules
+import { initSentry, requestHandler, errorHandler } from '@/sentry';
+
 import express from 'express'
 import cors from 'cors'
 import swaggerUi from 'swagger-ui-express'
@@ -35,9 +38,15 @@ import { SummaryRouter } from '@/modules/summary/routes/SummaryRouter';
 
 const uploadsDir = process.env.RAILWAY_VOLUME_MOUNT_PATH || process.env.UPLOAD_DIR || "/data/uploads";
 
+// Initialize Sentry before creating the Express app
+initSentry();
+
 const app = express()
 
-// Middleware de observabilidade (deve vir primeiro)
+// Sentry request handler must be the first middleware
+app.use(requestHandler);
+
+// Middleware de observabilidade (deve vir após Sentry)
 app.use(observabilityMiddleware);
 
 // Aumenta o limite para 50MB
@@ -163,6 +172,9 @@ app.get('/', (_req, res) => {
     }
   })
 })
+
+// Sentry error handler must be before other error handlers
+app.use(errorHandler);
 
 // Middleware de erro de observabilidade (deve vir por último)
 app.use(errorObservabilityMiddleware);
