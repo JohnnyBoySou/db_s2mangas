@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { logger, logPerformance, addRequestContext } from '@/utils/logger';
+import { captureException, setUser, setTag, addBreadcrumb } from '@/sentry';
 
 interface RequestMetrics {
   method: string;
@@ -25,6 +26,29 @@ export const observabilityMiddleware = (req: Request, res: Response, next: NextF
     userAgent: req.headers['user-agent'],
     ip: req.ip || req.connection.remoteAddress,
     userId: (req as any).user?.id
+  });
+
+  // Add Sentry context and breadcrumb
+  setTag('requestId', requestId);
+  if ((req as any).user?.id) {
+    setUser({
+      id: (req as any).user.id,
+      email: (req as any).user.email,
+      username: (req as any).user.username
+    });
+  }
+
+  addBreadcrumb({
+    message: `${req.method} ${req.url}`,
+    category: 'http',
+    level: 'info',
+    data: {
+      url: req.url,
+      method: req.method,
+      query: req.query,
+      userAgent: req.headers['user-agent'],
+      ip: req.ip || req.connection.remoteAddress,
+    }
   });
 
   req.logger.info('Request started', {
@@ -89,7 +113,7 @@ function logRequestMetrics(req: Request, res: Response, startTime: number) {
 export const errorObservabilityMiddleware = (error: Error, req: Request, res: Response, next: NextFunction) => {
   const duration = Date.now() - (req as any).startTime;
   
-  req.logger?.error('Unhandled error', {
+  const errorContext = {
     error: {
       name: error.name,
       message: error.message,
@@ -100,6 +124,28 @@ export const errorObservabilityMiddleware = (error: Error, req: Request, res: Re
       url: req.url,
       duration,
       requestId: req.headers['x-request-id']
+    }
+  };
+
+  req.logger?.error('Unhandled error', errorContext);
+
+  // Send error to Sentry with additional context
+  captureException(error, {
+    tags: {
+      method: req.method,
+      endpoint: req.url,
+      requestId: req.headers['x-request-id'] as string,
+    },
+    user: {
+      id: (req as any).user?.id,
+      email: (req as any).user?.email,
+    },
+    extra: {
+      duration,
+      userAgent: req.headers['user-agent'],
+      ip: req.ip || req.connection.remoteAddress,
+      query: req.query,
+      body: req.method !== 'GET' ? req.body : undefined,
     }
   });
 

@@ -1,3 +1,6 @@
+// Sentry must be imported and initialized before other modules
+import { initSentry, sentryErrorHandler } from '@/sentry';
+
 import express from 'express'
 import cors from 'cors'
 import swaggerUi from 'swagger-ui-express'
@@ -34,6 +37,9 @@ import { FileRouter, AdminFileRouter } from '@/modules/files/routes/FilesRouter'
 import { SummaryRouter } from '@/modules/summary/routes/SummaryRouter';
 
 const uploadsDir = process.env.RAILWAY_VOLUME_MOUNT_PATH || process.env.UPLOAD_DIR || "/data/uploads";
+
+// Initialize Sentry before creating the Express app
+initSentry();
 
 const app = express()
 
@@ -163,6 +169,9 @@ app.get('/', (_req, res) => {
     }
   })
 })
+
+// Sentry error handler must be before other error handlers
+app.use(sentryErrorHandler());
 
 // Middleware de erro de observabilidade (deve vir por último)
 app.use(errorObservabilityMiddleware);
