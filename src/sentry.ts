@@ -3,7 +3,7 @@ import { logger } from '@/utils/logger';
 
 export function initSentry() {
   const dsn = process.env.SENTRY_DSN;
-  
+
   if (!dsn) {
     logger.warn('Sentry DSN not configured, skipping Sentry initialization');
     return;
@@ -15,31 +15,31 @@ export function initSentry() {
       environment: process.env.NODE_ENV || 'development',
       release: process.env.npm_package_version || '1.0.0',
       serverName: process.env.RAILWAY_SERVICE_ID || 'local',
-      
+
       // Performance monitoring
       tracesSampleRate: parseFloat(process.env.SENTRY_TRACES_SAMPLE_RATE || '0.1'),
-      
+
       // Session tracking
       autoSessionTracking: true,
-      
+
       // Error filtering
       beforeSend(event, hint) {
         // Don't send certain errors to Sentry
         const error = hint.originalException;
-        
+
         // Skip validation errors (400 status codes)
         if (error && typeof error === 'object' && 'status' in error && error.status === 400) {
           return null;
         }
-        
+
         // Skip 404 errors
         if (error && typeof error === 'object' && 'status' in error && error.status === 404) {
           return null;
         }
-        
+
         return event;
       },
-      
+
       // Additional context
       initialScope: {
         tags: {
@@ -48,7 +48,7 @@ export function initSentry() {
           railway_project_id: process.env.RAILWAY_PROJECT_ID,
         },
       },
-      
+
       // Integrations
       integrations: [
         // Enable HTTP integration
