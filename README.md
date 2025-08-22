@@ -32,6 +32,7 @@ A S2Mangás API é uma aplicação backend completa desenvolvida em **Node.js** 
 - **Swagger/OpenAPI** - Documentação interativa da API
 - **Scalar** - Interface moderna para documentação
 - **Winston** - Sistema de logging estruturado
+- **Sentry** - Monitoramento de erros e performance
 - **Jest** - Framework de testes unitários e integração
 
 ### Infraestrutura & DevOps
@@ -262,7 +263,69 @@ SMTP_HOST="smtp.gmail.com"
 SMTP_PORT=587
 SMTP_USER="your-email@gmail.com"
 SMTP_PASS="your-app-password"
+
+# Sentry (Error Monitoring)
+SENTRY_DSN="https://your-key@your-sentry-domain.com/your-project-id"
+SENTRY_TRACES_SAMPLE_RATE=0.1  # Opcional: taxa de amostragem (0.0 a 1.0)
 ```
+
+## 🔍 Monitoramento de Erros com Sentry
+
+A API integra o Sentry para monitoramento de erros e performance em produção.
+
+### Configuração do Sentry Self-Hosted
+
+1. **Configure seu servidor Sentry** (em repositório separado, deploy via Railway)
+2. **Obtenha o DSN** do seu projeto no painel do Sentry
+3. **Configure a variável de ambiente** `SENTRY_DSN` com o valor obtido
+
+### Variáveis de Ambiente do Sentry
+
+```env
+# DSN do projeto Sentry (obrigatório para ativar o monitoramento)
+SENTRY_DSN="https://your-key@your-sentry-domain.com/your-project-id"
+
+# Taxa de amostragem de traces de performance (opcional, padrão: 0.1)
+SENTRY_TRACES_SAMPLE_RATE=0.1
+```
+
+### Funcionalidades Integradas
+
+- **Captura automática de erros** não tratados
+- **Rastreamento de requisições HTTP** com contexto completo
+- **Breadcrumbs** para melhor debugging
+- **Context tags** incluindo request ID, usuário, método HTTP
+- **Filtragem de erros** (ex: 404, erros de validação)
+- **Integração com logs Winston** existentes
+
+### Exemplo de Uso Manual
+
+```typescript
+import { captureException, captureMessage, setUser } from '@/sentry';
+
+// Capturar exceção com contexto
+captureException(error, {
+  tags: { module: 'manga-upload' },
+  user: { id: userId, email: userEmail },
+  extra: { fileName, fileSize }
+});
+
+// Capturar mensagem customizada
+captureMessage('Cache warming completed', 'info');
+
+// Definir usuário para sessão
+setUser({ id: '123', email: 'user@example.com' });
+```
+
+### Desabilitando em Development
+
+Para desabilitar o Sentry em desenvolvimento, simplesmente não defina `SENTRY_DSN` ou deixe vazio:
+
+```env
+# SENTRY_DSN=  # Comentado ou vazio = Sentry desabilitado
+```
+
+O sistema detecta automaticamente se o Sentry está configurado e ajusta o comportamento accordingly.
 
 ## 📊 Métricas de Performance
 
