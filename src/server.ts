@@ -1,5 +1,5 @@
 // Sentry must be imported and initialized before other modules
-import { initSentry, requestHandler, errorHandler } from '@/sentry';
+import { initSentry, sentryErrorHandler } from '@/sentry';
 
 import express from 'express'
 import cors from 'cors'
@@ -43,10 +43,7 @@ initSentry();
 
 const app = express()
 
-// Sentry request handler must be the first middleware
-app.use(requestHandler);
-
-// Middleware de observabilidade (deve vir após Sentry)
+// Middleware de observabilidade (deve vir primeiro)
 app.use(observabilityMiddleware);
 
 // Aumenta o limite para 50MB
@@ -174,7 +171,7 @@ app.get('/', (_req, res) => {
 })
 
 // Sentry error handler must be before other error handlers
-app.use(errorHandler);
+app.use(sentryErrorHandler());
 
 // Middleware de erro de observabilidade (deve vir por último)
 app.use(errorObservabilityMiddleware);

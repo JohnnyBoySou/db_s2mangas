@@ -52,13 +52,9 @@ export function initSentry() {
       // Integrations
       integrations: [
         // Enable HTTP integration
-        Sentry.httpIntegration({
-          tracing: true,
-        }),
+        Sentry.httpIntegration(),
         // Enable Express integration
-        Sentry.expressIntegration({
-          app: undefined, // Will be set when app is available
-        }),
+        Sentry.expressIntegration(),
       ],
     });
 
@@ -118,5 +114,19 @@ export function setContext(name: string, context: Record<string, any>) {
   }
 }
 
-// Export Sentry handlers for Express
-export const { requestHandler, errorHandler, tracingHandler } = Sentry;
+// Export Express middleware functions
+export function setupSentryMiddleware(app: any) {
+  if (process.env.SENTRY_DSN) {
+    // Setup Sentry error handler
+    Sentry.setupExpressErrorHandler(app);
+  }
+}
+
+// Export Sentry error handler
+export function sentryErrorHandler() {
+  if (process.env.SENTRY_DSN) {
+    return Sentry.expressErrorHandler();
+  }
+  // Return a no-op middleware if Sentry is not configured
+  return (error: any, req: any, res: any, next: any) => next(error);
+}
