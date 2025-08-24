@@ -5,17 +5,16 @@ import { initSentry, sentryErrorHandler } from '@/sentry';
 import express from 'express'
 import cors from 'cors'
 import swaggerUi from 'swagger-ui-express'
-
-// ✅ Utils
+import { warmupCache } from '@/middlewares/smartCache';
 import { logger } from '@/utils/logger';
 import { startInteractiveTerminal } from '@/utils/interactiveTerminal';
 import { specs } from '@/config/swagger';
-
+  
 // ✅ Middlewares
 import { initScalarDocs } from '@/middlewares/scalarDocs';
-import { warmupCache } from '@/middlewares/smartCache';
 import { observabilityMiddleware, errorObservabilityMiddleware } from '@/middlewares/observability';
 
+import { usernameBloomFilter } from '@/services/UsernameBloomFilter';
 
 // ✅ Modulos
 import { MetricsRouter } from '@/modules/metrics/MetricsRouter';
@@ -128,29 +127,30 @@ async function startServer() {
     console.warn('⚠️ Erro ao configurar Sentry:', error);
   }
 
-  try {
-    await warmupCache();
-    console.log('✅ Cache warming concluído');
-  } catch (error) {
-    logger.error('Erro no cache warming:', error);
-  }
 
   app.listen(process.env.PORT || 3000, async () => {
     const port = process.env.PORT || 3000;
     console.log(`✅ Servidor inciado com sucesso! \n✅ Rodando em http://localhost:${port}`)
 
-    if (process.env.NODE_ENV === 'development') {
-      console.log('\n🎮 Terminal interativo disponível!');
-      console.log('💡 Pressione Ctrl+C para acessar o menu interativo');
+    try {
+      await warmupCache();
+      console.log('✅ Cache warming concluído');
+    } catch (error) {
+      console.error('Erro no cache warming:', error);
+    }
 
-      process.on('SIGINT', () => {
-        console.log('\n\n🎮 Iniciando terminal interativo...');
-        startInteractiveTerminal();
-      });
+    try {
+      await usernameBloomFilter.initialize();
+      console.log('✅ Username Bloom Filter inicializado com sucesso');
+    } catch (error) {
+      console.error('Erro ao inicializar Username Bloom Filter:', error);
     }
   })
 }
 
-startServer();
+// Iniciar servidor apenas se este arquivo for executado diretamente
+if (require.main === module) {
+  startServer();
+}
 
 export default app;
