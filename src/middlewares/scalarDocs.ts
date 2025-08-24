@@ -1,6 +1,6 @@
 import { Express } from 'express';
 
-export const setupScalarDocs = async (app: Express) => {
+export const initScalarDocs = async (app: Express) => {
   try {
     const { apiReference } = await import('@scalar/express-api-reference');
     

@@ -5,17 +5,16 @@
  * para enviar emails com design personalizado
  */
 
-import { 
-    generateVerificationEmail, 
-    generateVerificationResendEmail,
-    emailTemplateManager,
-    EmailTemplateType
+import EmailTemplateManager, { 
+    EmailTemplateType,
+    generateVerificationEmail,
+    generateVerificationResendEmail
 } from '@/utils/emailTemplates';
 
 // Exemplo 1: Gerando email de verificação
 console.log('=== Exemplo 1: Email de Verificação ===');
 
-const verificationEmailHtml = generateVerificationEmail({
+const verificationEmailHtml = EmailTemplateManager.generateVerificationEmail({
     userName: 'João Silva',
     verificationCode: '123456'
 });
@@ -28,7 +27,7 @@ console.log('Contém código:', verificationEmailHtml.includes('123456'));
 // Exemplo 2: Gerando email de reenvio
 console.log('\n=== Exemplo 2: Email de Reenvio ===');
 
-const resendEmailHtml = generateVerificationResendEmail({
+const resendEmailHtml = EmailTemplateManager.generateVerificationResendEmail({
     userName: 'Maria Santos',
     verificationCode: '789012'
 });
@@ -41,7 +40,7 @@ console.log('Contém código:', resendEmailHtml.includes('789012'));
 // Exemplo 3: Usando o manager diretamente
 console.log('\n=== Exemplo 3: Usando o Manager Diretamente ===');
 
-const directEmailHtml = emailTemplateManager.generateVerificationEmail({
+const directEmailHtml = EmailTemplateManager.generateVerificationEmail({
     userName: 'Carlos Pereira',
     verificationCode: '345678'
 });
@@ -53,11 +52,11 @@ console.log('Contém nome do usuário:', directEmailHtml.includes('Carlos Pereir
 console.log('\n=== Exemplo 4: Operações de Cache ===');
 
 // Limpar cache (útil durante desenvolvimento)
-emailTemplateManager.clearCache();
+EmailTemplateManager.clearCache();
 console.log('Cache limpo!');
 
 // Pré-carregar templates
-emailTemplateManager.preloadTemplates();
+EmailTemplateManager.preloadTemplates();
 console.log('Templates pré-carregados!');
 
 // Exemplo 5: Simulação de envio de email
@@ -84,7 +83,7 @@ const emailData: EmailData = {
     from: '"S2Mangás" <noreply@s2mangas.com>',
     to: 'usuario@example.com',
     subject: 'Verificação de Email - S2Mangás',
-    html: generateVerificationEmail({
+    html: EmailTemplateManager.generateVerificationEmail({
         userName: 'Usuário Exemplo',
         verificationCode: '987654'
     })
@@ -97,7 +96,7 @@ console.log('\n=== Exemplo 6: Tratamento de Erros ===');
 
 try {
     // Tentativa de usar template inexistente
-    emailTemplateManager.generateVerificationEmail({
+    EmailTemplateManager.generateVerificationEmail({
         userName: '',
         verificationCode: ''
     });
@@ -148,9 +147,28 @@ testData.forEach((data, index) => {
     }
 });
 
+// Exemplo 8: Usando funções de conveniência
+console.log('\n=== Exemplo 8: Funções de Conveniência ===');
+
+const convenienceEmail = generateVerificationEmail({
+    userName: 'Ana Costa',
+    verificationCode: '111222'
+});
+
+console.log('Email gerado usando função de conveniência!');
+console.log('Tamanho:', convenienceEmail.length, 'caracteres');
+
+const convenienceResendEmail = generateVerificationResendEmail({
+    userName: 'Pedro Lima',
+    verificationCode: '333444'
+});
+
+console.log('Email de reenvio gerado usando função de conveniência!');
+console.log('Tamanho:', convenienceResendEmail.length, 'caracteres');
+
 export {
     generateVerificationEmail,
     generateVerificationResendEmail,
-    emailTemplateManager,
+    EmailTemplateManager,
     EmailTemplateType
 };

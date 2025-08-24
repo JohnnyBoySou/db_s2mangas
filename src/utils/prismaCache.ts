@@ -245,7 +245,7 @@ async function invalidateModel(model: string) {
 
 // Pré-aquecer cache para queries comuns
 async function warmupCommonQueries(prisma: PrismaClient) {
-  logger.info('Iniciando pré-aquecimento do cache do Prisma...');
+  //logger.info('Iniciando pré-aquecimento do cache do Prisma...');
 
   try {
     // Pré-aquecer categorias

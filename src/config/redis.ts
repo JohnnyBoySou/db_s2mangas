@@ -1,14 +1,35 @@
 import Redis from 'ioredis';
 import { logger } from '@/utils/logger';
 
-const REDIS_URL = process.env.REDIS_URL; 
+// Configuração Redis com suporte a senha
+// Para desenvolvimento local, usar REDIS_PUBLIC_URL
+// Para produção no Railway, usar REDIS_URL (interna)
+const REDIS_URL = process.env.REDIS_PUBLIC_URL;
+
+const REDIS_PASSWORD = process.env.REDIS_PASSWORD
+
 if (!REDIS_URL) {
   logger.warn('REDIS_URL não configurada; Redis ficará OFF');
 }
 
+// Construir URL com senha se necessário
+const getRedisUrl = () => {
+  if (!REDIS_URL) return null;
+  
+  // Se já tem senha na URL, usar como está
+  if (REDIS_URL.includes('@')) return REDIS_URL;
+  
+  // Se tem senha separada, adicionar à URL
+  if (REDIS_PASSWORD) {
+    return REDIS_URL.replace('redis://', `redis://:${REDIS_PASSWORD}@`);
+  }
+  
+  return REDIS_URL;
+};
+
 // Cliente principal (DB 0)
-const redisClient = REDIS_URL
-  ? new Redis(REDIS_URL, {
+const redisClient = getRedisUrl()
+  ? new Redis(getRedisUrl()!, {
       // NÃO force family:4 (rede interna é IPv6-friendly)
       lazyConnect: true,
       connectTimeout: 10_000,
@@ -20,8 +41,8 @@ const redisClient = REDIS_URL
   : null;
 
 // Cliente L1 (DB 1) baseado no mesmo servidor
-const redisL1Client = REDIS_URL
-  ? new Redis(REDIS_URL, {
+const redisL1Client = getRedisUrl()
+  ? new Redis(getRedisUrl()!, {
       db: 1,
       lazyConnect: true,
       connectTimeout: 10_000,

@@ -1,19 +1,25 @@
-// Sentry must be imported and initialized before other modules
+import 'dotenv/config';
+
 import { initSentry, sentryErrorHandler } from '@/sentry';
 
 import express from 'express'
 import cors from 'cors'
 import swaggerUi from 'swagger-ui-express'
-//import { cacheRouter } from './routes/cache';
-import { warmupCache } from '@/middlewares/smartCache';
-import { logger } from '@/utils/logger';
-import { specs } from '@/config/swagger';
-import { setupScalarDocs } from '@/middlewares/scalarDocs';
-import { observabilityMiddleware, errorObservabilityMiddleware } from '@/middlewares/observability';
-import metricsRouter from '@/routes/metrics';
 
-// ✅ Novo padrão de modulos 
-import { DiscoverRouter } from '@/modules/discover/routes/DiscoverRouter'; 
+// ✅ Utils
+import { logger } from '@/utils/logger';
+import { startInteractiveTerminal } from '@/utils/interactiveTerminal';
+import { specs } from '@/config/swagger';
+
+// ✅ Middlewares
+import { initScalarDocs } from '@/middlewares/scalarDocs';
+import { warmupCache } from '@/middlewares/smartCache';
+import { observabilityMiddleware, errorObservabilityMiddleware } from '@/middlewares/observability';
+
+
+// ✅ Modulos
+import { MetricsRouter } from '@/modules/metrics/MetricsRouter';
+import { DiscoverRouter } from '@/modules/discover/routes/DiscoverRouter';
 import { PlaylistRouter, AdminPlaylistRouter } from '@/modules/playlists/routes/PlaylistRouter';
 import { AuthRouter } from '@/modules/auth/routes/AuthRouter'
 import { ForgotPasswordRouter } from '@/modules/auth/routes/ForgotPasswordRouter';
@@ -35,18 +41,13 @@ import { ProfileRouter } from '@/modules/profile/routes/ProfileRouter';
 import { ChaptersRouter } from '@/modules/chapters/routes/ChaptersRouter';
 import { FileRouter, AdminFileRouter } from '@/modules/files/routes/FilesRouter';
 import { SummaryRouter } from '@/modules/summary/routes/SummaryRouter';
+import { HealthRouter } from '@/modules/health/HealthRouter';
 
 const uploadsDir = process.env.RAILWAY_VOLUME_MOUNT_PATH || process.env.UPLOAD_DIR || "/data/uploads";
 
-// Initialize Sentry before creating the Express app
-initSentry();
-
 const app = express()
 
-// Middleware de observabilidade (deve vir primeiro)
 app.use(observabilityMiddleware);
-
-// Aumenta o limite para 50MB
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
@@ -58,7 +59,6 @@ app.use(cors({
 
 app.use('/auth', AuthRouter)
 app.use('/forgot-password', ForgotPasswordRouter)
-
 app.use('/manga/', MangaRouter)
 app.use('/categories', CategoriesRouter)
 app.use('/collection', CollectionRouter)
@@ -76,14 +76,14 @@ app.use('/coins', CoinsRouter)
 app.use('/review', ReviewRouter)
 app.use('/moods', MangaListRouter)
 app.use('/summary', SummaryRouter)
-app.use("/uploads", express.static(uploadsDir, { maxAge: "7d", immutable: true,}));
+app.use("/uploads", express.static(uploadsDir, { maxAge: "7d", immutable: true, }));
 
 //ADMIN
 app.use('/admin/analytics', AdminAnalyticsRouter)
 app.use('/admin/moods', AdminMangaListRouter)
-app.use('/admin/users', AdminUsersRouter )
-app.use('/admin/mangas', AdminMangaRouter )
-app.use('/admin/wallpapers', AdminWallpaperRouter )
+app.use('/admin/users', AdminUsersRouter)
+app.use('/admin/mangas', AdminMangaRouter)
+app.use('/admin/wallpapers', AdminWallpaperRouter)
 app.use('/admin/categories', AdminCategoriesRouter)
 app.use('/admin/notifications', AdminNotificationsRouter)
 app.use('/admin/playlists', AdminPlaylistRouter)
@@ -108,102 +108,49 @@ app.use('/docs', swaggerUi.serve, swaggerUi.setup(specs, {
   }
 }));
 
-// Middlewares de cache e CDN
-//app.use('/static', staticCacheMiddleware());
-//app.use('/images', imageOptimizationMiddleware());
-
-// Configurar o proxy para a API do MangaDex
-//app.use('/api/mangadx', mangaDexProxy);
-
-// Rotas de métricas e observabilidade
-app.use('/metrics', metricsRouter);
-
-// Healthcheck simples para o Railway
-app.get('/health', (_req, res) => {
-  try {
-    res.status(200).json({ 
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      environment: process.env.NODE_ENV || 'development'
-    });
-  } catch (error) {
-    console.error('Erro no healthcheck:', error);
-    res.status(500).json({ 
-      status: 'error',
-      message: 'Health check failed',
-      timestamp: new Date().toISOString()
-    });
-  }
-});
-
-// Healthcheck detalhado
-app.get('/health/detailed', (_req, res) => {
-  try {
-    res.status(200).json({
-      status: 'healthy',
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      environment: process.env.NODE_ENV || 'development',
-      version: require('../package.json').version
-    });
-  } catch (error) {
-    console.error('Erro no healthcheck:', error);
-    res.status(500).json({
-      status: 'error',
-      message: 'Health check failed',
-      timestamp: new Date().toISOString()
-    });
-  }
-});
-
-app.get('/', (_req, res) => {
-  res.status(200).json({
-    message: 'S2Mangas API is running!',
-    version: require('../package.json').version,
-    endpoints: {
-      health: '/health',
-      auth: '/auth',
-      manga: '/manga',
-      categories: '/categories'
-    }
-  })
-})
-
-// Sentry error handler must be before other error handlers
+app.use('/metrics', MetricsRouter);
+app.use('/health', HealthRouter);
 app.use(sentryErrorHandler());
-
-// Middleware de erro de observabilidade (deve vir por último)
 app.use(errorObservabilityMiddleware);
 
-// Configurar Scalar docs antes de iniciar o servidor
 async function startServer() {
   try {
-    // Configurar Scalar docs
-    await setupScalarDocs(app);
+    await initScalarDocs(app);
     console.log('✅ Scalar docs configurado com sucesso');
   } catch (error) {
     console.warn('⚠️ Erro ao configurar Scalar docs:', error);
   }
 
+  try {
+    initSentry();
+    console.log('✅ Sentry configurado com sucesso');
+  } catch (error) {
+    console.warn('⚠️ Erro ao configurar Sentry:', error);
+  }
+
+  try {
+    await warmupCache();
+    console.log('✅ Cache warming concluído');
+  } catch (error) {
+    logger.error('Erro no cache warming:', error);
+  }
+
   app.listen(process.env.PORT || 3000, async () => {
     const port = process.env.PORT || 3000;
     console.log(`✅ Servidor inciado com sucesso! \n✅ Rodando em http://localhost:${port}`)
-    
-    // Inicializar cache warming
-    try {
-      logger.info('Iniciando cache warming...');
-      await warmupCache();
-      logger.info('Cache warming concluído');
-    } catch (error) {
-      logger.error('Erro no cache warming:', error);
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('\n🎮 Terminal interativo disponível!');
+      console.log('💡 Pressione Ctrl+C para acessar o menu interativo');
+
+      process.on('SIGINT', () => {
+        console.log('\n\n🎮 Iniciando terminal interativo...');
+        startInteractiveTerminal();
+      });
     }
   })
 }
 
-// Iniciar servidor apenas se este arquivo for executado diretamente
-if (require.main === module) {
-  startServer();
-}
+startServer();
 
 export default app;

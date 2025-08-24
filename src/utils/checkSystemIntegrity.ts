@@ -113,7 +113,7 @@ async function checkDatabaseIntegrity(report: IntegrityReport) {
     const orphanChapters = await prisma.chapter.count({
       where: {
         manga: {
-          is: null
+          is: undefined
         }
       }
     });

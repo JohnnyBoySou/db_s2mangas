@@ -296,7 +296,7 @@ export const conditionalCacheMiddleware = () => {
 
 // Função para pré-aquecer cache
 export async function warmupCache(routes?: Array<{ path: string; type: string; params?: any }>) {
-  logger.info('Iniciando pré-aquecimento do cache...');
+  //logger.info('Iniciando pré-aquecimento do cache...');
   
   // Rotas padrão para pré-aquecimento se nenhuma for fornecida
   const defaultRoutes = [
@@ -326,7 +326,7 @@ export async function warmupCache(routes?: Array<{ path: string; type: string; p
     }
   }
   
-  logger.info('Pré-aquecimento do cache concluído');
+  //logger.info('Pré-aquecimento do cache concluído');
 }
 
 // Exportar configurações padrão

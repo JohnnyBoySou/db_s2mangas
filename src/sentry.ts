@@ -58,11 +58,11 @@ export function initSentry() {
       ],
     });
 
-    logger.info('Sentry initialized successfully', {
-      dsn: dsn.substring(0, 20) + '...', // Log partial DSN for verification
-      environment: process.env.NODE_ENV,
-      tracesSampleRate: parseFloat(process.env.SENTRY_TRACES_SAMPLE_RATE || '0.1'),
-    });
+    // logger.info('Sentry initialized successfully', {
+    //   dsn: dsn.substring(0, 20) + '...', // Log partial DSN for verification
+    //   environment: process.env.NODE_ENV,
+    //   tracesSampleRate: parseFloat(process.env.SENTRY_TRACES_SAMPLE_RATE || '0.1'),
+    // });
   } catch (error) {
     logger.error('Failed to initialize Sentry', { error });
   }

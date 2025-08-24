@@ -5,156 +5,507 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reenvio de Código - S2Mangás</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
             line-height: 1.6;
-            color: #333;
+            color: #1a202c;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .email-wrapper {
             max-width: 600px;
             margin: 0 auto;
-            padding: 20px;
-            background-color: #f8f9fa;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            position: relative;
         }
+
+        .email-wrapper::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #f59e0b, #d97706, #fbbf24, #f59e0b);
+            background-size: 300% 100%;
+            animation: gradientShift 3s ease-in-out infinite;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
         .container {
-            background: white;
             padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
         }
+
         .header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 40px;
+            position: relative;
         }
+
         .logo {
-            font-size: 28px;
-            font-weight: bold;
-            color: #6366f1;
-            margin-bottom: 10px;
+            font-size: 32px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 15px;
+            letter-spacing: -1px;
         }
+
+        .logo-icon {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            border-radius: 50%;
+            margin-right: 10px;
+            vertical-align: middle;
+            position: relative;
+        }
+
+        .logo-icon::after {
+            content: '📧';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 20px;
+        }
+
         .title {
-            font-size: 24px;
-            font-weight: 600;
-            color: #1f2937;
-            margin-bottom: 20px;
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
         }
+
+        .subtitle {
+            font-size: 16px;
+            color: #718096;
+            font-weight: 500;
+        }
+
         .greeting {
-            font-size: 18px;
-            color: #374151;
-            margin-bottom: 20px;
+            font-size: 20px;
+            color: #2d3748;
+            margin-bottom: 25px;
+            font-weight: 600;
         }
+
+        .greeting strong {
+            color: #f59e0b;
+            font-weight: 700;
+        }
+
         .message {
             font-size: 16px;
-            color: #6b7280;
-            margin-bottom: 30px;
+            color: #4a5568;
+            margin-bottom: 35px;
+            line-height: 1.7;
         }
-        .verification-code {
+
+        .reminder-section {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border: 2px solid #60a5fa;
+            color: #1e40af;
+            padding: 20px;
+            border-radius: 16px;
+            margin: 25px 0;
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .reminder-section::before {
+            content: '📧';
+            font-size: 24px;
+        }
+
+        .reminder-section::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            animation: slide 2s ease-in-out infinite;
+        }
+
+        @keyframes slide {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .verification-section {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            margin: 35px 0;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(245, 158, 11, 0.3);
+        }
+
+        .verification-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(180deg); }
+        }
+
+        .code-label {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 15px;
+            font-weight: 600;
+            position: relative;
+            z-index: 1;
+        }
+
+        .code {
+            font-size: 42px;
+            font-weight: 800;
+            font-family: 'Courier New', 'Monaco', 'Menlo', monospace;
+            letter-spacing: 8px;
+            color: white;
+            margin: 15px 0;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 1;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .expiry-info {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border: 2px solid #f59e0b;
+            color: #92400e;
+            padding: 16px;
+            border-radius: 12px;
+            margin: 25px 0;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .expiry-info::before {
+            content: '⏰';
+            font-size: 18px;
+        }
+
+        .security-note {
+            background: linear-gradient(135deg, #fef2f2 0%, #fecaca 100%);
+            border: 2px solid #f87171;
+            color: #dc2626;
+            padding: 16px;
+            border-radius: 12px;
+            margin: 25px 0;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .security-note::before {
+            content: '🔒';
+            font-size: 18px;
+        }
+
+        .steps-section {
+            background: rgba(245, 158, 11, 0.05);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            border-radius: 16px;
+            padding: 25px;
+            margin: 35px 0;
+        }
+
+        .steps-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .steps-list {
+            display: grid;
+            gap: 15px;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #f59e0b;
+        }
+
+        .step-number {
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .step-text {
+            font-size: 14px;
+            color: #4a5568;
+            font-weight: 500;
+        }
+
+        .cta-section {
+            text-align: center;
+            margin: 35px 0;
+        }
+
+        .cta-button {
+            display: inline-block;
             background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
             color: white;
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-            margin: 30px 0;
-        }
-        .code {
-            font-size: 36px;
-            font-weight: bold;
-            font-family: 'Courier New', monospace;
-            letter-spacing: 4px;
-            margin: 10px 0;
-        }
-        .code-label {
-            font-size: 14px;
-            opacity: 0.9;
-            margin-bottom: 10px;
-        }
-        .expiry-info {
-            background: #fef3c7;
-            border: 1px solid #f59e0b;
-            color: #92400e;
-            padding: 12px;
-            border-radius: 6px;
-            margin: 20px 0;
-            font-size: 14px;
-        }
-        .reminder-info {
-            background: #eff6ff;
-            border: 1px solid #60a5fa;
-            color: #1e40af;
-            padding: 12px;
-            border-radius: 6px;
-            margin: 20px 0;
-            font-size: 14px;
-        }
-        .footer {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #e5e7eb;
-            text-align: center;
-            color: #6b7280;
-            font-size: 14px;
-        }
-        .footer a {
-            color: #6366f1;
+            padding: 16px 32px;
+            border-radius: 50px;
             text-decoration: none;
+            font-weight: 700;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(245, 158, 11, 0.3);
         }
-        .security-note {
-            background: #fef2f2;
-            border: 1px solid #fca5a5;
-            color: #dc2626;
-            padding: 12px;
-            border-radius: 6px;
-            margin: 20px 0;
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(245, 158, 11, 0.4);
+        }
+
+        .footer {
+            margin-top: 50px;
+            padding-top: 30px;
+            border-top: 2px solid #e2e8f0;
+            text-align: center;
+            color: #718096;
             font-size: 14px;
         }
+
+        .footer p {
+            margin-bottom: 8px;
+        }
+
+        .footer a {
+            color: #f59e0b;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .footer a:hover {
+            color: #d97706;
+        }
+
+        .social-links {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .social-link {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            border-radius: 50%;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            transition: all 0.3s ease;
+        }
+
+        .social-link:hover {
+            transform: scale(1.1);
+            box-shadow: 0 5px 15px rgba(245, 158, 11, 0.4);
+        }
+
         @media (max-width: 600px) {
-            .container {
-                padding: 20px;
+            body {
+                padding: 10px;
             }
+
+            .container {
+                padding: 25px 20px;
+            }
+
+            .logo {
+                font-size: 28px;
+            }
+
+            .title {
+                font-size: 24px;
+            }
+
+            .code {
+                font-size: 32px;
+                letter-spacing: 6px;
+            }
+
+            .verification-section {
+                padding: 25px 20px;
+            }
+
+            .steps-list {
+                grid-template-columns: 1fr;
+            }
+
+            .cta-button {
+                padding: 14px 28px;
+                font-size: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
             .code {
                 font-size: 28px;
+                letter-spacing: 4px;
+            }
+
+            .verification-section {
+                padding: 20px 15px;
+            }
+
+            .reminder-section {
+                padding: 15px;
+                font-size: 14px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <div class="logo">S2Mangás</div>
-            <div class="title">Reenvio de Código de Verificação</div>
-        </div>
-        
-        <div class="greeting">
-            Olá, <strong>{{userName}}</strong>!
-        </div>
-        
-        <div class="reminder-info">
-            <strong>📧 Lembrete:</strong> Você tentou fazer login, mas seu email ainda não foi verificado.
-        </div>
-        
-        <div class="message">
-            Não se preocupe! Reenviamos um novo código de verificação para você. Para acessar sua conta, você precisa verificar seu email primeiro.
-        </div>
-        
-        <div class="verification-code">
-            <div class="code-label">Seu novo código de verificação é:</div>
-            <div class="code">{{verificationCode}}</div>
-        </div>
-        
-        <div class="expiry-info">
-            <strong>⏰ Importante:</strong> Este código é válido por apenas 10 minutos.
-        </div>
-        
-        <div class="message">
-            Após verificar seu email, você poderá fazer login normalmente e aproveitar todas as funcionalidades do S2Mangás!
-        </div>
-        
-        <div class="security-note">
-            <strong>🔒 Segurança:</strong> Nunca compartilhe este código com outras pessoas. Nossa equipe nunca solicitará este código por telefone ou email.
-        </div>
-        
-        <div class="footer">
-            <p>Se você não tentou fazer login recentemente, pode ignorar este email.</p>
-            <p>Precisa de ajuda? <a href="mailto:suporte@s2mangas.com">Entre em contato conosco</a></p>
-            <p>&copy; 2024 S2Mangás. Todos os direitos reservados.</p>
+    <div class="email-wrapper">
+        <div class="container">
+            <div class="header">
+                <div class="logo">
+                    <span class="logo-icon"></span>
+                    S2Mangás
+                </div>
+                <div class="title">Reenvio de Código</div>
+                <div class="subtitle">Verificação necessária para acessar sua conta</div>
+            </div>
+            
+            <div class="greeting">
+                Olá, <strong>{{userName}}</strong>! 👋
+            </div>
+            
+            <div class="reminder-section">
+                <strong>Lembrete:</strong> Você tentou fazer login, mas seu email ainda não foi verificado.
+            </div>
+            
+            <div class="message">
+                Não se preocupe! Reenviamos um novo código de verificação para você. Para acessar sua conta e aproveitar todos os recursos do S2Mangás, você precisa verificar seu email primeiro.
+            </div>
+            
+            <div class="verification-section">
+                <div class="code-label">Seu novo código de verificação é:</div>
+                <div class="code">{{verificationCode}}</div>
+            </div>
+            
+            <div class="expiry-info">
+                <strong>Importante:</strong> Este código é válido por apenas 10 minutos por segurança.
+            </div>
+
+            <div class="steps-section">
+                <div class="steps-title">📋 Como verificar seu email:</div>
+                <div class="steps-list">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-text">Copie o código acima</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-text">Abra o aplicativo S2Mangás</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-text">Cole o código na tela de verificação</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <div class="step-text">Aproveite todos os recursos!</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="message">
+                Após verificar seu email, você poderá fazer login normalmente e desfrutar de toda a experiência do S2Mangás!
+            </div>
+            
+            <div class="security-note">
+                <strong>Segurança:</strong> Nunca compartilhe este código com outras pessoas. Nossa equipe nunca solicitará este código por telefone ou email.
+            </div>
+            
+            <div class="footer">
+                <p>Se você não tentou fazer login recentemente, pode ignorar este email com segurança.</p>
+                <p>Precisa de ajuda? <a href="mailto:suporte@s2mangas.com">Entre em contato conosco</a></p>
+                
+                <div class="social-links">
+                    <a href="#" class="social-link">📱</a>
+                    <a href="#" class="social-link">💬</a>
+                    <a href="#" class="social-link">📧</a>
+                </div>
+                
+                <p style="margin-top: 20px; font-size: 12px; opacity: 0.7;">
+                    &copy; 2024 S2Mangás. Todos os direitos reservados.
+                </p>
+            </div>
         </div>
     </div>
 </body>

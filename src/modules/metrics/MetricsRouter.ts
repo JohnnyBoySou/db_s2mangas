@@ -4,10 +4,9 @@ import { generateHealthReport } from '@/middlewares/observability';
 import { prismaCacheStats } from '@/utils/prismaCache';
 import { getRedisClient } from '@/config/redis';
 
-const router = Router();
+const MetricsRouter = Router();
 
-// Endpoint para métricas do Prometheus
-router.get('/prometheus', async (req, res) => {
+MetricsRouter.get('/prometheus', async (req, res) => {
   try {
     const metrics = await generatePrometheusMetrics();
     res.set('Content-Type', 'text/plain');
@@ -18,8 +17,7 @@ router.get('/prometheus', async (req, res) => {
   }
 });
 
-// Endpoint para métricas em JSON
-router.get('/json', async (req, res) => {
+MetricsRouter.get('/json', async (req, res) => {
   try {
     const metrics = await generateJSONMetrics();
     res.json(metrics);
@@ -29,13 +27,11 @@ router.get('/json', async (req, res) => {
   }
 });
 
-// Endpoint para health check detalhado
-router.get('/health', async (req, res) => {
+MetricsRouter.get('/health', async (req, res) => {
   try {
     const healthReport = generateHealthReport();
     const cacheStats = prismaCacheStats();
     
-    // Verificar conectividade com Redis
     const redis = getRedisClient();
     let redisStatus = 'unknown';
     if (redis) {
@@ -142,4 +138,4 @@ async function generateJSONMetrics() {
   };
 }
 
-export default router;
+export { MetricsRouter };
