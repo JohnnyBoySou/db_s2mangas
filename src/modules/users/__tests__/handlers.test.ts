@@ -1,5 +1,22 @@
 import bcrypt from 'bcrypt';
 import { prismaMock } from '../../../test/mocks/prisma';
+
+// Mock do UsernameBloomFilter
+const mockUsernameBloomFilter = {
+    checkUsernameExists: jest.fn(),
+    addUsername: jest.fn(),
+    mightExist: jest.fn(),
+    initialize: jest.fn(),
+    getStats: jest.fn(),
+    reset: jest.fn()
+};
+
+jest.mock('@/services/UsernameBloomFilter', () => ({
+    __esModule: true,
+    usernameBloomFilter: mockUsernameBloomFilter,
+    UsernameBloomFilter: jest.fn(() => mockUsernameBloomFilter)
+}));
+
 import {
     listUsers,
     getUserById,
@@ -24,6 +41,8 @@ const mockedBcrypt = bcrypt as jest.Mocked<typeof bcrypt>;
 describe('Users Handlers', () => {
     beforeEach(() => {
         jest.clearAllMocks();
+        mockUsernameBloomFilter.checkUsernameExists.mockResolvedValue(false);
+        mockUsernameBloomFilter.addUsername.mockReturnValue(undefined);
     });
 
     describe('listUsers', () => {
@@ -169,20 +188,17 @@ describe('Users Handlers', () => {
                 cover: null
             };
 
-            prismaMock.user.findFirst.mockResolvedValue(null);
+            prismaMock.user.findUnique.mockResolvedValue(null); // Email check
+            mockUsernameBloomFilter.checkUsernameExists.mockResolvedValue(false); // Username check
             mockedBcrypt.hash.mockResolvedValue('hashedPassword' as never);
             prismaMock.user.create.mockResolvedValue(mockCreatedUser as any);
 
             const result = await createUser(userData);
 
-            expect(prismaMock.user.findFirst).toHaveBeenCalledWith({
-                where: {
-                    OR: [
-                        { email: 'joao@example.com' },
-                        { username: 'joao123' }
-                    ]
-                }
+            expect(prismaMock.user.findUnique).toHaveBeenCalledWith({
+                where: { email: 'joao@example.com' }
             });
+            expect(mockUsernameBloomFilter.checkUsernameExists).toHaveBeenCalledWith('joao123');
             expect(mockedBcrypt.hash).toHaveBeenCalledWith('password123', 10);
             expect(prismaMock.user.create).toHaveBeenCalledWith({
                 data: {
@@ -196,6 +212,7 @@ describe('Users Handlers', () => {
                 },
                 select: expect.any(Object)
             });
+            expect(mockUsernameBloomFilter.addUsername).toHaveBeenCalledWith('joao123');
             expect(result).toEqual(mockCreatedUser);
         });
 
@@ -252,7 +269,23 @@ describe('Users Handlers', () => {
                 username: 'joao123'
             };
 
-            prismaMock.user.findFirst.mockResolvedValue(existingUser as any);
+            prismaMock.user.findUnique.mockResolvedValue(existingUser as any);
+
+            await expect(createUser(userData))
+                .rejects
+                .toThrow('Email ou username já cadastrado');
+        });
+
+        it('deve lançar erro quando username já existe', async () => {
+            const userData = {
+                name: 'João Silva',
+                email: 'joao@example.com',
+                password: 'password123',
+                username: 'joao123'
+            };
+
+            prismaMock.user.findUnique.mockResolvedValue(null); // Email doesn't exist
+            mockUsernameBloomFilter.checkUsernameExists.mockResolvedValue(true); // Username exists
 
             await expect(createUser(userData))
                 .rejects

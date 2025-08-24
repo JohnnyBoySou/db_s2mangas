@@ -11,6 +11,7 @@ import { specs } from '@/config/swagger';
 import { setupScalarDocs } from '@/middlewares/scalarDocs';
 import { observabilityMiddleware, errorObservabilityMiddleware } from '@/middlewares/observability';
 import metricsRouter from '@/routes/metrics';
+import { usernameBloomFilter } from '@/services/UsernameBloomFilter';
 
 // ✅ Novo padrão de modulos 
 import { DiscoverRouter } from '@/modules/discover/routes/DiscoverRouter'; 
@@ -197,6 +198,15 @@ async function startServer() {
       logger.info('Cache warming concluído');
     } catch (error) {
       logger.error('Erro no cache warming:', error);
+    }
+
+    // Inicializar Username Bloom Filter
+    try {
+      logger.info('Inicializando Username Bloom Filter...');
+      await usernameBloomFilter.initialize();
+      logger.info('Username Bloom Filter inicializado com sucesso');
+    } catch (error) {
+      logger.error('Erro ao inicializar Username Bloom Filter:', error);
     }
   })
 }
