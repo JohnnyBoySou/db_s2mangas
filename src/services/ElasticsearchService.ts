@@ -66,27 +66,27 @@ interface AutocompleteSuggestion {
 let elasticsearchClient: Client | null = null;
 const INDEX_NAME = 'manga_index';
 
-const elasticUrl = process.env.ELASTIC_INTERNAL_URL || process.env.ELASTIC_URL || 'http://localhost:9200';
-const elasticUsername = process.env.ELASTIC_USERNAME;
-const elasticPassword = process.env.ELASTIC_PASSWORD;
-
-if (!elasticUrl) {
-  throw new Error('ELASTIC_URL is not set');
-}
-if (!elasticUsername) {
-  throw new Error('ELASTIC_USER is not set');
-}
-if (!elasticPassword) {
-  throw new Error('ELASTIC_PASSWORD is not set');
-}
-
 function getElasticsearchClient(): Client {
   if (!elasticsearchClient) {
+    const elasticUrl = process.env.ELASTIC_INTERNAL_URL || process.env.ELASTIC_URL || 'http://localhost:9200';
+    const elasticUsername = process.env.ELASTIC_USERNAME;
+    const elasticPassword = process.env.ELASTIC_PASSWORD;
+
+    if (!elasticUrl) {
+      throw new Error('ELASTIC_URL is not set');
+    }
+    if (!elasticUsername) {
+      throw new Error('ELASTIC_USERNAME is not set');
+    }
+    if (!elasticPassword) {
+      throw new Error('ELASTIC_PASSWORD is not set');
+    }
+
     elasticsearchClient = new Client({
       node: elasticUrl,
       auth: {
-        username: elasticUsername!,
-        password: elasticPassword!
+        username: elasticUsername,
+        password: elasticPassword
       },
       requestTimeout: 10000, 
       maxRetries: 3,
