@@ -22,6 +22,9 @@ export function initSentry() {
       // Session tracking
       autoSessionTracking: true,
 
+      // Debug mode para desenvolvimento
+      debug: process.env.NODE_ENV === 'development',
+
       // Error filtering
       beforeSend(event, hint) {
         // Don't send certain errors to Sentry

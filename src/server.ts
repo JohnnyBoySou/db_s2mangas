@@ -1,6 +1,6 @@
 import 'dotenv/config';
 
-import { initSentry, sentryErrorHandler } from '@/sentry';
+import { initSentry, sentryErrorHandler, captureException, captureMessage } from '@/sentry';
 
 import express from 'express'
 import cors from 'cors'
@@ -44,6 +44,13 @@ const uploadsDir = process.env.RAILWAY_VOLUME_MOUNT_PATH || process.env.UPLOAD_D
 
 const app = express()
 
+try {
+  initSentry();
+  console.log('✅ Sentry configurado com sucesso');
+} catch (error) {
+  console.warn('⚠️ Erro ao configurar Sentry:', error);
+}
+
 app.use(observabilityMiddleware);
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
@@ -86,8 +93,27 @@ app.use('/admin/notifications', AdminNotificationsRouter)
 app.use('/admin/playlists', AdminPlaylistRouter)
 app.use('/admin/file', AdminFileRouter)
 //app.use('/cache', cacheRouter)
-app.get("/debug-sentry", function mainHandler() {
-  throw new Error("My first Sentry error!");
+
+// Rota de debug do Sentry - deve ser definida após a inicialização do Sentry
+app.get("/debug-sentry", function mainHandler(req, res) {
+  try {
+    // Enviar uma mensagem de teste primeiro
+    captureMessage("Teste de mensagem do Sentry", "info");
+    
+    // Lançar um erro intencional
+    throw new Error("My first Sentry error!");
+  } catch (error) {
+    // Capturar o erro no Sentry usando nossa função
+    captureException(error as Error);
+    
+    // Retornar uma resposta para o cliente
+    res.status(500).json({
+      message: "Erro intencional para testar o Sentry",
+      error: error instanceof Error ? error.message : 'Erro desconhecido',
+      timestamp: new Date().toISOString(),
+      sentryTest: true
+    });
+  }
 });
 
 app.get('/api-docs.json', (_req, res) => {
@@ -119,13 +145,6 @@ async function startServer() {
     console.log('✅ Scalar docs configurado com sucesso');
   } catch (error) {
     console.warn('⚠️ Erro ao configurar Scalar docs:', error);
-  }
-
-  try {
-    initSentry();
-    console.log('✅ Sentry configurado com sucesso');
-  } catch (error) {
-    console.warn('⚠️ Erro ao configurar Sentry:', error);
   }
 
   app.listen(process.env.PORT || 3000, async () => {
