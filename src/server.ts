@@ -146,9 +146,6 @@ async function startServer() {
   })
 }
 
-// Iniciar servidor apenas se este arquivo for executado diretamente
-if (require.main === module) {
-  startServer();
-}
+startServer();
 
 export default app;

@@ -24,27 +24,23 @@ bloomFilter = BloomFilter.create(expectedElements, errorRate);
  */
 export async function initialize(): Promise<void> {
     try {
-        console.log('Initializing Username Bloom Filter...');
-        
         // Load all existing usernames from the database
         const users = await prisma.user.findMany({
-            select: { username: true },
-            where: {
-                username: {
-                    not: null
-                }
-            }
+            select: { username: true }
         });
 
+        // Filter out users with null usernames
+        const validUsers = users.filter(user => user.username !== null);
+
         // Add all usernames to the Bloom Filter
-        for (const user of users) {
+        for (const user of validUsers) {
             if (user.username) {
                 bloomFilter.add(user.username);
             }
         }
 
         initialized = true;
-        console.log(`Username Bloom Filter initialized with ${users.length} usernames`);
+        //console.log(`Username Bloom Filter initialized with ${validUsers.length} usernames`);
     } catch (error) {
         console.error('Failed to initialize Username Bloom Filter:', error);
         // Don't throw error - allow application to continue without bloom filter
