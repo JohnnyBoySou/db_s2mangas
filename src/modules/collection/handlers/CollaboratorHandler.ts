@@ -1,8 +1,3 @@
-// Define enum locally to avoid Prisma client import issues
-enum CollaboratorRole {
-  EDITOR = 'EDITOR',
-  ADMIN = 'ADMIN'
-}
 
 import prisma from '@/prisma/client';
 

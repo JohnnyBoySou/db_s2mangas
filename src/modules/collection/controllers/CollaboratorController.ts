@@ -1,11 +1,8 @@
 import { Request, Response } from "express";
 import {
   addCollaboratorSchema,
-  removeCollaboratorSchema,
   updateCollaboratorRoleSchema,
-  listCollaboratorsSchema,
   collectionIdParamSchema,
-  userIdParamSchema,
 } from "../validators/CollaboratorValidator";
 import { handleZodError } from "@/utils/zodError";
 import {

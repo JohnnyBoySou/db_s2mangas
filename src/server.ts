@@ -6,7 +6,6 @@ import express from 'express'
 import cors from 'cors'
 import swaggerUi from 'swagger-ui-express'
 import { warmupCache } from '@/middlewares/smartCache';
-import { startInteractiveTerminal } from '@/utils/interactiveTerminal';
 import { specs } from '@/config/swagger';
 
 // ✅ Middlewares
@@ -87,7 +86,7 @@ app.use('/admin/notifications', AdminNotificationsRouter)
 app.use('/admin/playlists', AdminPlaylistRouter)
 app.use('/admin/file', AdminFileRouter)
 //app.use('/cache', cacheRouter)
-app.get("/debug-sentry", function mainHandler(req, res) {
+app.get("/debug-sentry", function mainHandler() {
   throw new Error("My first Sentry error!");
 });
 

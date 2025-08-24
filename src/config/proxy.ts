@@ -9,7 +9,7 @@ export const mangaDexProxy = createProxyMiddleware({
         '^/api/mangadx': '',
     },
     on: {
-        proxyRes: function(proxyRes: any, req: Request, res: Response) {
+        proxyRes: function(proxyRes: any, _req: Request, _res: Response) {
             proxyRes.headers['Access-Control-Allow-Origin'] = '*';
         },
         error: function(err: Error, req: Request, res: Response | any) {

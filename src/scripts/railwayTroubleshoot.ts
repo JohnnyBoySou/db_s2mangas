@@ -14,7 +14,7 @@ async function railwayTroubleshoot() {
   const railwayEnv = process.env.RAILWAY_ENVIRONMENT;
   const railwayProjectId = process.env.RAILWAY_PROJECT_ID;
   const railwayServiceId = process.env.RAILWAY_SERVICE_ID;
-  
+
   console.log(`   Ambiente: ${railwayEnv || 'não definido'}`);
   console.log(`   Project ID: ${railwayProjectId || 'não definido'}`);
   console.log(`   Service ID: ${railwayServiceId || 'não definido'}`);
@@ -50,7 +50,7 @@ async function railwayTroubleshoot() {
 
   // 3. Verificar conectividade de rede
   console.log('\n3. Verificando conectividade...');
-  
+
   const databaseUrl = process.env.DATABASE_URL;
   if (databaseUrl) {
     // Extrair host da URL
@@ -58,13 +58,14 @@ async function railwayTroubleshoot() {
     if (hostMatch) {
       const host = hostMatch[1];
       console.log(`   Testando conectividade com: ${host}`);
-      
+
       try {
         // Teste básico de conectividade
-        const { stdout } = await execAsync(`ping -c 1 -W 3 ${host}`);
+        await execAsync(`ping -c 1 -W 3 ${host}`);
         console.log(`   ✅ Host ${host} está acessível`);
       } catch (error) {
         console.log(`   ❌ Host ${host} não está acessível`);
+        console.log(error);
         console.log(`   💡 Isso pode indicar que o serviço PostgreSQL não está rodando`);
       }
     }
@@ -72,7 +73,7 @@ async function railwayTroubleshoot() {
 
   // 4. Verificar arquivos de build
   console.log('\n4. Verificando arquivos de build...');
-  
+
   const buildFiles = [
     'dist/server.js',
     'node_modules/@prisma/client',
@@ -84,18 +85,20 @@ async function railwayTroubleshoot() {
       await execAsync(`test -f ${file} || test -d ${file}`);
       console.log(`   ✅ ${file} existe`);
     } catch (error) {
+      console.log(error);
       console.log(`   ❌ ${file} não encontrado`);
     }
   }
 
   // 5. Verificar logs do sistema
   console.log('\n5. Verificando logs do sistema...');
-  
+
   try {
     const { stdout } = await execAsync('tail -n 20 logs/combined.log 2>/dev/null || echo "Logs não encontrados"');
     console.log('   📋 Últimas linhas do log:');
     console.log(stdout);
   } catch (error) {
+    console.log(error);
     console.log('   📋 Logs não disponíveis');
   }
 
@@ -107,18 +110,18 @@ async function railwayTroubleshoot() {
   console.log('   3. Confirme se a DATABASE_URL está correta');
   console.log('   4. Verifique se o serviço está na mesma rede');
   console.log('   5. Tente reiniciar o serviço PostgreSQL');
-  
+
   console.log('\n📋 Comandos úteis no Railway:');
   console.log('   • Ver logs: railway logs');
   console.log('   • Conectar ao banco: railway connect');
   console.log('   • Ver variáveis: railway variables');
-  
+
   console.log('\n🔍 Verificações adicionais:');
   console.log('   1. O serviço PostgreSQL está na mesma rede?');
   console.log('   2. A URL usa o hostname correto?');
   console.log('   3. As credenciais estão corretas?');
   console.log('   4. O banco de dados existe?');
-  
+
   console.log('\n💡 Soluções alternativas:');
   console.log('   1. Use DATABASE_URL externa (se disponível)');
   console.log('   2. Configure um novo serviço PostgreSQL');
@@ -127,7 +130,7 @@ async function railwayTroubleshoot() {
 
   // 7. Teste de conexão direta
   console.log('\n7. Teste de conexão direta...');
-  
+
   if (databaseUrl) {
     try {
       const { stdout } = await execAsync(`psql "${databaseUrl}" -c "SELECT version();" -t 2>/dev/null || echo "psql não disponível"`);
@@ -138,6 +141,7 @@ async function railwayTroubleshoot() {
         console.log('   ❌ Conexão direta falhou');
       }
     } catch (error) {
+      console.log(error);
       console.log('   ❌ Cliente PostgreSQL não disponível');
     }
   }

@@ -18,6 +18,7 @@ export const requireCollectionOwner = async (req: Request, res: Response, next: 
 
     next();
   } catch (error) {
+    console.log(error);
     return res.status(404).json({ error: "Coleção não encontrada." });
   }
 };
@@ -39,6 +40,7 @@ export const requireCollectionAdmin = async (req: Request, res: Response, next: 
 
     next();
   } catch (error) {
+    console.log(error);
     return res.status(404).json({ error: "Coleção não encontrada." });
   }
 };
@@ -60,6 +62,7 @@ export const requireCollectionEditor = async (req: Request, res: Response, next:
 
     next();
   } catch (error) {
+    console.log(error);
     return res.status(404).json({ error: "Coleção não encontrada." });
   }
 };

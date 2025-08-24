@@ -1,5 +1,4 @@
 import { Client } from '@elastic/elasticsearch';
-import axios from 'axios';
 
 interface MangaForIndex {
   id: string;

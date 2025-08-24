@@ -1,10 +1,8 @@
 import { RequestHandler } from "express";
 import jwt from "jsonwebtoken";
 import prisma from "@/prisma/client";
-import { getRedisClient } from "@/config/redis";
 
 const JWT_SECRET = process.env.JWT_SECRET!;
-const ADMIN_CACHE_TTL = 60 * 60;
 
 export const requireAuth: RequestHandler = async (req, res, next) => {
   const token = req.headers.authorization?.split(" ")[1];

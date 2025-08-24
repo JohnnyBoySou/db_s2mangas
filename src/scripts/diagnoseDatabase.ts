@@ -29,7 +29,7 @@ async function diagnoseDatabase() {
   // 2. Verificar se o Prisma Client está gerado
   console.log('2. Verificando Prisma Client...');
   try {
-    const { stdout } = await execAsync('npx prisma generate');
+   await execAsync('npx prisma generate');
     console.log('✅ Prisma Client gerado com sucesso');
   } catch (error) {
     console.error('❌ Erro ao gerar Prisma Client:', error);

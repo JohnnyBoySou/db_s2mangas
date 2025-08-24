@@ -491,12 +491,12 @@ describe('Wallpaper Handlers', () => {
       {
         name: 'Wallpaper 1',
         capa: 'https://example.com/cover1.jpg',
-        data: '\"[{\\\"img\\\":\\\"https://example.com/img1.jpg\\\"},{\\\"img\\\":\\\"https://example.com/img2.jpg\\\"}]\"'
+        data: '"[{"img":"https://example.com/img1.jpg"},{"img":"https://example.com/img2.jpg"}]"'
       },
       {
         name: 'Wallpaper 2',
         capa: 'https://example.com/cover2.jpg',
-        data: '\"[{\\\"img\\\":\\\"https://example.com/img3.jpg\\\"}]\"'
+        data: '"[{"img":"https://example.com/img3.jpg"}]"'
       }
     ];
 

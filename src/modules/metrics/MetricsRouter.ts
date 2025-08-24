@@ -39,6 +39,7 @@ MetricsRouter.get('/health', async (req, res) => {
         await redis.ping();
         redisStatus = 'connected';
       } catch (error) {
+        console.log(error);
         redisStatus = 'disconnected';
       }
     }

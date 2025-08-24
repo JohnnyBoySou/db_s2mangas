@@ -1,9 +1,3 @@
-// Define enum locally to avoid Prisma client import issues
-enum CollectionStatus {
-  PRIVATE = 'PRIVATE',
-  PUBLIC = 'PUBLIC'
-}
-
 import prisma from '@/prisma/client';
 import { checkUserCanEdit, checkUserCanView } from './CollaboratorHandler';
 

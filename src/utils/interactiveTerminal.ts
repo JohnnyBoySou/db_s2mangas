@@ -1,6 +1,5 @@
 import chalk from 'chalk';
 import inquirer from 'inquirer';
-import { logger } from './logger';
 import { getRedisClient } from '@/config/redis';
 import { exec } from 'child_process';
 import { promisify } from 'util';
@@ -112,6 +111,7 @@ class InteractiveTerminal {
       }
     } catch (error: any) {
       console.log(chalk.red('❌ Redis: Erro na conexão'));
+      console.log(error);
     }
 
     // Status das variáveis de ambiente
@@ -218,7 +218,7 @@ class InteractiveTerminal {
       console.log(chalk.yellow.bold('🧪 Teste de Operações:'));
       
       await redisClient.set('test_key', 'test_value');
-      const value = await redisClient.get('test_key');
+      await redisClient.get('test_key');
       await redisClient.del('test_key');
       
       console.log(chalk.green('✅ Set/Get/Delete: Funcionando'));
@@ -288,6 +288,7 @@ class InteractiveTerminal {
       console.log(chalk.green('✅ VS Code aberto!'));
     } catch (error) {
       console.log(chalk.red('❌ Erro ao abrir VS Code'));
+      console.log(error);
     }
     await this.waitForEnter();
   }
@@ -300,6 +301,7 @@ class InteractiveTerminal {
       await execAsync(`open ${url}`);
       console.log(chalk.green(`✅ Navegador aberto em ${url}`));
     } catch (error) {
+      console.log(error);
       console.log(chalk.red('❌ Erro ao abrir navegador'));
       console.log(chalk.cyan(`Acesse manualmente: ${url}`));
     }
