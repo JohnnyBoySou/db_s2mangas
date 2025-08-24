@@ -70,6 +70,16 @@ const elasticUrl = process.env.ELASTIC_INTERNAL_URL || process.env.ELASTIC_URL |
 const elasticUsername = process.env.ELASTIC_USER;
 const elasticPassword = process.env.ELASTIC_PASSWORD;
 
+if (!elasticUrl) {
+  throw new Error('ELASTIC_URL is not set');
+}
+if (!elasticUsername) {
+  throw new Error('ELASTIC_USER is not set');
+}
+if (!elasticPassword) {
+  throw new Error('ELASTIC_PASSWORD is not set');
+}
+
 function getElasticsearchClient(): Client {
   if (!elasticsearchClient) {
     elasticsearchClient = new Client({
