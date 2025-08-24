@@ -6,10 +6,9 @@ import express from 'express'
 import cors from 'cors'
 import swaggerUi from 'swagger-ui-express'
 import { warmupCache } from '@/middlewares/smartCache';
-import { logger } from '@/utils/logger';
 import { startInteractiveTerminal } from '@/utils/interactiveTerminal';
 import { specs } from '@/config/swagger';
-  
+
 // ✅ Middlewares
 import { initScalarDocs } from '@/middlewares/scalarDocs';
 import { observabilityMiddleware, errorObservabilityMiddleware } from '@/middlewares/observability';
@@ -126,7 +125,6 @@ async function startServer() {
   } catch (error) {
     console.warn('⚠️ Erro ao configurar Sentry:', error);
   }
-
 
   app.listen(process.env.PORT || 3000, async () => {
     const port = process.env.PORT || 3000;
