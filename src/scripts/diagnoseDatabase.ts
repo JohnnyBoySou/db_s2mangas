@@ -1,6 +1,6 @@
 #!/usr/bin/env ts-node
 
-import { PrismaClient } from '@prisma/client';
+import prisma from '@/prisma/client';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 
@@ -29,7 +29,7 @@ async function diagnoseDatabase() {
   // 2. Verificar se o Prisma Client está gerado
   console.log('2. Verificando Prisma Client...');
   try {
-    const { stdout } = await execAsync('npx prisma generate');
+    const { stdout: _stdout } = await execAsync('npx prisma generate');
     console.log('✅ Prisma Client gerado com sucesso');
   } catch (error) {
     console.error('❌ Erro ao gerar Prisma Client:', error);
@@ -38,16 +38,9 @@ async function diagnoseDatabase() {
 
   // 3. Testar conexão com o banco
   console.log('\n3. Testando conexão com o banco...');
-  const prisma = new PrismaClient({
-    datasources: {
-      db: {
-        url: databaseUrl
-      }
-    }
-  });
-
+  
   try {
-    // Teste simples de conexão
+    // Teste simples de conexão com o prisma client já configurado
     await prisma.$connect();
     console.log('✅ Conexão com o banco estabelecida com sucesso');
 

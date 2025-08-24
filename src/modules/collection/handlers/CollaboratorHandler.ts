@@ -1,5 +1,5 @@
 // Define enum locally to avoid Prisma client import issues
-enum CollaboratorRole {
+enum _CollaboratorRole {
   EDITOR = 'EDITOR',
   ADMIN = 'ADMIN'
 }

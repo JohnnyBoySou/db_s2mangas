@@ -61,9 +61,9 @@ async function railwayTroubleshoot() {
       
       try {
         // Teste básico de conectividade
-        const { stdout } = await execAsync(`ping -c 1 -W 3 ${host}`);
+        const { stdout: _stdout } = await execAsync(`ping -c 1 -W 3 ${host}`);
         console.log(`   ✅ Host ${host} está acessível`);
-      } catch (error) {
+      } catch {
         console.log(`   ❌ Host ${host} não está acessível`);
         console.log(`   💡 Isso pode indicar que o serviço PostgreSQL não está rodando`);
       }
@@ -83,7 +83,7 @@ async function railwayTroubleshoot() {
     try {
       await execAsync(`test -f ${file} || test -d ${file}`);
       console.log(`   ✅ ${file} existe`);
-    } catch (error) {
+    } catch {
       console.log(`   ❌ ${file} não encontrado`);
     }
   }
@@ -95,7 +95,7 @@ async function railwayTroubleshoot() {
     const { stdout } = await execAsync('tail -n 20 logs/combined.log 2>/dev/null || echo "Logs não encontrados"');
     console.log('   📋 Últimas linhas do log:');
     console.log(stdout);
-  } catch (error) {
+  } catch {
     console.log('   📋 Logs não disponíveis');
   }
 
@@ -137,7 +137,7 @@ async function railwayTroubleshoot() {
       } else {
         console.log('   ❌ Conexão direta falhou');
       }
-    } catch (error) {
+    } catch {
       console.log('   ❌ Cliente PostgreSQL não disponível');
     }
   }

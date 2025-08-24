@@ -1,11 +1,10 @@
 // Define enum locally to avoid Prisma client import issues
-enum CollectionStatus {
+enum _CollectionStatus {
   PRIVATE = 'PRIVATE',
   PUBLIC = 'PUBLIC'
 }
 
 import prisma from '@/prisma/client';
-import { getPaginationParams } from '@/utils/pagination';
 
 export interface DiscoverFilters {
   language?: string;

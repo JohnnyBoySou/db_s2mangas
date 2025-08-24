@@ -44,14 +44,14 @@ const CDN_CONFIG: CDNConfig = {
 };
 
 // Tipos de conteúdo para CDN
-const CONTENT_TYPES = {
+const _CONTENT_TYPES = {
   images: ['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif'],
   static: ['text/css', 'application/javascript', 'font/woff', 'font/woff2'],
   api: ['application/json']
 };
 
 // Middleware para simular comportamento de CDN
-export const cdnMiddleware = (type: keyof typeof CONTENT_TYPES) => {
+export const cdnMiddleware = (type: keyof typeof _CONTENT_TYPES) => {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     if (!CDN_CONFIG.enabled) {
       return next();
@@ -144,7 +144,7 @@ export const cdnMiddleware = (type: keyof typeof CONTENT_TYPES) => {
 // Obter região mais próxima baseada no IP
 function getClosestRegion(req: Request): string {
   // Implementação simplificada - em produção usaria geolocalização real
-  const clientIP = req.ip || req.connection.remoteAddress;
+  const _clientIP = req.ip || req.connection.remoteAddress;
   
   // Lógica básica baseada em headers
   const cfRegion = req.get('CF-IPCountry'); // Cloudflare
