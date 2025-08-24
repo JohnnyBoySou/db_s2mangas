@@ -1,4 +1,11 @@
-import ElasticsearchService from '@/services/ElasticsearchService';
+import { 
+  isElasticsearchAvailable, 
+  searchMangas, 
+  autocomplete as elasticsearchAutocomplete,
+  createElasticsearchIndex,
+  indexManga,
+  bulkIndexMangas
+} from '@/services/ElasticsearchService';
 import * as searchHandlers from './SearchHandler';
 import { DEFAULT_LIMIT, DEFAULT_PAGE } from '@/constants/search';
 
@@ -34,10 +41,8 @@ interface SmartSearchResults {
 }
 
 export class SmartSearchHandler {
-  private elasticsearchService: ElasticsearchService;
-
   constructor() {
-    this.elasticsearchService = new ElasticsearchService();
+    // Não precisa mais instanciar ElasticsearchService
   }
 
   /**
@@ -57,11 +62,11 @@ export class SmartSearchHandler {
 
     try {
       // Check if Elasticsearch is available
-      const elasticsearchAvailable = await this.elasticsearchService.isAvailable();
+      const elasticsearchAvailable = await isElasticsearchAvailable();
       
       if (elasticsearchAvailable) {
         // Try Elasticsearch search
-        const elasticResults = await this.elasticsearchService.search({
+        const elasticResults = await searchMangas({
           query: name,
           categories,
           status,
@@ -108,9 +113,9 @@ export class SmartSearchHandler {
    */
   async getAutocompleteSuggestions(query: string, language = 'pt-BR'): Promise<any[]> {
     try {
-      const available = await this.elasticsearchService.isAvailable();
+      const available = await isElasticsearchAvailable();
       if (available) {
-        return await this.elasticsearchService.autocomplete(query, language);
+        return await elasticsearchAutocomplete(query, language);
       }
     } catch (error) {
       console.warn('Autocomplete failed:', error);
@@ -125,9 +130,9 @@ export class SmartSearchHandler {
    */
   async indexManga(mangaData: any): Promise<void> {
     try {
-      const available = await this.elasticsearchService.isAvailable();
+      const available = await isElasticsearchAvailable();
       if (available) {
-        await this.elasticsearchService.indexManga(mangaData);
+        await indexManga(mangaData);
       }
     } catch (error) {
       console.error('Failed to index manga:', error);
@@ -139,9 +144,9 @@ export class SmartSearchHandler {
    */
   async bulkIndexMangas(mangas: any[]): Promise<void> {
     try {
-      const available = await this.elasticsearchService.isAvailable();
+      const available = await isElasticsearchAvailable();
       if (available) {
-        await this.elasticsearchService.bulkIndexMangas(mangas);
+        await bulkIndexMangas(mangas);
       }
     } catch (error) {
       console.error('Failed to bulk index mangas:', error);
@@ -153,9 +158,9 @@ export class SmartSearchHandler {
    */
   async initializeIndex(): Promise<void> {
     try {
-      const available = await this.elasticsearchService.isAvailable();
+      const available = await isElasticsearchAvailable();
       if (available) {
-        await this.elasticsearchService.createIndex();
+        await createElasticsearchIndex();
       }
     } catch (error) {
       console.error('Failed to initialize Elasticsearch index:', error);
@@ -170,7 +175,7 @@ export class SmartSearchHandler {
     sql: boolean;
     recommendedSearchType: 'elasticsearch' | 'sql';
   }> {
-    const elasticsearchAvailable = await this.elasticsearchService.isAvailable();
+    const elasticsearchAvailable = await isElasticsearchAvailable();
     
     return {
       elasticsearch: elasticsearchAvailable,

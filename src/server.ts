@@ -39,6 +39,7 @@ import { ChaptersRouter } from '@/modules/chapters/routes/ChaptersRouter';
 import { FileRouter, AdminFileRouter } from '@/modules/files/routes/FilesRouter';
 import { SummaryRouter } from '@/modules/summary/routes/SummaryRouter';
 import { HealthRouter } from '@/modules/health/HealthRouter';
+import { isElasticsearchAvailable } from './services/ElasticsearchService';
 
 const uploadsDir = process.env.RAILWAY_VOLUME_MOUNT_PATH || process.env.UPLOAD_DIR || "/data/uploads";
 
@@ -94,28 +95,6 @@ app.use('/admin/playlists', AdminPlaylistRouter)
 app.use('/admin/file', AdminFileRouter)
 //app.use('/cache', cacheRouter)
 
-// Rota de debug do Sentry - deve ser definida após a inicialização do Sentry
-app.get("/debug-sentry", function mainHandler(req, res) {
-  try {
-    // Enviar uma mensagem de teste primeiro
-    captureMessage("Teste de mensagem do Sentry", "info");
-    
-    // Lançar um erro intencional
-    throw new Error("My first Sentry error!");
-  } catch (error) {
-    // Capturar o erro no Sentry usando nossa função
-    captureException(error as Error);
-    
-    // Retornar uma resposta para o cliente
-    res.status(500).json({
-      message: "Erro intencional para testar o Sentry",
-      error: error instanceof Error ? error.message : 'Erro desconhecido',
-      timestamp: new Date().toISOString(),
-      sentryTest: true
-    });
-  }
-});
-
 app.get('/api-docs.json', (_req, res) => {
   res.setHeader('Content-Type', 'application/json');
   res.send(specs);
@@ -149,6 +128,8 @@ async function startServer() {
     console.warn('⚠️ Erro ao configurar Scalar docs:', error);
   }
 
+
+
   app.listen(process.env.PORT || 3000, async () => {
     const port = process.env.PORT || 3000;
     console.log(`✅ Servidor inciado com sucesso! \n✅ Rodando em http://localhost:${port}`)
@@ -165,6 +146,13 @@ async function startServer() {
       console.log('✅ Username Bloom Filter inicializado com sucesso');
     } catch (error) {
       console.error('Erro ao inicializar Username Bloom Filter:', error);
+    }
+
+    try {
+      const available = await isElasticsearchAvailable();
+      console.log('✅ Elasticsearch :', available);
+    } catch (error) {
+      console.error('Erro ao inicializar Elasticsearch:', error);
     }
   })
 }
