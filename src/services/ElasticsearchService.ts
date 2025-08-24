@@ -68,10 +68,10 @@ export class ElasticsearchService {
 
   constructor() {
     this.client = new Client({
-      node: process.env.ELASTICSEARCH_URL || 'http://localhost:9200',
-      auth: process.env.ELASTICSEARCH_USER && process.env.ELASTICSEARCH_PASSWORD ? {
-        username: process.env.ELASTICSEARCH_USER,
-        password: process.env.ELASTICSEARCH_PASSWORD
+      node: process.env.ELASTIC_URL || 'http://localhost:9200',
+      auth: process.env.ELASTIC_USERNAME && process.env.ELASTIC_PASSWORD ? {
+        username: process.env.ELASTIC_USERNAME,
+        password: process.env.ELASTIC_PASSWORD
       } : undefined,
       // Configurações robustas para Railway
       requestTimeout: 10000, // 10 segundos
