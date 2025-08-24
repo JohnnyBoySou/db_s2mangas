@@ -1,4 +1,9 @@
-import { CollectionStatus } from '@prisma/client';
+// Define the enum locally since we can't import from Prisma client
+enum CollectionStatus {
+  PRIVATE = 'PRIVATE',
+  PUBLIC = 'PUBLIC'
+}
+
 import { prismaMock } from '../../../test/mocks/prisma';
 
 // Mock do prisma client

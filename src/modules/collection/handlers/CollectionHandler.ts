@@ -1,5 +1,5 @@
 // Define enum locally to avoid Prisma client import issues
-enum CollectionStatus {
+enum _CollectionStatus {
   PRIVATE = 'PRIVATE',
   PUBLIC = 'PUBLIC'
 }

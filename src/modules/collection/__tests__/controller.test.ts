@@ -10,7 +10,12 @@ import {
   checkInCollections,
   toggleCollection
 } from '../controllers/CollectionController';
-import { CollectionStatus } from '@prisma/client';
+
+// Define the enum locally since we can't import from Prisma client
+enum CollectionStatus {
+  PRIVATE = 'PRIVATE',
+  PUBLIC = 'PUBLIC'
+}
 
 // Extender o tipo Request para incluir a propriedade user
 interface RequestWithUser extends Request {

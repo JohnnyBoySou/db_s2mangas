@@ -1,4 +1,3 @@
-import { PrismaClient } from '@prisma/client'
 import { createCachedPrismaClient } from '@/utils/prismaCache'
 
 const prisma = createCachedPrismaClient()

@@ -217,7 +217,7 @@ export class SmartSearchHandler {
    * Enhanced search with search type detection
    */
   async enhancedSearch(params: SmartSearchParams): Promise<SmartSearchResults> {
-    const searchType = this.detectSearchIntent(params.name || '');
+    const _searchType = this.detectSearchIntent(params.name || '');
     
     // For now, all searches go through intelligent search
     // In the future, we can route different search types differently

@@ -1,6 +1,6 @@
 #!/usr/bin/env ts-node
 
-import { PrismaClient } from '@prisma/client';
+import prisma from '@/prisma/client';
 
 async function quickCheck() {
   console.log('⚡ Verificação Rápida - Conexão com Banco');
@@ -15,13 +15,7 @@ async function quickCheck() {
 
   console.log('🔍 Testando conexão...');
   
-  const prisma = new PrismaClient({
-    datasources: {
-      db: {
-        url: databaseUrl
-      }
-    }
-  });
+  // Use the already configured prisma client instead of creating a new one
 
   try {
     // Teste de conexão

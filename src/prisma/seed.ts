@@ -1,6 +1,5 @@
 // prisma/seed.ts
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
+import prisma from './client';
 
 async function main() {
   await prisma.user.create({

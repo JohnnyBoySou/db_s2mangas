@@ -42,7 +42,7 @@ router.get('/health', async (req, res) => {
       try {
         await redis.ping();
         redisStatus = 'connected';
-      } catch (error) {
+      } catch {
         redisStatus = 'disconnected';
       }
     }
