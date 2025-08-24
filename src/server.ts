@@ -87,6 +87,9 @@ app.use('/admin/notifications', AdminNotificationsRouter)
 app.use('/admin/playlists', AdminPlaylistRouter)
 app.use('/admin/file', AdminFileRouter)
 //app.use('/cache', cacheRouter)
+app.get("/debug-sentry", function mainHandler(req, res) {
+  throw new Error("My first Sentry error!");
+});
 
 app.get('/api-docs.json', (_req, res) => {
   res.setHeader('Content-Type', 'application/json');
@@ -146,9 +149,7 @@ async function startServer() {
   })
 }
 
-app.get("/debug-sentry", function mainHandler(req, res) {
-  throw new Error("My first Sentry error!");
-});
+
 
 startServer();
 
