@@ -2,7 +2,7 @@ import { Router } from "express";
 
 const HealthRouter = Router();
 
-HealthRouter.get("/health", (_req, res) => {
+HealthRouter.get("/", (_req, res) => {
   try {
     res.status(200).json({
       status: 'ok',
@@ -20,14 +20,14 @@ HealthRouter.get("/health", (_req, res) => {
   }
 });
 
-HealthRouter.get("/health/detailed", (_req, res) => {
+HealthRouter.get("/detailed", (_req, res) => {
   try {
     res.status(200).json({
       status: 'healthy',
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
       environment: process.env.NODE_ENV || 'development',
-      version: require('../package.json').version
+      version: process.env.npm_package_version || '1.0.0'
     });
   } catch (error) {
     console.error('Erro no healthcheck:', error);
