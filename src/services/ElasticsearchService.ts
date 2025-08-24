@@ -67,7 +67,7 @@ let elasticsearchClient: Client | null = null;
 const INDEX_NAME = 'manga_index';
 
 const elasticUrl = process.env.ELASTIC_INTERNAL_URL || process.env.ELASTIC_URL || 'http://localhost:9200';
-const elasticUsername = process.env.ELASTIC_USER;
+const elasticUsername = process.env.ELASTIC_USERNAME;
 const elasticPassword = process.env.ELASTIC_PASSWORD;
 
 if (!elasticUrl) {
