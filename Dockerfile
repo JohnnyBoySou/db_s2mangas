@@ -29,6 +29,7 @@ COPY --from=builder /usr/src/app/node_modules ./node_modules
 COPY --from=builder /usr/src/app/dist ./dist
 COPY --from=builder /usr/src/app/src/prisma ./src/prisma
 COPY --from=builder /usr/src/app/src/import ./src/import
+COPY --from=builder /usr/src/app/start.js ./
 
 # Variáveis de ambiente (opcional)
 ENV NODE_ENV=production

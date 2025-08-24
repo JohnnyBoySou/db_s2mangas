@@ -45,6 +45,30 @@ const uploadsDir = process.env.RAILWAY_VOLUME_MOUNT_PATH || process.env.UPLOAD_D
 
 const app = express()
 
+// Graceful shutdown handling
+process.on('SIGTERM', () => {
+  console.log('🛑 SIGTERM received, shutting down gracefully...');
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  console.log('🛑 SIGINT received, shutting down gracefully...');
+  process.exit(0);
+});
+
+// Uncaught exception handling
+process.on('uncaughtException', (error) => {
+  console.error('💥 Uncaught Exception:', error);
+  captureException(error);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('💥 Unhandled Rejection at:', promise, 'reason:', reason);
+  captureException(new Error(`Unhandled Rejection: ${reason}`));
+  process.exit(1);
+});
+
 try {
   initSentry();
   console.log('✅ Sentry configurado com sucesso');
@@ -122,41 +146,64 @@ app.use(errorObservabilityMiddleware);
 
 async function startServer() {
   try {
+    console.log('🚀 Iniciando servidor...');
+    
     await initScalarDocs(app);
     console.log('✅ Scalar docs configurado com sucesso');
   } catch (error) {
     console.warn('⚠️ Erro ao configurar Scalar docs:', error);
   }
 
+  const port = process.env.PORT || 3000;
+  const server = app.listen(port, async () => {
+    console.log(`✅ Servidor iniciado com sucesso! \n✅ Rodando em http://localhost:${port}`)
 
+    // Initialize services asynchronously to avoid blocking server startup
+    setTimeout(async () => {
+      try {
+        await warmupCache();
+        console.log('✅ Cache warming concluído');
+      } catch (error) {
+        console.error('❌ Erro no cache warming:', error);
+      }
 
-  app.listen(process.env.PORT || 3000, async () => {
-    const port = process.env.PORT || 3000;
-    console.log(`✅ Servidor inciado com sucesso! \n✅ Rodando em http://localhost:${port}`)
+      try {
+        await usernameBloomFilter.initialize();
+        console.log('✅ Username Bloom Filter inicializado com sucesso');
+      } catch (error) {
+        console.error('❌ Erro ao inicializar Username Bloom Filter:', error);
+      }
 
-    try {
-      await warmupCache();
-      console.log('✅ Cache warming concluído');
-    } catch (error) {
-      console.error('Erro no cache warming:', error);
-    }
+      try {
+        const available = await isElasticsearchAvailable();
+        console.log('✅ Elasticsearch disponível:', available);
+      } catch (error) {
+        console.error('❌ Erro ao verificar Elasticsearch:', error);
+      }
+    }, 1000); // Delay initialization to allow server to start first
+  });
 
-    try {
-      await usernameBloomFilter.initialize();
-      console.log('✅ Username Bloom Filter inicializado com sucesso');
-    } catch (error) {
-      console.error('Erro ao inicializar Username Bloom Filter:', error);
-    }
+  // Handle server errors
+  server.on('error', (error) => {
+    console.error('💥 Server error:', error);
+    captureException(error);
+    process.exit(1);
+  });
 
-    try {
-      const available = await isElasticsearchAvailable();
-      console.log('✅ Elasticsearch :', available);
-    } catch (error) {
-      console.error('Erro ao inicializar Elasticsearch:', error);
-    }
-  })
+  // Graceful shutdown
+  process.on('SIGTERM', () => {
+    console.log('🛑 Shutting down server...');
+    server.close(() => {
+      console.log('✅ Server closed');
+      process.exit(0);
+    });
+  });
 }
 
-startServer();
+startServer().catch((error) => {
+  console.error('💥 Failed to start server:', error);
+  captureException(error);
+  process.exit(1);
+});
 
 export default app;
