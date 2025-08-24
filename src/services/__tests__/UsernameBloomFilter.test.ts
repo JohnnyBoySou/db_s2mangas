@@ -1,4 +1,4 @@
-import { UsernameBloomFilter } from '../UsernameBloomFilter';
+import * as UsernameBloomFilter from '../UsernameBloomFilter';
 import prisma from '@/prisma/client';
 
 // Mock Prisma
@@ -15,15 +15,13 @@ jest.mock('@/prisma/client', () => ({
 const mockedPrisma = prisma as jest.Mocked<typeof prisma>;
 
 describe('UsernameBloomFilter', () => {
-    let bloomFilter: UsernameBloomFilter;
-
     beforeEach(() => {
         jest.clearAllMocks();
-        bloomFilter = new UsernameBloomFilter();
+        UsernameBloomFilter.reset();
     });
 
     afterEach(() => {
-        bloomFilter.reset();
+        UsernameBloomFilter.reset();
     });
 
     describe('initialize', () => {
@@ -37,7 +35,7 @@ describe('UsernameBloomFilter', () => {
             mockedPrisma.user.findMany.mockResolvedValue(mockUsers as any);
 
             // When
-            await bloomFilter.initialize();
+            await UsernameBloomFilter.initialize();
 
             // Then
             expect(mockedPrisma.user.findMany).toHaveBeenCalledWith({
@@ -49,7 +47,7 @@ describe('UsernameBloomFilter', () => {
                 }
             });
             
-            const stats = bloomFilter.getStats();
+            const stats = UsernameBloomFilter.getStats();
             expect(stats.initialized).toBe(true);
         });
 
@@ -58,10 +56,10 @@ describe('UsernameBloomFilter', () => {
             mockedPrisma.user.findMany.mockRejectedValue(new Error('Database error'));
 
             // When
-            await bloomFilter.initialize();
+            await UsernameBloomFilter.initialize();
 
             // Then
-            const stats = bloomFilter.getStats();
+            const stats = UsernameBloomFilter.getStats();
             expect(stats.initialized).toBe(false);
         });
 
@@ -75,10 +73,10 @@ describe('UsernameBloomFilter', () => {
             mockedPrisma.user.findMany.mockResolvedValue(mockUsers as any);
 
             // When
-            await bloomFilter.initialize();
+            await UsernameBloomFilter.initialize();
 
             // Then
-            const stats = bloomFilter.getStats();
+            const stats = UsernameBloomFilter.getStats();
             expect(stats.initialized).toBe(true);
         });
     });
@@ -89,7 +87,7 @@ describe('UsernameBloomFilter', () => {
             // Filter not initialized
 
             // When
-            const result = bloomFilter.mightExist('testuser');
+            const result = UsernameBloomFilter.mightExist('testuser');
 
             // Then
             expect(result).toBe(true);
@@ -100,10 +98,10 @@ describe('UsernameBloomFilter', () => {
             mockedPrisma.user.findMany.mockResolvedValue([
                 { username: 'existinguser' }
             ] as any);
-            await bloomFilter.initialize();
+            await UsernameBloomFilter.initialize();
 
             // When
-            const result = bloomFilter.mightExist('definitelydoesnotexist');
+            const result = UsernameBloomFilter.mightExist('definitelydoesnotexist');
 
             // Then - This might be true due to bloom filter nature, but let's test the logic
             expect(typeof result).toBe('boolean');
@@ -112,11 +110,11 @@ describe('UsernameBloomFilter', () => {
         it('should return true for added username', async () => {
             // Given
             mockedPrisma.user.findMany.mockResolvedValue([] as any);
-            await bloomFilter.initialize();
-            bloomFilter.addUsername('newuser');
+            await UsernameBloomFilter.initialize();
+            UsernameBloomFilter.addUsername('newuser');
 
             // When
-            const result = bloomFilter.mightExist('newuser');
+            const result = UsernameBloomFilter.mightExist('newuser');
 
             // Then
             expect(result).toBe(true);
@@ -127,22 +125,22 @@ describe('UsernameBloomFilter', () => {
         it('should add username when initialized', async () => {
             // Given
             mockedPrisma.user.findMany.mockResolvedValue([] as any);
-            await bloomFilter.initialize();
+            await UsernameBloomFilter.initialize();
 
             // When
-            bloomFilter.addUsername('newuser');
+            UsernameBloomFilter.addUsername('newuser');
 
             // Then
-            expect(bloomFilter.mightExist('newuser')).toBe(true);
+            expect(UsernameBloomFilter.mightExist('newuser')).toBe(true);
         });
 
         it('should handle null username gracefully', async () => {
             // Given
             mockedPrisma.user.findMany.mockResolvedValue([] as any);
-            await bloomFilter.initialize();
+            await UsernameBloomFilter.initialize();
 
             // When & Then - Should not throw
-            expect(() => bloomFilter.addUsername('')).not.toThrow();
+            expect(() => UsernameBloomFilter.addUsername('')).not.toThrow();
         });
 
         it('should not add username when not initialized', () => {
@@ -150,7 +148,7 @@ describe('UsernameBloomFilter', () => {
             // Filter not initialized
 
             // When & Then - Should not throw
-            expect(() => bloomFilter.addUsername('testuser')).not.toThrow();
+            expect(() => UsernameBloomFilter.addUsername('testuser')).not.toThrow();
         });
     });
 
@@ -158,10 +156,10 @@ describe('UsernameBloomFilter', () => {
         it('should return false without database query when bloom filter says no', async () => {
             // Given
             mockedPrisma.user.findMany.mockResolvedValue([] as any);
-            await bloomFilter.initialize();
+            await UsernameBloomFilter.initialize();
 
             // When
-            const result = await bloomFilter.checkUsernameExists('definitelynotexist12345');
+            const result = await UsernameBloomFilter.checkUsernameExists('definitelynotexist12345');
 
             // Then
             expect(result).toBe(false);
@@ -174,12 +172,12 @@ describe('UsernameBloomFilter', () => {
             mockedPrisma.user.findMany.mockResolvedValue([
                 { username: 'existinguser' }
             ] as any);
-            await bloomFilter.initialize();
+            await UsernameBloomFilter.initialize();
             
             mockedPrisma.user.findUnique.mockResolvedValue({ id: '1' } as any);
 
             // When
-            const result = await bloomFilter.checkUsernameExists('existinguser');
+            const result = await UsernameBloomFilter.checkUsernameExists('existinguser');
 
             // Then
             expect(result).toBe(true);
@@ -194,14 +192,14 @@ describe('UsernameBloomFilter', () => {
             mockedPrisma.user.findMany.mockResolvedValue([
                 { username: 'someuser' }
             ] as any);
-            await bloomFilter.initialize();
+            await UsernameBloomFilter.initialize();
             
             // Add a username to increase chance of false positive
-            bloomFilter.addUsername('anotheruser');
+            UsernameBloomFilter.addUsername('anotheruser');
             mockedPrisma.user.findUnique.mockResolvedValue(null);
 
             // When
-            const result = await bloomFilter.checkUsernameExists('falsepositive');
+            const result = await UsernameBloomFilter.checkUsernameExists('falsepositive');
 
             // Then
             expect(result).toBe(false);
@@ -212,7 +210,7 @@ describe('UsernameBloomFilter', () => {
             mockedPrisma.user.findUnique.mockResolvedValue({ id: '1' } as any);
 
             // When
-            const result = await bloomFilter.checkUsernameExists('testuser');
+            const result = await UsernameBloomFilter.checkUsernameExists('testuser');
 
             // Then
             expect(result).toBe(true);
@@ -226,7 +224,7 @@ describe('UsernameBloomFilter', () => {
     describe('getStats', () => {
         it('should return correct stats when not initialized', () => {
             // When
-            const stats = bloomFilter.getStats();
+            const stats = UsernameBloomFilter.getStats();
 
             // Then
             expect(stats).toEqual({
@@ -243,10 +241,10 @@ describe('UsernameBloomFilter', () => {
                 { username: 'user1' },
                 { username: 'user2' }
             ] as any);
-            await bloomFilter.initialize();
+            await UsernameBloomFilter.initialize();
 
             // When
-            const stats = bloomFilter.getStats();
+            const stats = UsernameBloomFilter.getStats();
 
             // Then
             expect(stats.initialized).toBe(true);
@@ -262,13 +260,13 @@ describe('UsernameBloomFilter', () => {
             mockedPrisma.user.findMany.mockResolvedValue([
                 { username: 'user1' }
             ] as any);
-            await bloomFilter.initialize();
+            await UsernameBloomFilter.initialize();
 
             // When
-            bloomFilter.reset();
+            UsernameBloomFilter.reset();
 
             // Then
-            const stats = bloomFilter.getStats();
+            const stats = UsernameBloomFilter.getStats();
             expect(stats.initialized).toBe(false);
         });
     });

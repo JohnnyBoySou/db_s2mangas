@@ -14,7 +14,12 @@ const mockUsernameBloomFilter = {
 jest.mock('@/services/UsernameBloomFilter', () => ({
     __esModule: true,
     usernameBloomFilter: mockUsernameBloomFilter,
-    UsernameBloomFilter: jest.fn(() => mockUsernameBloomFilter)
+    initialize: mockUsernameBloomFilter.initialize,
+    checkUsernameExists: mockUsernameBloomFilter.checkUsernameExists,
+    addUsername: mockUsernameBloomFilter.addUsername,
+    mightExist: mockUsernameBloomFilter.mightExist,
+    getStats: mockUsernameBloomFilter.getStats,
+    reset: mockUsernameBloomFilter.reset
 }));
 
 import {

@@ -1,183 +1,182 @@
-# Username Bloom Filter Implementation
+# Implementação do Filtro Bloom para Nomes de Usuário
 
-## Overview
+## Visão Geral
 
-This document describes the implementation of a Bloom Filter for efficient username lookup in the S2Mangas application. The Bloom Filter serves as a fast pre-filter to reduce database queries when checking username availability.
+Este documento descreve a implementação de um Filtro Bloom para pesquisa eficiente de nomes de usuário na aplicação S2Mangas. O Filtro Bloom serve como um pré-filtro rápido para reduzir consultas ao banco de dados ao verificar a disponibilidade de nomes de usuário.
 
-## What is a Bloom Filter?
+## O que é um Filtro Bloom?
 
-A Bloom Filter is a space-efficient probabilistic data structure that tests whether an element is a member of a set. It can have false positives but never false negatives:
+Um Filtro Bloom é uma estrutura de dados probabilística eficiente em espaço que testa se um elemento é membro de um conjunto. Pode ter falsos positivos, mas nunca falsos negativos:
 
-- **False positive**: Filter says "maybe in set" when item is not actually in set
-- **Never false negative**: If filter says "not in set", the item is definitely not in set
+- **Falso positivo**: Filtro diz "talvez esteja no conjunto" quando o item não está realmente no conjunto
+- **Nunca falso negativo**: Se o filtro diz "não está no conjunto", o item definitivamente não está no conjunto
 
-This property makes it perfect for our use case:
-- If Bloom Filter says username doesn't exist → **No database query needed**
-- If Bloom Filter says username might exist → **Verify with database query**
+Esta propriedade é perfeita para nosso caso de uso:
+- Se o Filtro Bloom diz que o nome de usuário não existe → **Não precisa de consulta ao banco de dados**
+- Se o Filtro Bloom diz que o nome de usuário pode existir → **Verificar com consulta ao banco de dados**
 
-## Implementation Details
+## Detalhes da Implementação
 
-### Core Components
+### Componentes Principais
 
-#### 1. UsernameBloomFilter Service (`src/services/UsernameBloomFilter.ts`)
+#### 1. Serviço UsernameBloomFilter (`src/services/UsernameBloomFilter.ts`)
 
 ```typescript
-export class UsernameBloomFilter {
-    private bloomFilter: BloomFilter;
-    private initialized = false;
-    private expectedElements = 100000; // Expected number of usernames
-    private errorRate = 0.01; // 1% false positive rate
-}
+// Variáveis de estado do módulo
+let bloomFilter: BloomFilter;
+let initialized = false;
+let expectedElements = 100000; // Número esperado de nomes de usuário
+let errorRate = 0.01; // Taxa de falso positivo de 1%
 ```
 
-**Key Methods:**
+**Funções Principais:**
 
-- `initialize()`: Loads all existing usernames from database into filter
-- `mightExist(username)`: Fast check if username might exist (probabilistic)
-- `checkUsernameExists(username)`: Complete check using filter + database verification
-- `addUsername(username)`: Adds new username to filter
-- `getStats()`: Returns filter statistics
-- `reset()`: Resets the filter (useful for testing)
+- `initialize()`: Carrega todos os nomes de usuário existentes do banco de dados para o filtro
+- `mightExist(username)`: Verificação rápida se o nome de usuário pode existir (probabilística)
+- `checkUsernameExists(username)`: Verificação completa usando filtro + verificação no banco de dados
+- `addUsername(username)`: Adiciona novo nome de usuário ao filtro
+- `getStats()`: Retorna estatísticas do filtro
+- `reset()`: Reinicia o filtro (útil para testes)
 
-#### 2. Integration Points
+#### 2. Pontos de Integração
 
-**AuthHandler.ts Updates:**
-- Registration process now uses `checkUsernameExists()` for collision detection
-- Username creation loop uses Bloom Filter for faster iteration
-- New usernames are added to filter after successful creation
+**Atualizações no AuthHandler.ts:**
+- Processo de registro agora usa `checkUsernameExists()` para detecção de colisões
+- Loop de criação de nome de usuário usa Filtro Bloom para iteração mais rápida
+- Novos nomes de usuário são adicionados ao filtro após criação bem-sucedida
 
-**UsersHandler.ts Updates:**
-- User creation process uses Bloom Filter for username validation
-- Maintains consistency with auth handler approach
+**Atualizações no UsersHandler.ts:**
+- Processo de criação de usuário usa Filtro Bloom para validação de nome de usuário
+- Mantém consistência com a abordagem do auth handler
 
-**Server Startup (`src/server.ts`):**
-- Bloom Filter is initialized during application startup
-- Runs after cache warming but before server starts accepting requests
+**Inicialização do Servidor (`src/server.ts`):**
+- Filtro Bloom é inicializado durante a inicialização da aplicação
+- Executa após aquecimento do cache, mas antes do servidor começar a aceitar requisições
 
-### Performance Benefits
+### Benefícios de Performance
 
-#### Before (Database-Only Approach)
+#### Antes (Abordagem Apenas com Banco de Dados)
 ```typescript
-// Every username check = 1 database query
+// Cada verificação de nome de usuário = 1 consulta ao banco de dados
 while (await prisma.user.findUnique({ where: { username: candidateUsername } })) {
     tries++;
     candidateUsername = `${baseUsername}_${tries}`;
 }
 ```
 
-#### After (Bloom Filter + Database)
+#### Depois (Filtro Bloom + Banco de Dados)
 ```typescript
-// Most username checks = 0 database queries
+// A maioria das verificações de nome de usuário = 0 consultas ao banco de dados
 while (await usernameBloomFilter.checkUsernameExists(candidateUsername)) {
     tries++;
     candidateUsername = `${baseUsername}_${tries}`;
 }
 ```
 
-**Performance Improvements:**
-- **~99% reduction** in database queries for username collision checking
-- **Faster registration** process, especially for users with common names
-- **Better scalability** as user base grows
-- **Reduced database load** during peak registration periods
+**Melhorias de Performance:**
+- **~99% de redução** nas consultas ao banco de dados para verificação de colisão de nomes de usuário
+- **Processo de registro mais rápido**, especialmente para usuários com nomes comuns
+- **Melhor escalabilidade** conforme a base de usuários cresce
+- **Redução de carga no banco de dados** durante períodos de pico de registro
 
-### Configuration
+### Configuração
 
-The Bloom Filter is configured with these parameters:
+O Filtro Bloom é configurado com estes parâmetros:
 
 ```typescript
-expectedElements: 100000  // Expected number of usernames
-errorRate: 0.01          // 1% false positive rate
+expectedElements: 100000  // Número esperado de nomes de usuário
+errorRate: 0.01          // Taxa de falso positivo de 1%
 ```
 
-**Memory Usage:** ~120KB for 100,000 usernames with 1% error rate
+**Uso de Memória:** ~120KB para 100.000 nomes de usuário com taxa de erro de 1%
 
-**Adjusting Parameters:**
-- Increase `expectedElements` if expecting more users
-- Decrease `errorRate` for fewer false positives (uses more memory)
-- Current settings provide good balance of memory usage vs. accuracy
+**Ajustando Parâmetros:**
+- Aumentar `expectedElements` se esperando mais usuários
+- Diminuir `errorRate` para menos falsos positivos (usa mais memória)
+- Configurações atuais fornecem bom equilíbrio entre uso de memória vs. precisão
 
-### Error Handling
+### Tratamento de Erros
 
-The implementation includes robust error handling:
+A implementação inclui tratamento robusto de erros:
 
-1. **Initialization Failure**: If database is unavailable during startup, filter continues without crashing
-2. **Graceful Degradation**: When not initialized, always performs database checks
-3. **No Data Loss**: False positives still result in database verification
-4. **Logging**: Comprehensive logging for monitoring and debugging
+1. **Falha na Inicialização**: Se o banco de dados não estiver disponível durante a inicialização, o filtro continua sem travar
+2. **Degradação Graciosa**: Quando não inicializado, sempre realiza verificações no banco de dados
+3. **Sem Perda de Dados**: Falsos positivos ainda resultam em verificação no banco de dados
+4. **Logging**: Logging abrangente para monitoramento e depuração
 
-### Monitoring and Statistics
+### Monitoramento e Estatísticas
 
-Access filter statistics via `getStats()` method:
+Acesse estatísticas do filtro via função `getStats()`:
 
 ```typescript
 {
-    initialized: boolean,        // Whether filter is initialized
-    expectedElements: number,    // Configured capacity
-    currentElements: number,     // Current number of elements
-    errorRate: number           // Configured error rate
+    initialized: boolean,        // Se o filtro está inicializado
+    expectedElements: number,    // Capacidade configurada
+    currentElements: number,     // Número atual de elementos
+    errorRate: number           // Taxa de erro configurada
 }
 ```
 
-**Monitoring Recommendations:**
-- Check `initialized` status in health checks
-- Monitor `currentElements` vs `expectedElements` for capacity planning
-- Track false positive rate in production
+**Recomendações de Monitoramento:**
+- Verificar status `initialized` em verificações de saúde
+- Monitorar `currentElements` vs `expectedElements` para planejamento de capacidade
+- Rastrear taxa de falso positivo em produção
 
-## Testing
+## Testes
 
-### Unit Tests
+### Testes Unitários
 
-Comprehensive test suite covers:
-- Initialization with various scenarios
-- Filter operations (add, check)
-- Error handling and edge cases
-- Statistics and reset functionality
+Suíte de testes abrangente cobre:
+- Inicialização com vários cenários
+- Operações do filtro (adicionar, verificar)
+- Tratamento de erros e casos extremos
+- Funcionalidade de estatísticas e reinicialização
 
-### Integration Tests
+### Testes de Integração
 
-- AuthHandler tests updated to work with Bloom Filter
-- UsersHandler tests updated with proper mocking
-- Maintains existing behavior while improving performance
+- Testes do AuthHandler atualizados para funcionar com Filtro Bloom
+- Testes do UsersHandler atualizados com mocking apropriado
+- Mantém comportamento existente enquanto melhora a performance
 
-## Deployment Considerations
+## Considerações de Deploy
 
-### Startup Sequence
+### Sequência de Inicialização
 
-1. Application starts
-2. Cache warming occurs
-3. **Bloom Filter initialization** (loads existing usernames)
-4. Server begins accepting requests
+1. Aplicação inicia
+2. Aquecimento do cache ocorre
+3. **Inicialização do Filtro Bloom** (carrega nomes de usuário existentes)
+4. Servidor começa a aceitar requisições
 
-### Database Schema Impact
+### Impacto no Schema do Banco de Dados
 
-**No database schema changes required** - this is a pure performance optimization.
+**Nenhuma mudança no schema do banco de dados é necessária** - esta é uma otimização pura de performance.
 
-### Rollback Strategy
+### Estratégia de Rollback
 
-If issues arise, the implementation can be quickly disabled by:
-1. Commenting out the bloom filter integration in handlers
-2. Reverting to direct database queries
-3. No data loss or corruption risk
+Se surgirem problemas, a implementação pode ser rapidamente desabilitada:
+1. Comentando a integração do filtro bloom nos handlers
+2. Revertendo para consultas diretas ao banco de dados
+3. Sem risco de perda ou corrupção de dados
 
-## Future Improvements
+## Melhorias Futuras
 
-### Potential Optimizations
+### Otimizações Potenciais
 
-1. **Persistent Storage**: Save/load filter state to avoid full rebuilds
-2. **Incremental Updates**: Update filter based on database change logs
-3. **Multiple Filters**: Separate filters for different username patterns
-4. **Adaptive Sizing**: Automatically adjust filter size based on growth
+1. **Armazenamento Persistente**: Salvar/carregar estado do filtro para evitar reconstruções completas
+2. **Atualizações Incrementais**: Atualizar filtro baseado em logs de mudanças do banco de dados
+3. **Múltiplos Filtros**: Filtros separados para diferentes padrões de nomes de usuário
+4. **Dimensionamento Adaptativo**: Ajustar automaticamente o tamanho do filtro baseado no crescimento
 
-### Monitoring Metrics
+### Métricas de Monitoramento
 
-Consider adding these metrics:
-- Filter hit/miss ratios
-- Database query reduction percentages
-- Registration performance improvements
-- Memory usage tracking
+Considere adicionar estas métricas:
+- Razões de acerto/erro do filtro
+- Percentuais de redução de consultas ao banco de dados
+- Melhorias de performance no registro
+- Rastreamento de uso de memória
 
-## Conclusion
+## Conclusão
 
-The Username Bloom Filter implementation provides significant performance improvements for username checking operations while maintaining data consistency and reliability. The probabilistic nature of Bloom Filters is well-suited for this use case, offering substantial database load reduction with minimal memory overhead.
+A implementação do Filtro Bloom para nomes de usuário fornece melhorias significativas de performance para operações de verificação de nomes de usuário, mantendo consistência e confiabilidade dos dados. A natureza probabilística dos Filtros Bloom é bem adequada para este caso de uso, oferecendo redução substancial da carga do banco de dados com sobrecarga mínima de memória.
 
-The implementation follows best practices for error handling, testing, and monitoring, ensuring reliable operation in production environments.
+A implementação segue melhores práticas para tratamento de erros, testes e monitoramento, garantindo operação confiável em ambientes de produção.
