@@ -41,10 +41,6 @@ interface SmartSearchResults {
 }
 
 export class SmartSearchHandler {
-  constructor() {
-    // Não precisa mais instanciar ElasticsearchService
-  }
-
   /**
    * Intelligent search that tries Elasticsearch first, falls back to SQL
    */
