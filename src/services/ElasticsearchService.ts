@@ -63,59 +63,32 @@ interface AutocompleteSuggestion {
   type: 'title' | 'category';
 }
 
-// Cliente Elasticsearch global
 let elasticsearchClient: Client | null = null;
 const INDEX_NAME = 'manga_index';
 
-// Inicializar cliente Elasticsearch
+const elasticUrl = process.env.ELASTIC_INTERNAL_URL || process.env.ELASTIC_URL || 'http://localhost:9200';
+const elasticUsername = process.env.ELASTIC_USER;
+const elasticPassword = process.env.ELASTIC_PASSWORD;
+
 function getElasticsearchClient(): Client {
   if (!elasticsearchClient) {
-    // Priorizar URL interna para Railway
-    // Se não tiver URL interna, usar HTTPS para Railway
-    let elasticUrl = process.env.ELASTIC_INTERNAL_URL || process.env.ELASTIC_URL || 'http://localhost:9200';
-    
-    // Se for URL do Railway e não tiver protocolo HTTPS, adicionar
-    if (elasticUrl.includes('railway.app') && !elasticUrl.startsWith('https://')) {
-      elasticUrl = elasticUrl.replace('http://', 'https://');
-    }
-    
-    // Para Railway, remover porta 9200 se estiver usando HTTPS
-    if (elasticUrl.includes('railway.app') && elasticUrl.includes(':9200')) {
-      elasticUrl = elasticUrl.replace(':9200', '');
-    }
-    const hasUsername = !!process.env.ELASTIC_USERNAME;
-    const hasPassword = !!process.env.ELASTIC_PASSWORD;
-    
-    console.log('🔍 Elasticsearch Configuration:');
-    console.log(`   Internal URL: ${process.env.ELASTIC_INTERNAL_URL || '❌ Não configurado'}`);
-    console.log(`   Public URL: ${process.env.ELASTIC_URL || '❌ Não configurado'}`);
-    console.log(`   Using URL: ${elasticUrl}`);
-    console.log(`   URL Type: ${elasticUrl.includes('railway.internal') ? '🔒 Internal' : elasticUrl.includes('railway.app') ? '🌐 Public' : '🏠 Local'}`);
-    console.log(`   Username: ${hasUsername ? '✅ Configurado' : '❌ Não configurado'}`);
-    console.log(`   Password: ${hasPassword ? '✅ Configurado' : '❌ Não configurado'}`);
-    console.log(`   Auth: ${hasUsername && hasPassword ? '✅ Habilitado' : '❌ Desabilitado'}`);
-    console.log(`   Environment: ${process.env.NODE_ENV || 'development'}`);
-    
     elasticsearchClient = new Client({
       node: elasticUrl,
-      auth: hasUsername && hasPassword ? {
-        username: process.env.ELASTIC_USERNAME!,
-        password: process.env.ELASTIC_PASSWORD!
-      } : undefined,
-      // Configurações robustas para Railway
-      requestTimeout: 10000, // 10 segundos
+      auth: {
+        username: elasticUsername!,
+        password: elasticPassword!
+      },
+      requestTimeout: 10000, 
       maxRetries: 3,
-      // Configuração TLS para Railway
       tls: {
-        rejectUnauthorized: false, // Para desenvolvimento
+        rejectUnauthorized: false, 
         ca: undefined,
         cert: undefined,
         key: undefined
       },
-      // Configurações de conexão
-      compression: false, // Desabilitar compressão para melhor performance
-      sniffOnStart: false, // Desabilitar sniffing para single-node
-      sniffInterval: false, // Desabilitar sniffing interval
+      compression: false, 
+      sniffOnStart: false, 
+      sniffInterval: false, 
     });
     
     console.log('✅ Elasticsearch iniciado com sucesso');
@@ -123,31 +96,42 @@ function getElasticsearchClient(): Client {
   return elasticsearchClient;
 }
 
-// Verificar se Elasticsearch está disponível
 export async function isElasticsearchAvailable(): Promise<boolean> {
   try {
     console.log('🔍 Checking Elasticsearch availability...');
     const client = getElasticsearchClient();
     
-    // Timeout mais curto para health check
     const response: any = await client.ping({}, { 
-      requestTimeout: 5000 // 5 segundos para health check
+      requestTimeout: 5000 
     });
     
-    // Verificar se a resposta é válida
-    const statusCode = response.statusCode || response.meta?.statusCode;
-    // Elasticsearch está disponível se responder (qualquer status 2xx ou se a resposta existe)
-    const isAvailable = (statusCode >= 200 && statusCode < 300) || !!response;
+    let isAvailable = false;
+    let statusCode: number | undefined = undefined;
+    
+    if (typeof response === 'boolean') {
+      isAvailable = response === true; 
+      statusCode = response ? 200 : 0;
+    } else if (response && typeof response === 'object') {
+      statusCode = response.statusCode || response.meta?.statusCode;
+      isAvailable = (statusCode && statusCode >= 200 && statusCode < 300) || !!response;
+    } else {
+      isAvailable = !!response;
+    }
     
     console.log('📊 Elasticsearch Response Details:');
-    console.log(`   Status Code: ${statusCode}`);
     console.log(`   Response Type: ${typeof response}`);
-    console.log(`   Has Meta: ${!!response.meta}`);
-    console.log(`   Meta Status: ${response.meta?.statusCode}`);
-    console.log(`   Response Keys: ${Object.keys(response || {}).join(', ')}`);
+    console.log(`   Response Value: ${response}`);
+    console.log(`   Response === true: ${response === true}`);
+    console.log(`   Response === false: ${response === false}`);
+    console.log(`   Status Code: ${statusCode}`);
     
-    // Verificar se é uma resposta válida do Elasticsearch
-    if (response && typeof response === 'object') {
+    if (typeof response === 'boolean') {
+      console.log(`   Ping Response: ${response ? '✅ Success' : '❌ Failed'}`);
+      console.log(`   Is Valid Response: ✅ (Boolean response is valid)`);
+    } else if (response && typeof response === 'object') {
+      console.log(`   Has Meta: ${!!response.meta}`);
+      console.log(`   Meta Status: ${response.meta?.statusCode}`);
+      console.log(`   Response Keys: ${Object.keys(response || {}).join(', ')}`);
       console.log(`   Is Valid Response: ✅`);
     } else {
       console.log(`   Is Valid Response: ❌`);
@@ -156,8 +140,12 @@ export async function isElasticsearchAvailable(): Promise<boolean> {
     if (isAvailable) {
       console.log('✅ Elasticsearch is available and responding');
     } else {
-      console.log('⚠️  Elasticsearch responded but with unexpected status:', statusCode);
-      console.log('   Full response:', JSON.stringify(response, null, 2));
+      if (typeof response === 'boolean') {
+        console.log('❌ Elasticsearch ping failed');
+      } else {
+        console.log('⚠️  Elasticsearch responded but with unexpected status:', statusCode);
+        console.log('   Full response:', JSON.stringify(response, null, 2));
+      }
     }
     
     return isAvailable;
