@@ -11,7 +11,7 @@
     "type-check": "tsc --noEmit",
     "dev": "tsx watch src/server.ts",
     "dev:interactive": "tsx src/scripts/interactiveDev.ts",
-    "build": "tsc && tsc-alias && mkdir -p dist/templates/email && cp -r src/templates/email/* dist/templates/email/",
+    "build": "tsc && tsc-alias && mkdir -p dist/templates/email && cp -r src/templates/email/* dist/templates/email/ && pnpm sentry:sourcemaps",
     "build:watch": "tsc -w",
     "build:dev": "tsc && ts-node-dev --respawn --transpile-only src/server.ts",
     "build:prod": "tsx src/server.ts",
@@ -37,7 +37,8 @@
     "observability:test": "ts-node -r tsconfig-paths/register src/scripts/testObservability.ts",
     "elasticsearch:init": "ts-node -r tsconfig-paths/register src/scripts/initializeElasticsearch.ts",
     "elasticsearch:health": "ts-node -r tsconfig-paths/register -e \"import SmartSearchHandler from './src/modules/search/handlers/SmartSearchHandler'; new SmartSearchHandler().getSearchHealth().then(h => console.log(JSON.stringify(h, null, 2)))\"",
-    "postinstall": "npx prisma generate"
+    "postinstall": "npx prisma generate",
+    "sentry:sourcemaps": "sentry-cli sourcemaps inject --org s2mangas --project node-express dist && sentry-cli sourcemaps upload --org s2mangas --project node-express dist"
   },
   "prisma": {
     "schema": "src/prisma/schema.prisma",
@@ -58,6 +59,7 @@
     "@faker-js/faker": "^9.8.0",
     "@prisma/client": "^6.11.1",
     "@scalar/express-api-reference": "^0.8.13",
+    "@sentry/cli": "^2.52.0",
     "@sentry/node": "^8.40.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/http-proxy-middleware": "^0.19.3",

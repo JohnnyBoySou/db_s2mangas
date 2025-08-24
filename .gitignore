@@ -21,3 +21,5 @@ logs
 cache
 
 uploads/*
+# Sentry Config File
+.sentryclirc

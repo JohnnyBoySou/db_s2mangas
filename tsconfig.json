@@ -6,6 +6,7 @@
     "outDir": "./dist",
     "moduleResolution": "node",
     "baseUrl": "./src",
+
     "paths": {
       "@/*": ["*"],
       "@/controllers/*": ["controllers/*"],
@@ -22,12 +23,20 @@
       "@/schemas/*": ["schemas/*"],
       "@/prisma/*": ["prisma/*"]
     },
+
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "noImplicitAny": false,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "inlineSources": true,
+
+    // Set `sourceRoot` to  "/" to strip the build path prefix
+    // from generated source code references.
+    // This improves issue grouping in Sentry.
+    "sourceRoot": "/"
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"],
