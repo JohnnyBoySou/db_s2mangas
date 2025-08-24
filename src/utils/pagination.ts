@@ -8,16 +8,12 @@ type PaginationParams = {
 };
 
 export function getPaginationParams(req: Request): PaginationParams {
-  // Pega o primeiro parâmetro que contenha 'page' no nome
   const pageParam = Object.keys(req.query).find(key => key.toLowerCase().includes('page'));
-  // Pega o primeiro parâmetro que contenha 'limit' ou 'per_page' no nome
   const limitParam = Object.keys(req.query).find(key => 
     key.toLowerCase().includes('limit') || key.toLowerCase().includes('per_page')
   );
-
   const page = pageParam ? parseInt(req.query[pageParam] as string) || 1 : 1;
   const limit = limitParam ? parseInt(req.query[limitParam] as string) || 20 : 20;
-
   const take = Math.min(Math.max(limit, 1), 100);
   const skip = (page - 1) * take;
 

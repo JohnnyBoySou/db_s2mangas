@@ -6,6 +6,7 @@ import { smartCacheMiddleware, cacheInvalidationMiddleware, imageCacheMiddleware
 const MangaRouter = Router();
 const AdminMangaRouter = Router();
 
+MangaRouter.get("/", requireAuth, smartCacheMiddleware('manga'), list);
 MangaRouter.get("/:id/covers", requireAuth, imageCacheMiddleware(['thumbnail', 'small', 'medium']), covers);
 MangaRouter.get('/category', requireAuth, smartCacheMiddleware('categories'), category);
 MangaRouter.get("/:id", requireAuth, smartCacheMiddleware('manga'), get);

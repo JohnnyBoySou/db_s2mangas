@@ -1,6 +1,7 @@
 import prisma from '@/prisma/client';
 import { RequestHandler, Request, Response } from 'express';
 import { handleZodError } from '@/utils/zodError';
+import { getPaginationParams } from '@/utils/pagination';
 import * as analyticsHandlers from '../handlers/AnalyticsHandler';
 
 /**
@@ -803,8 +804,8 @@ export const getViewsByPeriod: RequestHandler = async (req, res): Promise<void> 
 
 export const getMostViewedMangas: RequestHandler = async (req, res) => {
     try {
-        const limit = parseInt(req.query.limit as string) || 10;
-        const mangas = await analyticsHandlers.getMostViewedMangas(limit);
+        const { take } = getPaginationParams(req);
+        const mangas = await analyticsHandlers.getMostViewedMangas(take);
         res.status(200).json(mangas);
     } catch (err) {
         handleZodError(err, res);
@@ -813,8 +814,8 @@ export const getMostViewedMangas: RequestHandler = async (req, res) => {
 
 export const getMostLikedMangas: RequestHandler = async (req, res) => {
     try {
-        const limit = parseInt(req.query.limit as string) || 10;
-        const mangas = await analyticsHandlers.getMostLikedMangas(limit);
+        const { take } = getPaginationParams(req);
+        const mangas = await analyticsHandlers.getMostLikedMangas(take);
         res.status(200).json(mangas);
     } catch (err) {
         handleZodError(err, res);
@@ -823,8 +824,8 @@ export const getMostLikedMangas: RequestHandler = async (req, res) => {
 
 export const getMostCommentedMangas: RequestHandler = async (req, res) => {
     try {
-        const limit = parseInt(req.query.limit as string) || 10;
-        const mangas = await analyticsHandlers.getMostCommentedMangas(limit);
+        const { take } = getPaginationParams(req);
+        const mangas = await analyticsHandlers.getMostCommentedMangas(take);
         res.status(200).json(mangas);
     } catch (err) {
         handleZodError(err, res);
@@ -853,8 +854,8 @@ export const getUsersByPeriod: RequestHandler = async (req, res): Promise<void> 
 
 export const getMostActiveUsers: RequestHandler = async (req, res) => {
     try {
-        const limit = parseInt(req.query.limit as string) || 10;
-        const users = await analyticsHandlers.getMostActiveUsers(limit);
+        const { take } = getPaginationParams(req);
+        const users = await analyticsHandlers.getMostActiveUsers(take);
         res.status(200).json(users);
     } catch (err) {
         handleZodError(err, res);

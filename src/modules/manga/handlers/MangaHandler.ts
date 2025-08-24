@@ -56,33 +56,54 @@ export const createManga = async (data: any) => {
 };
 
 export const listMangas = async (language: string, page: number = 1, limit: number = 10) => {
-    const skip = (page - 1) * limit;
-
-    const [mangas, total] = await Promise.all([
-        prisma.manga.findMany({
-            include: {
-                categories: true,
-                translations: true,
-                languages: true,
-            },
-            orderBy: { createdAt: "desc" },
-            skip,
-            take: limit,
-        }),
-        prisma.manga.count()
-    ]);
-
+    // Primeiro, vamos contar o total para validar a página
+    const total = await prisma.manga.count();
     const totalPages = Math.ceil(total / limit);
+    
+    // Validar se a página solicitada é válida
+    if (page > totalPages && totalPages > 0) {
+        throw new Error(`Página ${page} não existe. Total de páginas: ${totalPages}`);
+    }
+    
+    // Se não há dados, retornar página 1
+    if (total === 0) {
+        return {
+            data: [],
+            pagination: {
+                total: 0,
+                page: 1,
+                limit,
+                totalPages: 0,
+                next: false,
+                prev: false,
+            },
+        };
+    }
+    
+    // Ajustar página para o máximo se exceder o total
+    const adjustedPage = Math.min(page, totalPages);
+    const skip = (adjustedPage - 1) * limit;
+
+    const mangas = await prisma.manga.findMany({
+        include: {
+            categories: true,
+            translations: true,
+            languages: true,
+        },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+    });
 
     return {
         data: mangas.map(manga => getTranslatedManga(manga, language)),
         pagination: {
             total,
-            page,
+            page: adjustedPage,
             limit,
             totalPages,
-            next: page < totalPages,
-            prev: page > 1,
+            next: adjustedPage < totalPages,
+            prev: adjustedPage > 1,
         },
     };
 };
@@ -293,61 +314,83 @@ export const deleteManga = async (id: string) => {
 };
 
 export const getMangaByCategory = async (category: string, page: number, limit: number) => {
-    const skip = (page - 1) * limit;
-
-    const [mangas, total] = await Promise.all([
-        prisma.manga.findMany({
-            where: {
-                categories: {
-                    some: {
-                        name: {
-                            equals: category,
-                            mode: 'insensitive',
-                        },
+    // Primeiro, vamos contar o total para validar a página
+    const total = await prisma.manga.count({
+        where: {
+            categories: {
+                some: {
+                    name: {
+                        equals: category,
+                        mode: 'insensitive',
                     },
                 },
             },
-            skip,
-            take: limit,
-            orderBy: {
-                createdAt: 'desc',
-            },
-            include: {
-                translations: true,
-                categories: true,
-                _count: {
-                    select: {
-                        likes: true,
-                        views: true,
-                    },
-                },
-            },
-        }),
-        prisma.manga.count({
-            where: {
-                categories: {
-                    some: {
-                        name: {
-                            equals: category,
-                            mode: 'insensitive',
-                        },
-                    },
-                },
-            },
-        }),
-    ]);
-
+        },
+    });
+    
     const totalPages = Math.ceil(total / limit);
+    
+    // Validar se a página solicitada é válida
+    if (page > totalPages && totalPages > 0) {
+        throw new Error(`Página ${page} não existe. Total de páginas: ${totalPages}`);
+    }
+    
+    // Se não há dados, retornar página 1
+    if (total === 0) {
+        return {
+            data: [],
+            pagination: {
+                total: 0,
+                page: 1,
+                limit,
+                totalPages: 0,
+                next: false,
+                prev: false,
+            },
+        };
+    }
+    
+    // Ajustar página para o máximo se exceder o total
+    const adjustedPage = Math.min(page, totalPages);
+    const skip = (adjustedPage - 1) * limit;
+
+    const mangas = await prisma.manga.findMany({
+        where: {
+            categories: {
+                some: {
+                    name: {
+                        equals: category,
+                        mode: 'insensitive',
+                    },
+                },
+            },
+        },
+        skip,
+        take: limit,
+        orderBy: {
+            createdAt: 'desc',
+        },
+        include: {
+            translations: true,
+            categories: true,
+            _count: {
+                select: {
+                    likes: true,
+                    views: true,
+                },
+            },
+        },
+    });
 
     return {
         data: mangas,
         pagination: {
             total,
-            page,
+            page: adjustedPage,
             limit,
             totalPages,
-            next: page < totalPages,
-            prev: page > 1,
+            next: adjustedPage < totalPages,
+            prev: adjustedPage > 1,
         },
     };
 };
@@ -690,7 +733,40 @@ export const getMangaChapters = async (id: string, lg: string, order: string, pa
         throw new Error('Mangá não encontrado ou UUID não disponível');
     }
 
-    const offset = (page - 1) * limit;
+    // Primeiro, vamos buscar o total de capítulos para validar a página
+    const totalResponse = await axios.get(`https://api.mangadex.org/manga/${manga.manga_uuid}/feed?limit=1&translatedLanguage[]=${lg}&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&includeFutureUpdates=1`);
+    
+    if (totalResponse.status !== 200) {
+        throw new Error('Failed to fetch chapters');
+    }
+
+    const { total } = totalResponse.data;
+    const lastPage = Math.ceil(total / limit);
+    
+    // Validar se a página solicitada é válida
+    if (page > lastPage && lastPage > 0) {
+        throw new Error(`Página ${page} não existe. Total de páginas: ${lastPage}`);
+    }
+    
+    // Se não há dados, retornar página 1
+    if (total === 0) {
+        return {
+            current_page: 1,
+            data: [],
+            from: 0,
+            last_page: 1,
+            next: false,
+            per_page: limit,
+            prev: false,
+            to: 0,
+            total: 0
+        };
+    }
+    
+    // Ajustar página para o máximo se exceder o total
+    const adjustedPage = Math.min(page, lastPage);
+    const offset = (adjustedPage - 1) * limit;
+    
     const apiUrl = `https://api.mangadex.org/manga/${manga.manga_uuid}/feed?limit=${limit}&offset=${offset}&translatedLanguage[]=${lg}&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&includeFutureUpdates=1&order[createdAt]=${order}&order[updatedAt]=${order}&order[publishAt]=${order}&order[readableAt]=${order}&order[volume]=${order}&order[chapter]=${order}`;
 
     const response = await axios.get(apiUrl, {
@@ -704,14 +780,14 @@ export const getMangaChapters = async (id: string, lg: string, order: string, pa
         throw new Error('Failed to fetch chapters');
     }
 
-    const { data, total } = response.data;
+    const { data } = response.data;
 
     if (!data || data.length === 0) {
         return {
-            current_page: page,
+            current_page: adjustedPage,
             data: [],
             from: 0,
-            last_page: 1,
+            last_page: lastPage,
             next: false,
             per_page: limit,
             prev: false,
@@ -720,21 +796,20 @@ export const getMangaChapters = async (id: string, lg: string, order: string, pa
         };
     }
 
-    const transformed = transformChapterData(data, total, limit, page, offset, lg);
+    const transformed = transformChapterData(data, total, limit, adjustedPage, offset, lg);
     const chapters = transformed.chapters;
 
-    const lastPage = Math.ceil(total / limit);
     const from = offset + 1;
     const to = Math.min(offset + limit, total);
 
     return {
-        current_page: page,
+        current_page: adjustedPage,
         data: chapters,
         from,
         last_page: lastPage,
-        next: page < lastPage,
+        next: adjustedPage < lastPage,
         per_page: limit,
-        prev: page > 1,
+        prev: adjustedPage > 1,
         to,
         total
     };

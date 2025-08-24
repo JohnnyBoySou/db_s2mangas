@@ -1,4 +1,5 @@
 import type { RequestHandler } from "express";
+import { getPaginationParams } from '@/utils/pagination';
 import * as chapterHandlers from "../handlers/ChaptersHandler";
 
 /**
@@ -218,13 +219,11 @@ export const list: RequestHandler = async (req, res) => {
     const { id } = req.params;
     const lg = req.query.lang as string || 'pt-br';
     const order = req.query.order as string || 'desc';
-    const page = Math.max(1, parseInt(req.query.page as string || '1'));
-    const limit = parseInt(req.query.limit as string || '20');
-    const offset = (page - 1) * limit;
+    const { skip, take, page } = getPaginationParams(req);
     const baseUrl = `${req.protocol}://${req.get('host')}${req.originalUrl.split('?')[0]}`;
 
     try {
-        const result = await chapterHandlers.listChapters({ id, lg, order, page, limit, offset });
+        const result = await chapterHandlers.listChapters({ id, lg, order, page, limit: take, offset: skip });
         
         // Adiciona o baseUrl aos links de paginação
         const response = {
