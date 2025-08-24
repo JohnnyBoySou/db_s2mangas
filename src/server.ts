@@ -136,6 +136,8 @@ app.use('/docs', swaggerUi.serve, swaggerUi.setup(specs, {
 
 app.use('/metrics', MetricsRouter);
 app.use('/health', HealthRouter);
+
+// Error handler
 app.use(sentryErrorHandler());
 app.use(errorObservabilityMiddleware);
 
@@ -166,8 +168,6 @@ async function startServer() {
     }
   })
 }
-
-
 
 startServer();
 
