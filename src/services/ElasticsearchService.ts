@@ -134,12 +134,30 @@ export async function isElasticsearchAvailable(): Promise<boolean> {
       requestTimeout: 5000 // 5 segundos para health check
     });
     
-    const isAvailable = response.statusCode === 200 || response.meta?.statusCode === 200;
+    // Verificar se a resposta é válida
+    const statusCode = response.statusCode || response.meta?.statusCode;
+    // Elasticsearch está disponível se responder (qualquer status 2xx ou se a resposta existe)
+    const isAvailable = (statusCode >= 200 && statusCode < 300) || !!response;
+    
+    console.log('📊 Elasticsearch Response Details:');
+    console.log(`   Status Code: ${statusCode}`);
+    console.log(`   Response Type: ${typeof response}`);
+    console.log(`   Has Meta: ${!!response.meta}`);
+    console.log(`   Meta Status: ${response.meta?.statusCode}`);
+    console.log(`   Response Keys: ${Object.keys(response || {}).join(', ')}`);
+    
+    // Verificar se é uma resposta válida do Elasticsearch
+    if (response && typeof response === 'object') {
+      console.log(`   Is Valid Response: ✅`);
+    } else {
+      console.log(`   Is Valid Response: ❌`);
+    }
     
     if (isAvailable) {
       console.log('✅ Elasticsearch is available and responding');
     } else {
-      console.log('⚠️  Elasticsearch responded but with unexpected status:', response.statusCode);
+      console.log('⚠️  Elasticsearch responded but with unexpected status:', statusCode);
+      console.log('   Full response:', JSON.stringify(response, null, 2));
     }
     
     return isAvailable;

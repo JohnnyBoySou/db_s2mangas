@@ -37,6 +37,7 @@
     "observability:test": "ts-node -r tsconfig-paths/register src/scripts/testObservability.ts",
     "elasticsearch:init": "ts-node -r tsconfig-paths/register src/scripts/initializeElasticsearch.ts",
     "elasticsearch:health": "ts-node -r tsconfig-paths/register -e \"import SmartSearchHandler from './src/modules/search/handlers/SmartSearchHandler'; new SmartSearchHandler().getSearchHealth().then(h => console.log(JSON.stringify(h, null, 2)))\"",
+    "elasticsearch:test": "ts-node -r tsconfig-paths/register -e \"import { isElasticsearchAvailable } from './src/services/ElasticsearchService'; isElasticsearchAvailable().then(available => console.log('Elasticsearch Available:', available))\"",
     "postinstall": "npx prisma generate",
     "sentry:sourcemaps": "sentry-cli sourcemaps inject --org s2mangas --project node-express dist && sentry-cli sourcemaps upload --org s2mangas --project node-express dist"
   },
