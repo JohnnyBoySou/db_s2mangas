@@ -1,9 +1,13 @@
 import Redis from 'ioredis';
 import { logger } from '@/utils/logger';
 
-// Configuração Redis com suporte a senha
+// Configuração Redis com suporte a senha e pesquisa de pilha dupla
 // Para desenvolvimento local, usar REDIS_PUBLIC_URL
 // Para produção no Railway, usar REDIS_URL (interna)
+// 
+// SOLUÇÃO RAILWAY: Configurado family: 0 para habilitar pesquisa de pilha dupla
+// Isso resolve problemas de conectividade com redis.railway.internal
+// tentando resolver tanto IPv4 quanto IPv6 (registros A e AAAA)
 const REDIS_URL = process.env.REDIS_URL;
 
 const REDIS_PASSWORD = process.env.REDIS_PASSWORD
@@ -30,7 +34,8 @@ const getRedisUrl = () => {
 // Cliente principal (DB 0)
 const redisClient = getRedisUrl()
   ? new Redis(getRedisUrl()!, {
-      // NÃO force family:4 (rede interna é IPv6-friendly)
+      // Habilitar pesquisa de pilha dupla (IPv4 + IPv6) para Railway
+      family: 0,
       lazyConnect: true,
       connectTimeout: 10_000,
       commandTimeout: 5_000,
@@ -44,6 +49,8 @@ const redisClient = getRedisUrl()
 const redisL1Client = getRedisUrl()
   ? new Redis(getRedisUrl()!, {
       db: 1,
+      // Habilitar pesquisa de pilha dupla (IPv4 + IPv6) para Railway
+      family: 0,
       lazyConnect: true,
       connectTimeout: 10_000,
       retryStrategy: (times) => Math.min(times * 30, 1000),
