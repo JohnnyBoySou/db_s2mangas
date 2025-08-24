@@ -8,6 +8,27 @@ import emailAdapter from '../../../config/nodemailer';
 process.env.JWT_SECRET = 'test-jwt-secret';
 process.env.SMTP_USER = 'test@example.com';
 
+// Mock do UsernameBloomFilter
+const mockUsernameBloomFilter = {
+    checkUsernameExists: jest.fn(),
+    addUsername: jest.fn(),
+    mightExist: jest.fn(),
+    initialize: jest.fn(),
+    getStats: jest.fn(),
+    reset: jest.fn()
+};
+
+jest.mock('@/services/UsernameBloomFilter', () => ({
+    __esModule: true,
+    usernameBloomFilter: mockUsernameBloomFilter,
+    initialize: mockUsernameBloomFilter.initialize,
+    checkUsernameExists: mockUsernameBloomFilter.checkUsernameExists,
+    addUsername: mockUsernameBloomFilter.addUsername,
+    mightExist: mockUsernameBloomFilter.mightExist,
+    getStats: mockUsernameBloomFilter.getStats,
+    reset: mockUsernameBloomFilter.reset
+}));
+
 // Mock do Prisma
 jest.mock('@/prisma/client', () => ({
     __esModule: true,
@@ -30,6 +51,8 @@ import { register, verifyEmailCode, login, getProfile, updateMe, deleteMe } from
 describe('Auth Handler', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockUsernameBloomFilter.checkUsernameExists.mockResolvedValue(false);
+    mockUsernameBloomFilter.addUsername.mockReturnValue(undefined);
   });
 
   describe('register', () => {
@@ -76,10 +99,12 @@ describe('Auth Handler', () => {
 
     it('should generate unique username if collision occurs', async () => {
       // Given
-      (prismaMock.user.findUnique as jest.Mock)
-        .mockResolvedValueOnce(null) // Email check
-        .mockResolvedValueOnce({ id: 'existing' } as any) // Username collision
-        .mockResolvedValueOnce(null); // Username with suffix available
+      (prismaMock.user.findUnique as jest.Mock).mockResolvedValue(null); // Email check
+      
+      // Mock bloom filter to return true for 'testuser' and false for 'testuser_1'
+      mockUsernameBloomFilter.checkUsernameExists
+        .mockResolvedValueOnce(true)  // 'testuser' exists
+        .mockResolvedValueOnce(false); // 'testuser_1' doesn't exist
       
       mockedGenerateUsername.mockReturnValue('testuser');
       mockedBcrypt.hash.mockResolvedValue('hashed-password' as never);
@@ -108,7 +133,7 @@ describe('Auth Handler', () => {
       // Given
       const email = 'test@example.com';
       const code = '123456';
-      const futureDate = new Date(Date.now() + 1000 * 60 * 5); // 5 minutes in future
+      const futureDate = new Date(Date.now() + 1000 * 60 * 15); // 15 minutes in future
       
       (prismaMock.user.findUnique as jest.Mock).mockResolvedValue({
         id: 'user-id',
@@ -348,6 +373,10 @@ describe('Auth Handler', () => {
     it('should throw error if username already exists', async () => {
       // Given
       const updateDataWithUsername = { ...updateData, username: 'existinguser' };
+      
+      // Mock bloom filter to indicate username might exist
+      mockUsernameBloomFilter.checkUsernameExists.mockResolvedValue(true);
+      
       (prismaMock.user.findUnique as jest.Mock).mockResolvedValue({
         id: 'other-user-id',
         username: 'existinguser',

@@ -1,5 +1,6 @@
 import prisma from '@/prisma/client';
 import bcrypt from 'bcrypt';
+import { usernameBloomFilter } from '@/services/UsernameBloomFilter';
 
 // Listar todos os usuários
 export const listUsers = async (page = 1, limit = 10) => {
@@ -73,17 +74,21 @@ export const createUser = async (data: {
     const { name, email, password, username, avatar, cover } = data;
     const normalizedEmail = email.toLowerCase();
 
-    const existingUser = await prisma.user.findFirst({
-        where: {
-            OR: [
-                { email: normalizedEmail },
-                { username: username }
-            ]
-        }
+    // Check email existence first (still need DB query for this)
+    const existingEmailUser = await prisma.user.findUnique({
+        where: { email: normalizedEmail }
     });
 
-    if (existingUser) {
+    if (existingEmailUser) {
         throw new Error("Email ou username já cadastrado");
+    }
+
+    // Check username existence using Bloom Filter if username is provided
+    if (username) {
+        const usernameExists = await usernameBloomFilter.checkUsernameExists(username);
+        if (usernameExists) {
+            throw new Error("Email ou username já cadastrado");
+        }
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -110,6 +115,9 @@ export const createUser = async (data: {
             cover: true,
         }
     });
+
+    // Add the new username to the Bloom Filter
+    usernameBloomFilter.addUsername(generatedUsername);
 
     return user;
 };

@@ -5,6 +5,7 @@ import emailAdapter from '@/config/nodemailer';
 import { generateUsername } from '@/utils/generate';
 import { RegisterBody, LoginBody } from '@/types/auth';
 import { generateVerificationEmail, generateVerificationResendEmail } from '@/utils/emailTemplates';
+import { usernameBloomFilter } from '@/services/UsernameBloomFilter';
 //import { OAuth2Client } from 'google-auth-library';
 
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -85,7 +86,7 @@ export const register = async (data: RegisterBody) => {
     let finalUsername = generatedUsername;
 
     let tries = 0;
-    while (await prisma.user.findUnique({ where: { username: generatedUsername } })) {
+    while (await usernameBloomFilter.checkUsernameExists(finalUsername)) {
         tries++;
         finalUsername = `${generatedUsername}_${tries}`;
     }
@@ -105,6 +106,9 @@ export const register = async (data: RegisterBody) => {
             emailVerified: false,
         },
     });
+
+    // Add the new username to the Bloom Filter
+    usernameBloomFilter.addUsername(finalUsername);
 
     const emailHtml = generateVerificationEmail({
         userName: user.name,
@@ -230,9 +234,12 @@ export const updateMe = async (userId: string, data: {
     }
 
     if (data.username) {
-        const existing = await prisma.user.findUnique({ where: { username: data.username } });
-        if (existing && existing.id !== userId) {
-            throw new Error("Username já está em uso");
+        const usernameExists = await usernameBloomFilter.checkUsernameExists(data.username);
+        if (usernameExists) {
+            const existing = await prisma.user.findUnique({ where: { username: data.username } });
+            if (existing && existing.id !== userId) {
+                throw new Error("Username já está em uso");
+            }
         }
     }
 
@@ -302,6 +309,11 @@ export const updateMe = async (userId: string, data: {
             }
         }
     });
+
+    // Add the new username to the Bloom Filter if it was updated
+    if (data.username && updatedUser.username) {
+        usernameBloomFilter.addUsername(updatedUser.username);
+    }
 
     return updatedUser;
 };
