@@ -1,6 +1,6 @@
 import 'dotenv/config';
 
-import { initSentry, sentryErrorHandler, captureException, captureMessage } from '@/sentry';
+import { initSentry, sentryErrorHandler, captureException, captureMessage } from '@/utils/sentry';
 
 import express from 'express'
 import cors from 'cors'

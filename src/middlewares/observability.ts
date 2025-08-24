@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { logger, logPerformance } from '@/utils/logger';
-import { captureException, setUser, setTag, addBreadcrumb } from '@/sentry';
+import { captureException, setUser, setTag, addBreadcrumb } from '@/utils/sentry';
 
 interface RequestMetrics {
   method: string;

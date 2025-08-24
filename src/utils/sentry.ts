@@ -1,17 +1,19 @@
 import * as Sentry from '@sentry/node';
 import { logger } from '@/utils/logger';
 
-export function initSentry() {
-  const dsn = process.env.SENTRY_DSN;
+// Verificar se Sentry está configurado uma única vez
+const SENTRY_DSN = process.env.SENTRY_DSN || "https://53cee84f0dda0d9f87717f212009f638@o4509888227246080.ingest.de.sentry.io/4509888228753488";
+const SENTRY_ENABLED = !!SENTRY_DSN;
 
-  if (!dsn) {
+export function initSentry() {
+  if (!SENTRY_ENABLED) {
     logger.warn('Sentry DSN not configured, skipping Sentry initialization');
     return;
   }
 
   try {
     Sentry.init({
-      dsn,
+      dsn: SENTRY_DSN,
       environment: process.env.NODE_ENV || 'development',
       release: process.env.npm_package_version || '1.0.0',
       serverName: process.env.RAILWAY_SERVICE_ID || 'local',
@@ -72,64 +74,58 @@ export function initSentry() {
 }
 
 export function captureException(error: Error, context?: Record<string, any>) {
-  if (process.env.SENTRY_DSN) {
-    Sentry.captureException(error, {
-      tags: context?.tags,
-      extra: context?.extra,
-      user: context?.user,
-      level: 'error',
-    });
-  }
+  if (!SENTRY_ENABLED) return;
+  
+  Sentry.captureException(error, {
+    tags: context?.tags,
+    extra: context?.extra,
+    user: context?.user,
+    level: 'error',
+  });
 }
 
 export function captureMessage(message: string, level: Sentry.SeverityLevel = 'info', context?: Record<string, any>) {
-  if (process.env.SENTRY_DSN) {
-    Sentry.captureMessage(message, {
-      level,
-      tags: context?.tags,
-      extra: context?.extra,
-      user: context?.user,
-    });
-  }
+  if (!SENTRY_ENABLED) return;
+  
+  Sentry.captureMessage(message, {
+    level,
+    tags: context?.tags,
+    extra: context?.extra,
+    user: context?.user,
+  });
 }
 
 export function addBreadcrumb(breadcrumb: Sentry.Breadcrumb) {
-  if (process.env.SENTRY_DSN) {
-    Sentry.addBreadcrumb(breadcrumb);
-  }
+  if (!SENTRY_ENABLED) return;
+  Sentry.addBreadcrumb(breadcrumb);
 }
 
 export function setUser(user: { id?: string; email?: string; username?: string }) {
-  if (process.env.SENTRY_DSN) {
-    Sentry.setUser(user);
-  }
+  if (!SENTRY_ENABLED) return;
+  Sentry.setUser(user);
 }
 
 export function setTag(key: string, value: string) {
-  if (process.env.SENTRY_DSN) {
-    Sentry.setTag(key, value);
-  }
+  if (!SENTRY_ENABLED) return;
+  Sentry.setTag(key, value);
 }
 
 export function setContext(name: string, context: Record<string, any>) {
-  if (process.env.SENTRY_DSN) {
-    Sentry.setContext(name, context);
-  }
+  if (!SENTRY_ENABLED) return;
+  Sentry.setContext(name, context);
 }
 
 // Export Express middleware functions
 export function setupSentryMiddleware(app: any) {
-  if (process.env.SENTRY_DSN) {
-    // Setup Sentry error handler
-    Sentry.setupExpressErrorHandler(app);
-  }
+  if (!SENTRY_ENABLED) return;
+  Sentry.setupExpressErrorHandler(app);
 }
 
 // Export Sentry error handler
 export function sentryErrorHandler() {
-  if (process.env.SENTRY_DSN) {
-    return Sentry.expressErrorHandler();
+  if (!SENTRY_ENABLED) {
+    // Return a no-op middleware if Sentry is not configured
+    return (error: any, req: any, res: any, next: any) => next(error);
   }
-  // Return a no-op middleware if Sentry is not configured
-  return (error: any, req: any, res: any, next: any) => next(error);
+  return Sentry.expressErrorHandler();
 }

@@ -1,5 +1,12 @@
 import { Client } from '@elastic/elasticsearch';
 
+// Configuração Elasticsearch otimizada para Railway
+// - Timeout de 10s para requests normais
+// - Timeout de 5s para health checks
+// - 3 tentativas de retry
+// - Sniffing desabilitado para single-node
+// - SSL verification desabilitada para desenvolvimento
+
 interface MangaForIndex {
   id: string;
   manga_uuid: string;
@@ -66,16 +73,26 @@ export class ElasticsearchService {
         username: process.env.ELASTICSEARCH_USER,
         password: process.env.ELASTICSEARCH_PASSWORD
       } : undefined,
+      // Configurações robustas para Railway
+      requestTimeout: 10000, // 10 segundos
+      maxRetries: 3,
       // Disable SSL verification for development
       tls: {
         rejectUnauthorized: false
-      }
+      },
+      // Configurações de conexão
+      compression: false, // Desabilitar compressão para melhor performance
+      sniffOnStart: false, // Desabilitar sniffing para single-node
+      sniffInterval: false, // Desabilitar sniffing interval
     });
   }
 
   async isAvailable(): Promise<boolean> {
     try {
-      const response: any = await this.client.ping();
+      // Timeout mais curto para health check
+      const response: any = await this.client.ping({}, { 
+        requestTimeout: 5000 // 5 segundos para health check
+      });
       return response.statusCode === 200 || response.meta?.statusCode === 200;
     } catch (error) {
       console.warn('Elasticsearch not available:', error);
