@@ -389,42 +389,78 @@ export async function searchMangas(params: SearchParams): Promise<SearchResults>
 export async function autocomplete(query: string, language = 'pt-BR'): Promise<AutocompleteSuggestion[]> {
   try {
     const client = getElasticsearchClient();
+    
+    // Usar uma busca normal em vez de completion suggester
     const response: any = await client.search({
       index: INDEX_NAME,
       body: {
-        suggest: {
-          title_suggest: {
-            prefix: query,
-            completion: {
-              field: 'translations.name.suggest',
-              size: 10,
-              contexts: {
-                language: [language]
+        query: {
+          bool: {
+            must: [
+              {
+                nested: {
+                  path: 'translations',
+                  query: {
+                    bool: {
+                      must: [
+                        {
+                          match: {
+                            'translations.name': {
+                              query: query,
+                              fuzziness: 'AUTO',
+                              boost: 2.0
+                            }
+                          }
+                        },
+                        {
+                          term: {
+                            'translations.language': language.toLowerCase()
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
               }
-            }
+            ]
           }
         },
-        _source: false
+        size: 10,
+        sort: [
+          { _score: { order: 'desc' } },
+          { popularity_score: { order: 'desc' } }
+        ],
+        _source: ['translations.name', 'translations.language']
       }
     });
 
     const suggestions: AutocompleteSuggestion[] = [];
     
-    if (response.suggest?.title_suggest?.[0]?.options) {
-      const options = Array.isArray(response.suggest.title_suggest[0].options) 
-        ? response.suggest.title_suggest[0].options 
-        : [response.suggest.title_suggest[0].options];
-        
-      options.forEach((option: any) => {
-        suggestions.push({
-          text: option.text,
-          score: option._score,
-          type: 'title'
-        });
+    if (response.hits?.hits) {
+      response.hits.hits.forEach((hit: any) => {
+        const source = hit._source;
+        if (source.translations) {
+          source.translations.forEach((translation: any) => {
+            if (translation.language === language.toLowerCase() && translation.name) {
+              suggestions.push({
+                text: translation.name,
+                score: hit._score,
+                type: 'title'
+              });
+            }
+          });
+        }
       });
     }
 
-    return suggestions;
+    // Remover duplicatas e limitar a 10 resultados
+    const uniqueSuggestions = suggestions
+      .filter((suggestion, index, self) => 
+        index === self.findIndex(s => s.text === suggestion.text)
+      )
+      .slice(0, 10);
+
+    return uniqueSuggestions;
   } catch (error) {
     console.error('Autocomplete failed:', error);
     return [];
@@ -577,7 +613,7 @@ function buildAdvancedQuery(params: SearchParams) {
       nested: {
         path: 'translations',
         query: {
-          term: { 'translations.language': params.language }
+          term: { 'translations.language': params.language.toLowerCase() }
         }
       }
     });

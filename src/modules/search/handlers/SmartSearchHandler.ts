@@ -62,7 +62,7 @@ export class SmartSearchHandler {
       
       if (elasticsearchAvailable) {
         // Try Elasticsearch search
-        const elasticResults = await searchMangas({
+        const searchParams = {
           query: name,
           categories,
           status,
@@ -70,7 +70,9 @@ export class SmartSearchHandler {
           language,
           page,
           limit
-        });
+        };
+        
+        const elasticResults = await searchMangas(searchParams);
 
         const responseTime = Date.now() - startTime;
 
