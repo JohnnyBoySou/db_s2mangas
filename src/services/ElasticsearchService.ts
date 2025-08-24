@@ -70,12 +70,27 @@ const INDEX_NAME = 'manga_index';
 // Inicializar cliente Elasticsearch
 function getElasticsearchClient(): Client {
   if (!elasticsearchClient) {
-    const elasticUrl = process.env.ELASTIC_URL;
+    // Priorizar URL interna para Railway
+    // Se não tiver URL interna, usar HTTPS para Railway
+    let elasticUrl = process.env.ELASTIC_INTERNAL_URL || process.env.ELASTIC_URL || 'http://localhost:9200';
+    
+    // Se for URL do Railway e não tiver protocolo HTTPS, adicionar
+    if (elasticUrl.includes('railway.app') && !elasticUrl.startsWith('https://')) {
+      elasticUrl = elasticUrl.replace('http://', 'https://');
+    }
+    
+    // Para Railway, remover porta 9200 se estiver usando HTTPS
+    if (elasticUrl.includes('railway.app') && elasticUrl.includes(':9200')) {
+      elasticUrl = elasticUrl.replace(':9200', '');
+    }
     const hasUsername = !!process.env.ELASTIC_USERNAME;
     const hasPassword = !!process.env.ELASTIC_PASSWORD;
     
     console.log('🔍 Elasticsearch Configuration:');
-    console.log(`   URL: ${elasticUrl}`);
+    console.log(`   Internal URL: ${process.env.ELASTIC_INTERNAL_URL || '❌ Não configurado'}`);
+    console.log(`   Public URL: ${process.env.ELASTIC_URL || '❌ Não configurado'}`);
+    console.log(`   Using URL: ${elasticUrl}`);
+    console.log(`   URL Type: ${elasticUrl.includes('railway.internal') ? '🔒 Internal' : elasticUrl.includes('railway.app') ? '🌐 Public' : '🏠 Local'}`);
     console.log(`   Username: ${hasUsername ? '✅ Configurado' : '❌ Não configurado'}`);
     console.log(`   Password: ${hasPassword ? '✅ Configurado' : '❌ Não configurado'}`);
     console.log(`   Auth: ${hasUsername && hasPassword ? '✅ Habilitado' : '❌ Desabilitado'}`);
@@ -90,9 +105,12 @@ function getElasticsearchClient(): Client {
       // Configurações robustas para Railway
       requestTimeout: 10000, // 10 segundos
       maxRetries: 3,
-      // Disable SSL verification for development
+      // Configuração TLS para Railway
       tls: {
-        rejectUnauthorized: false
+        rejectUnauthorized: false, // Para desenvolvimento
+        ca: undefined,
+        cert: undefined,
+        key: undefined
       },
       // Configurações de conexão
       compression: false, // Desabilitar compressão para melhor performance
