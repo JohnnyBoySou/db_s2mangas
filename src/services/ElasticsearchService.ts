@@ -88,19 +88,19 @@ function getElasticsearchClient(): Client {
         username: elasticUsername,
         password: elasticPassword
       },
-      requestTimeout: 10000, 
+      requestTimeout: 10000,
       maxRetries: 3,
       tls: {
-        rejectUnauthorized: false, 
+        rejectUnauthorized: false,
         ca: undefined,
         cert: undefined,
         key: undefined
       },
-      compression: false, 
-      sniffOnStart: false, 
-      sniffInterval: false, 
+      compression: false,
+      sniffOnStart: false,
+      sniffInterval: false,
     });
-    
+
     console.log('✅ Elasticsearch iniciado com sucesso');
   }
   return elasticsearchClient;
@@ -108,18 +108,17 @@ function getElasticsearchClient(): Client {
 
 export async function isElasticsearchAvailable(): Promise<boolean> {
   try {
-    console.log('🔍 Checking Elasticsearch availability...');
     const client = getElasticsearchClient();
-    
-    const response: any = await client.ping({}, { 
-      requestTimeout: 5000 
+
+    const response: any = await client.ping({}, {
+      requestTimeout: 5000
     });
-    
+
     let isAvailable = false;
     let statusCode: number | undefined = undefined;
-    
+
     if (typeof response === 'boolean') {
-      isAvailable = response === true; 
+      isAvailable = response === true;
       statusCode = response ? 200 : 0;
     } else if (response && typeof response === 'object') {
       statusCode = response.statusCode || response.meta?.statusCode;
@@ -127,44 +126,14 @@ export async function isElasticsearchAvailable(): Promise<boolean> {
     } else {
       isAvailable = !!response;
     }
-    
-    console.log('📊 Elasticsearch Response Details:');
-    console.log(`   Response Type: ${typeof response}`);
-    console.log(`   Response Value: ${response}`);
-    console.log(`   Response === true: ${response === true}`);
-    console.log(`   Response === false: ${response === false}`);
-    console.log(`   Status Code: ${statusCode}`);
-    
-    if (typeof response === 'boolean') {
-      console.log(`   Ping Response: ${response ? '✅ Success' : '❌ Failed'}`);
-      console.log(`   Is Valid Response: ✅ (Boolean response is valid)`);
-    } else if (response && typeof response === 'object') {
-      console.log(`   Has Meta: ${!!response.meta}`);
-      console.log(`   Meta Status: ${response.meta?.statusCode}`);
-      console.log(`   Response Keys: ${Object.keys(response || {}).join(', ')}`);
-      console.log(`   Is Valid Response: ✅`);
-    } else {
-      console.log(`   Is Valid Response: ❌`);
-    }
-    
-    if (isAvailable) {
-      console.log('✅ Elasticsearch is available and responding');
-    } else {
-      if (typeof response === 'boolean') {
-        console.log('❌ Elasticsearch ping failed');
-      } else {
-        console.log('⚠️  Elasticsearch responded but with unexpected status:', statusCode);
-        console.log('   Full response:', JSON.stringify(response, null, 2));
-      }
-    }
-    
+
     return isAvailable;
   } catch (error: any) {
     console.error('❌ Elasticsearch not available:');
     console.error('   Error:', error.message);
     console.error('   Code:', error.code);
     console.error('   Stack:', error.stack?.split('\n')[0]);
-    
+
     // Log específico para problemas de conexão
     if (error.code === 'ECONNREFUSED') {
       console.error('   💡 Tip: Check if Elasticsearch is running and accessible');
@@ -173,7 +142,7 @@ export async function isElasticsearchAvailable(): Promise<boolean> {
     } else if (error.code === 'ETIMEDOUT') {
       console.error('   💡 Tip: Check network connectivity or increase timeout');
     }
-    
+
     return false;
   }
 }
@@ -345,7 +314,7 @@ export async function bulkIndexMangas(mangas: MangaForIndex[]): Promise<void> {
     ]);
 
     const response = await client.bulk({ body });
-    
+
     if (response.errors) {
       console.error('Bulk indexing errors:', response.items.filter((item: any) => item.index?.error));
     }
@@ -389,7 +358,7 @@ export async function searchMangas(params: SearchParams): Promise<SearchResults>
 export async function autocomplete(query: string, language = 'pt-BR'): Promise<AutocompleteSuggestion[]> {
   try {
     const client = getElasticsearchClient();
-    
+
     // Usar uma busca normal em vez de completion suggester
     const response: any = await client.search({
       index: INDEX_NAME,
@@ -435,7 +404,7 @@ export async function autocomplete(query: string, language = 'pt-BR'): Promise<A
     });
 
     const suggestions: AutocompleteSuggestion[] = [];
-    
+
     if (response.hits?.hits) {
       response.hits.hits.forEach((hit: any) => {
         const source = hit._source;
@@ -455,7 +424,7 @@ export async function autocomplete(query: string, language = 'pt-BR'): Promise<A
 
     // Remover duplicatas e limitar a 10 resultados
     const uniqueSuggestions = suggestions
-      .filter((suggestion, index, self) => 
+      .filter((suggestion, index, self) =>
         index === self.findIndex(s => s.text === suggestion.text)
       )
       .slice(0, 10);
@@ -582,7 +551,7 @@ function buildAdvancedQuery(params: SearchParams) {
         minimum_should_match: 1
       }
     };
-    
+
     must.push(textQuery);
   }
 

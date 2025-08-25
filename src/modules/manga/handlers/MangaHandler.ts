@@ -56,16 +56,13 @@ export const createManga = async (data: any) => {
 };
 
 export const listMangas = async (language: string, page: number = 1, limit: number = 10) => {
-    // Primeiro, vamos contar o total para validar a página
     const total = await prisma.manga.count();
     const totalPages = Math.ceil(total / limit);
     
-    // Validar se a página solicitada é válida
     if (page > totalPages && totalPages > 0) {
         throw new Error(`Página ${page} não existe. Total de páginas: ${totalPages}`);
     }
     
-    // Se não há dados, retornar página 1
     if (total === 0) {
         return {
             data: [],
@@ -80,10 +77,10 @@ export const listMangas = async (language: string, page: number = 1, limit: numb
         };
     }
     
-    // Ajustar página para o máximo se exceder o total
     const adjustedPage = Math.min(page, totalPages);
     const skip = (adjustedPage - 1) * limit;
 
+    
     const mangas = await prisma.manga.findMany({
         include: {
             categories: true,

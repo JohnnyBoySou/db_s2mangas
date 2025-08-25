@@ -6,11 +6,12 @@ async function main() {
   await prisma.user.create({
     data: {
         username: "admin",
-        email: 'admin@email.com',
+        email: 'joaodesousa123@gmail.com',
         name: 'Admin',
-        password: 'senha123',
+        password: '223761de',
     }
   });
+  
 }
 
 main()

@@ -40,34 +40,11 @@ import { FileRouter, AdminFileRouter } from '@/modules/files/routes/FilesRouter'
 import { SummaryRouter } from '@/modules/summary/routes/SummaryRouter';
 import { HealthRouter } from '@/modules/health/HealthRouter';
 import { isElasticsearchAvailable } from './services/ElasticsearchService';
+import { initRedis, closeRedis } from '@/config/redis';
 
 const uploadsDir = process.env.RAILWAY_VOLUME_MOUNT_PATH || process.env.UPLOAD_DIR || "/data/uploads";
 
 const app = express()
-
-// Graceful shutdown handling
-process.on('SIGTERM', () => {
-  console.log('🛑 SIGTERM received, shutting down gracefully...');
-  process.exit(0);
-});
-
-process.on('SIGINT', () => {
-  console.log('🛑 SIGINT received, shutting down gracefully...');
-  process.exit(0);
-});
-
-// Uncaught exception handling
-process.on('uncaughtException', (error) => {
-  console.error('💥 Uncaught Exception:', error);
-  captureException(error);
-  process.exit(1);
-});
-
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('💥 Unhandled Rejection at:', promise, 'reason:', reason);
-  captureException(new Error(`Unhandled Rejection: ${reason}`));
-  process.exit(1);
-});
 
 try {
   initSentry();
@@ -158,7 +135,6 @@ async function startServer() {
   const server = app.listen(port, async () => {
     console.log(`✅ Servidor iniciado com sucesso! \n✅ Rodando em http://localhost:${port}`)
 
-    // Initialize services asynchronously to avoid blocking server startup
     setTimeout(async () => {
       try {
         await warmupCache();
@@ -175,12 +151,23 @@ async function startServer() {
       }
 
       try {
-        const available = await isElasticsearchAvailable();
-        console.log('✅ Elasticsearch disponível:', available);
+        await isElasticsearchAvailable();
+        console.log('✅ Elasticsearch disponível');
       } catch (error) {
         console.error('❌ Erro ao verificar Elasticsearch:', error);
       }
-    }, 1000); // Delay initialization to allow server to start first
+
+      try {
+        const redisSuccess = await initRedis();
+        if (redisSuccess) {
+          console.log('✅ Redis inicializado com sucesso');
+        } else {
+          console.log('❌ Aplicação funcionando sem Redis (modo offline)');
+        }
+      } catch (error) {
+        console.log('❌ Erro na inicialização do Redis - continuando sem cache');
+      }
+    }, 1000);
   });
 
   // Handle server errors
@@ -191,8 +178,15 @@ async function startServer() {
   });
 
   // Graceful shutdown
-  process.on('SIGTERM', () => {
+  process.on('SIGTERM', async () => {
     console.log('🛑 Shutting down server...');
+    
+    try {
+      await closeRedis();
+    } catch (error) {
+      console.error('❌ Erro ao fechar Redis:', error);
+    }
+    
     server.close(() => {
       console.log('✅ Server closed');
       process.exit(0);
