@@ -6,7 +6,6 @@ import { smartCacheMiddleware, cacheInvalidationMiddleware, imageCacheMiddleware
 const MangaRouter = Router();
 const AdminMangaRouter = Router();
 
-MangaRouter.use();
 AdminMangaRouter.use(requireAuth, requireAdmin);
 
 MangaRouter.get("/", list);
