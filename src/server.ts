@@ -46,12 +46,12 @@ const uploadsDir = process.env.RAILWAY_VOLUME_MOUNT_PATH || process.env.UPLOAD_D
 
 const app = express()
 
-try {
-  initSentry();
-  console.log('✅ Sentry configurado com sucesso');
-} catch (error) {
-  console.warn('⚠️ Erro ao configurar Sentry:', error);
-}
+// try {
+//   initSentry();
+//   console.log('✅ Sentry configurado com sucesso');
+// } catch (error) {
+//   console.warn('⚠️ Erro ao configurar Sentry:', error);
+// }
 
 app.use(observabilityMiddleware);
 app.use(express.json({ limit: '50mb' }));
@@ -124,7 +124,7 @@ app.use(errorObservabilityMiddleware);
 async function startServer() {
   try {
     console.log('🚀 Iniciando servidor...');
-    
+
     await initScalarDocs(app);
     console.log('✅ Scalar docs configurado com sucesso');
   } catch (error) {
@@ -180,13 +180,13 @@ async function startServer() {
   // Graceful shutdown
   process.on('SIGTERM', async () => {
     console.log('🛑 Shutting down server...');
-    
+
     try {
       await closeRedis();
     } catch (error) {
       console.error('❌ Erro ao fechar Redis:', error);
     }
-    
+
     server.close(() => {
       console.log('✅ Server closed');
       process.exit(0);

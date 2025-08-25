@@ -300,10 +300,10 @@ export async function warmupCache(routes?: Array<{ path: string; type: string; p
   
   // Rotas padrão para pré-aquecimento se nenhuma for fornecida
   const defaultRoutes = [
-    { path: '/discover/recents', type: 'discover' },
-    { path: '/discover/views', type: 'discover' },
-    { path: '/discover/likes', type: 'discover' },
-    { path: '/categories', type: 'categories' },
+    // { path: '/discover/recents', type: 'discover' },
+    // { path: '/discover/views', type: 'discover' },
+    // { path: '/discover/likes', type: 'discover' },
+    // { path: '/categories', type: 'categories' },
   ];
   
   const routesToWarm = routes || defaultRoutes;
