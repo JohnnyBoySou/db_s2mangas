@@ -170,27 +170,10 @@ async function startServer() {
     }, 1000);
   });
 
-  // Handle server errors
   server.on('error', (error) => {
     console.error('💥 Server error:', error);
     captureException(error);
     process.exit(1);
-  });
-
-  // Graceful shutdown
-  process.on('SIGTERM', async () => {
-    console.log('🛑 Shutting down server...');
-
-    try {
-      await closeRedis();
-    } catch (error) {
-      console.error('❌ Erro ao fechar Redis:', error);
-    }
-
-    server.close(() => {
-      console.log('✅ Server closed');
-      process.exit(0);
-    });
   });
 }
 
