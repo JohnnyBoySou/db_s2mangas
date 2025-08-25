@@ -16,7 +16,6 @@ MangaRouter.get("/chapters/:chapterID/pages", smartCacheMiddleware('chapter'), p
 MangaRouter.get("/:id/chapters", smartCacheMiddleware('manga', { varyBy: ['id', 'lg'] }), chapters);
 MangaRouter.get("/:id/similar", smartCacheMiddleware('discover', { ttl: 1800 }), similar);
 
-
 //ADMIN
 AdminMangaRouter.get("/", list);
 AdminMangaRouter.post("/", cacheInvalidationMiddleware(['manga', 'discover']), create);
