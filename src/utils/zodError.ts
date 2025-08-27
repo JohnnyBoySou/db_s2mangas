@@ -17,5 +17,5 @@ export function handleZodError(error: unknown, res: Response) {
   }
 
   // Para outros tipos de erro
-  return res.status(500).json({ error: 'Erro interno', details: error })
+  return res.status(400).json({ error: 'Erro interno' })
 }

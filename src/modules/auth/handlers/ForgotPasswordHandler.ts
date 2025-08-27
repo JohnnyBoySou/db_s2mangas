@@ -13,7 +13,7 @@ export const forgotPassword = async (email: string) => {
 
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
-        throw new Error('Usuário não encontrado');
+        throw new Error('Email não encontrado');
     }
 
     const otp = generateOTP();

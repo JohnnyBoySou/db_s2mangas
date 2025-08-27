@@ -40,6 +40,25 @@ app.post('/auth/reset-password', forgotPasswordController.resetPassword);
 describe('Controlador de Recuperação de Senha', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Restaurar o comportamento real do handleZodError para os testes de erro
+    mockedHandleZodError.mockImplementation((error, res) => {
+      // Se for um erro do Zod
+      if (error instanceof Error && error.name === 'ZodError') {
+        const formattedErrors = (error as any).errors.map((err: any) => ({
+          field: err.path.join('.') || '(root)',
+          message: err.message,
+        }))
+        return res.status(400).json({ errors: formattedErrors })
+      }
+
+      // Se for um erro customizado (Error comum)
+      if (error instanceof Error) {
+        return res.status(400).json({ error: error.message })
+      }
+
+      // Para outros tipos de erro
+      return res.status(400).json({ error: 'Erro interno' })
+    });
   });
 
   describe('POST /auth/forgot-password', () => {
@@ -66,8 +85,6 @@ describe('Controlador de Recuperação de Senha', () => {
       expect(response.body).toEqual(mockForgotPasswordResponse);
       expect(mockedForgotPasswordHandlers.forgotPassword).toHaveBeenCalledWith(mockForgotPasswordData.email);
     });
-
-    /*
 
     it('deve lidar com erro ao enviar código de recuperação', async () => {
       // Given
@@ -97,7 +114,7 @@ describe('Controlador de Recuperação de Senha', () => {
       // Then
       expect(response.status).toBe(400);
       expect(response.body).toEqual({ error: 'Erro interno' });
-    });*/
+    });
   });
 
   describe('POST /auth/verify-reset-code', () => {
@@ -129,7 +146,6 @@ describe('Controlador de Recuperação de Senha', () => {
       );
     });
 
-    /*
     it('deve lidar com erro ao verificar código de recuperação', async () => {
       // Given
       const verifyCodeError = new Error('Código inválido ou expirado');
@@ -159,7 +175,6 @@ describe('Controlador de Recuperação de Senha', () => {
       expect(response.status).toBe(400);
       expect(response.body).toEqual({ error: 'Erro interno' });
     });
-    */
   });
 
   describe('POST /auth/reset-password', () => {
@@ -193,7 +208,6 @@ describe('Controlador de Recuperação de Senha', () => {
       );
     });
 
-    /*
     it('deve lidar com erro ao redefinir senha', async () => {
       // Given
       const resetPasswordError = new Error('Código inválido ou expirado');
@@ -280,7 +294,6 @@ describe('Controlador de Recuperação de Senha', () => {
       expect(mockedHandleZodError).toHaveBeenCalled();
       expect(mockedForgotPasswordHandlers.resetPassword).not.toHaveBeenCalled();
     });
-    */
   });
 
   describe('Validação de dados de entrada', () => {
