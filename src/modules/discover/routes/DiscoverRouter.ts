@@ -1,13 +1,13 @@
 import { Router } from "express";
-import { 
-  getRecent, 
-  getMostViewed, 
-  getMostLiked, 
-  getFeed, 
-  getIA, 
+import {
+  getRecent,
+  getMostViewed,
+  getMostLiked,
+  getFeed,
+  getIA,
   getMangasByCategories,
   getStats,
-  healthCheck
+  healthCheck,
 } from "../controllers/DiscoverController";
 import { requireAuth } from "@/middlewares/auth";
 import { smartCacheMiddleware } from "@/middlewares/smartCache";
@@ -15,28 +15,22 @@ import { smartCacheMiddleware } from "@/middlewares/smartCache";
 const DiscoverRouter = Router();
 const AdminDiscoverRouter = Router();
 
-// Cache inteligente para recents
-DiscoverRouter.get("/recents", requireAuth, getRecent);
+// DiscoverRouter.use(requireAuth);
 
-// Cache inteligente para mais vistos
-DiscoverRouter.get("/views", requireAuth, getMostViewed);
+DiscoverRouter.get("/recents", getRecent);
 
-// Cache inteligente para mais curtidos
-DiscoverRouter.get("/likes", requireAuth, getMostLiked);
+DiscoverRouter.get("/views", getMostViewed);
 
-// Cache inteligente para feed personalizado (varia por usuário)
-DiscoverRouter.get("/feed", requireAuth,  getFeed);
+DiscoverRouter.get("/likes", getMostLiked);
 
-// Cache para recomendações baseadas em IA (varia por usuário)
-DiscoverRouter.get("/ia", requireAuth, getIA);
+DiscoverRouter.get("/feed", getFeed);
 
-// Cache para mangás por categorias
-DiscoverRouter.get("/categories/:categoryIds", requireAuth, getMangasByCategories);
+DiscoverRouter.get("/ia", getIA);
 
-// Health check (sem cache)
+DiscoverRouter.get("/categories/:categoryIds", getMangasByCategories);
+
 DiscoverRouter.get("/health", healthCheck);
 
-// Rotas admin
 AdminDiscoverRouter.get("/stats", requireAuth, getStats);
 
 export { DiscoverRouter, AdminDiscoverRouter };

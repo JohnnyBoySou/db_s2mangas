@@ -1,5 +1,5 @@
-import { RequestHandler } from 'express';
-import { getPaginationParams } from '@/utils/pagination';
+import { RequestHandler } from "express";
+import { getPaginationParams } from "@/utils/pagination";
 import {
   getRecentMangas,
   getMostViewedMangas,
@@ -7,8 +7,8 @@ import {
   getFeedForUser,
   getIARecommendations,
   getMangasByCategories as getMangasByCategoriesHandler,
-  getDiscoverStats
-} from '../handlers/DiscoverHandler';
+  getDiscoverStats,
+} from "../handlers/DiscoverHandler";
 
 /**
  * @swagger
@@ -543,18 +543,22 @@ class DiscoverController {
    */
   static getRecent: RequestHandler = async (req, res) => {
     try {
+      console.log("controller recents");
       const { page, take } = getPaginationParams(req);
-      const language = (req.query.lg as string) || 'pt-BR';
-      
+      const language = (req.query.lg as string) || "pt-BR";
+
       const result = await getRecentMangas({
         page,
         take,
-        language
+        language,
       });
-      
+
+      console.log(result);
+
       res.status(200).json(result);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Erro interno do servidor';
+      const message =
+        error instanceof Error ? error.message : "Erro interno do servidor";
       res.status(400).json({ error: message });
     }
   };
@@ -566,17 +570,18 @@ class DiscoverController {
   static getMostViewed: RequestHandler = async (req, res) => {
     try {
       const { page, take } = getPaginationParams(req);
-      const language = (req.query.lg as string) || 'pt-BR';
-      
+      const language = (req.query.lg as string) || "pt-BR";
+
       const result = await getMostViewedMangas({
         page,
         take,
-        language
+        language,
       });
-      
+
       res.status(200).json(result);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Erro interno do servidor';
+      const message =
+        error instanceof Error ? error.message : "Erro interno do servidor";
       res.status(400).json({ error: message });
     }
   };
@@ -588,17 +593,18 @@ class DiscoverController {
   static getMostLiked: RequestHandler = async (req, res) => {
     try {
       const { page, take } = getPaginationParams(req);
-      const language = (req.query.lg as string) || 'pt-BR';
-      
+      const language = (req.query.lg as string) || "pt-BR";
+
       const result = await getMostLikedMangas({
         page,
         take,
-        language
+        language,
       });
-      
+
       res.status(200).json(result);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Erro interno do servidor';
+      const message =
+        error instanceof Error ? error.message : "Erro interno do servidor";
       res.status(400).json({ error: message });
     }
   };
@@ -610,24 +616,25 @@ class DiscoverController {
   static getFeed: RequestHandler = async (req, res) => {
     try {
       const userId = (req as any).user?.id;
-      
+
       if (!userId) {
-        res.status(401).json({ error: 'Não autenticado.' });
+        res.status(401).json({ error: "Não autenticado." });
         return;
       }
 
       const { page, take } = getPaginationParams(req);
-      const language = (req.query.lg as string) || 'pt-BR';
-      
+      const language = (req.query.lg as string) || "pt-BR";
+
       const result = await getFeedForUser(userId, {
         page,
         take,
-        language
+        language,
       });
-      
+
       res.status(200).json(result);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Erro interno do servidor';
+      const message =
+        error instanceof Error ? error.message : "Erro interno do servidor";
       res.status(400).json({ error: message });
     }
   };
@@ -639,24 +646,25 @@ class DiscoverController {
   static getIA: RequestHandler = async (req, res) => {
     try {
       const userId = (req as any).user?.id;
-      
+
       if (!userId) {
-        res.status(401).json({ error: 'Não autenticado.' });
+        res.status(401).json({ error: "Não autenticado." });
         return;
       }
 
       const { page, take } = getPaginationParams(req);
-      const language = (req.query.lg as string) || 'pt-BR';
-      
+      const language = (req.query.lg as string) || "pt-BR";
+
       const result = await getIARecommendations(userId, {
         page,
         take,
-        language
+        language,
       });
-      
+
       res.status(200).json(result);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Erro interno do servidor';
+      const message =
+        error instanceof Error ? error.message : "Erro interno do servidor";
       res.status(400).json({ error: message });
     }
   };
@@ -667,25 +675,26 @@ class DiscoverController {
    */
   static getMangasByCategories: RequestHandler = async (req, res) => {
     try {
-      const categoryIds = req.params.categoryIds?.split(',') || [];
-      
+      const categoryIds = req.params.categoryIds?.split(",") || [];
+
       if (categoryIds.length === 0) {
-        res.status(400).json({ error: 'IDs de categorias são obrigatórios' });
+        res.status(400).json({ error: "IDs de categorias são obrigatórios" });
         return;
       }
 
       const { page, take } = getPaginationParams(req);
-      const language = (req.query.lg as string) || 'pt-BR';
-      
+      const language = (req.query.lg as string) || "pt-BR";
+
       const result = await getMangasByCategoriesHandler(categoryIds, {
         page,
         take,
-        language
+        language,
       });
-      
+
       res.status(200).json(result);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Erro interno do servidor';
+      const message =
+        error instanceof Error ? error.message : "Erro interno do servidor";
       res.status(400).json({ error: message });
     }
   };
@@ -696,13 +705,14 @@ class DiscoverController {
    */
   static getStats: RequestHandler = async (req, res) => {
     try {
-      const language = (req.query.lg as string) || 'pt-BR';
-      
+      const language = (req.query.lg as string) || "pt-BR";
+
       const stats = await getDiscoverStats(language);
-      
+
       res.status(200).json(stats);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Erro interno do servidor';
+      const message =
+        error instanceof Error ? error.message : "Erro interno do servidor";
       res.status(500).json({ error: message });
     }
   };
@@ -714,16 +724,16 @@ class DiscoverController {
   static healthCheck: RequestHandler = async (req, res) => {
     try {
       // Pode incluir checks de conectividade com banco, etc.
-      res.status(200).json({ 
-        status: 'healthy',
+      res.status(200).json({
+        status: "healthy",
         timestamp: new Date().toISOString(),
-        service: 'discover'
+        service: "discover",
       });
     } catch {
-      res.status(503).json({ 
-        status: 'unhealthy',
+      res.status(503).json({
+        status: "unhealthy",
         timestamp: new Date().toISOString(),
-        service: 'discover'
+        service: "discover",
       });
     }
   };
