@@ -11,7 +11,7 @@
     "type-check": "tsc --noEmit",
     "dev": "tsx watch src/server.ts",
     "dev:interactive": "tsx src/scripts/interactiveDev.ts",
-    "build": "tsc && tsc-alias && mkdir -p dist/templates/email && cp -r src/templates/email/* dist/templates/email/ && npm run sentry:sourcemaps || echo 'Sentry upload failed, continuing build...'",
+    "build": "tsc && tsc-alias",
     "build:watch": "tsc -w",
     "build:dev": "tsc && ts-node-dev --respawn --transpile-only src/server.ts",
     "build:prod": "tsx src/server.ts",
@@ -60,6 +60,7 @@
     "@auth/prisma-adapter": "^2.9.1",
     "@elastic/elasticsearch": "^8.19.0",
     "@faker-js/faker": "^9.8.0",
+    "@jest/globals": "^29.7.0",
     "@prisma/client": "^6.11.1",
     "@scalar/express-api-reference": "^0.8.13",
     "@sentry/cli": "^2.52.0",
@@ -80,6 +81,7 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
+    "form-data": "^4.0.4",
     "http-proxy-middleware": "^3.0.5",
     "i18n-iso-countries": "^7.14.0",
     "inquirer": "8.2.6",
@@ -94,7 +96,6 @@
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "ts-node": "^10.9.2",
-    "tsc-alias": "^1.8.16",
     "tsconfig-paths": "^4.2.0",
     "uuid": "^11.1.0",
     "winston": "^3.17.0",
@@ -121,8 +122,9 @@
     "ts-jest": "^29.3.4",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
+    "tsc-alias": "^1.8.16",
     "tsconfig-paths": "^4.2.0",
     "tsx": "^4.20.3",
-    "typescript": "^5.8.3"
+    "typescript": "^5.9.2"
   }
 }

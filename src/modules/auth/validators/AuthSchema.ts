@@ -53,6 +53,7 @@ export const registerSchema = z.object({
     password: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres'),
     avatar: z.string().url().optional(),
     cover: z.string().url().optional(),
+    username: z.string().min(3, 'Username deve ter no mínimo 3 caracteres'),
     categories: z.array(z.object({
         name: z.string()
     })).optional(),
