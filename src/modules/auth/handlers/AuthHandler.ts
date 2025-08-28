@@ -2,7 +2,6 @@ import prisma from "@/prisma/client";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import emailAdapter from "@/config/nodemailer";
-import { generateUsername } from "@/utils/generate";
 import { RegisterBody, LoginBody } from "@/types/auth";
 import {
   generateVerificationEmail,
@@ -16,7 +15,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 //const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 
 export const register = async (data: RegisterBody) => {
-  const { name, email, password } = data;
+  const { name, email, password, username } = data;
   const normalizedEmail = email.toLowerCase();
 
   const existingEmail = await prisma.user.findUnique({
@@ -87,14 +86,6 @@ export const register = async (data: RegisterBody) => {
         }
     }));
 */
-  const generatedUsername = generateUsername(name);
-  let finalUsername = generatedUsername;
-
-  let tries = 0;
-  while (await usernameBloomFilter.checkUsernameExists(finalUsername)) {
-    tries++;
-    finalUsername = `${generatedUsername}_${tries}`;
-  }
 
   const hashedPassword = await bcrypt.hash(password, 10);
   const verificationCode = Math.floor(
@@ -106,7 +97,7 @@ export const register = async (data: RegisterBody) => {
     data: {
       name,
       email: normalizedEmail,
-      username: finalUsername,
+      username: username,
       password: hashedPassword,
       emailVerificationCode: verificationCode,
       emailVerificationExp: codeExp,
@@ -114,8 +105,7 @@ export const register = async (data: RegisterBody) => {
     },
   });
 
-  // Add the new username to the Bloom Filter
-  usernameBloomFilter.addUsername(finalUsername);
+  usernameBloomFilter.addUsername(username);
 
   const emailHtml = generateVerificationEmail({
     userName: user.name,

@@ -1,17 +1,18 @@
 export type RegisterBody = {
-    name: string;
-    email: string;
-    password: string;
-    avatar?: string;
-    cover?: string;
-    categories?: Array<{ name: string }>;
-    languages?: string[];
+  name: string;
+  email: string;
+  password: string;
+  avatar?: string;
+  username: string;
+  cover?: string;
+  categories?: Array<{ name: string }>;
+  languages?: string[];
 };
-  
+
 export type LoginBody = {
-    email: string;
-    password: string;
-  };
+  email: string;
+  password: string;
+};
 
 export interface User {
   id: string;
