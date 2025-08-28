@@ -18,6 +18,10 @@ COPY . .
 # Compila o TypeScript
 RUN npm run build
 
+# Ensure templates directory exists in dist
+RUN mkdir -p dist/templates/email
+RUN cp -r src/templates/email/* dist/templates/email/
+
 # Stage 2: Production
 FROM node:20
 
@@ -30,6 +34,7 @@ COPY --from=builder /usr/src/app/dist ./dist
 COPY --from=builder /usr/src/app/src/prisma ./src/prisma
 COPY --from=builder /usr/src/app/src/import ./src/import
 COPY --from=builder /usr/src/app/src/templates ./src/templates
+# Copy templates from both src and dist directories
 COPY --from=builder /usr/src/app/dist/templates ./dist/templates
 COPY --from=builder /usr/src/app/start.js ./
 
