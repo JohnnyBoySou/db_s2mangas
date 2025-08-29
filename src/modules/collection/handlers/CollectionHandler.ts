@@ -545,7 +545,7 @@ export const searchCollectionsByName = async (query: string, userId: string, pag
     });
 
     return {
-        collections,
+        data: collections,
         pagination: {
             total,
             page,
