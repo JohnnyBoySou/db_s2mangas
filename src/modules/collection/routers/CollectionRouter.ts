@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { requireAuth } from "@/middlewares/auth";
-import { create, list, get, update, remove, listPublic, checkInCollections, toggleCollection } from "../controllers/CollectionController";
+import { create, list, get, update, remove, listPublic, checkInCollections, toggleCollection, togglePinned, searchByName } from "../controllers/CollectionController";
 import { 
   addCollaboratorToCollection, 
   listCollectionCollaborators, 
@@ -12,9 +12,11 @@ const CollectionRouter = Router();
 
 CollectionRouter.post('/', requireAuth, create);
 CollectionRouter.get('/', requireAuth, list);
+CollectionRouter.get('/search', requireAuth, searchByName);
 CollectionRouter.get('/public', requireAuth, listPublic);
 CollectionRouter.get('/:id', requireAuth, get);
 CollectionRouter.put('/:id', requireAuth, update);
+CollectionRouter.put('/:id/toggle-pinned', requireAuth, togglePinned);
 CollectionRouter.delete('/:id', requireAuth, remove);
 CollectionRouter.get('/check/:mangaId', requireAuth, checkInCollections)
 CollectionRouter.post('/:id/toggle/:mangaId', requireAuth, toggleCollection)

@@ -121,6 +121,7 @@ model Collection {
   cover            String
   description      String?
   status           CollectionStatus         @default(PRIVATE)
+  pinned           Boolean                  @default(false)
   createdAt        DateTime                 @default(now())
   updatedAt        DateTime                 @updatedAt
   user             User                     @relation(fields: [userId], references: [id])

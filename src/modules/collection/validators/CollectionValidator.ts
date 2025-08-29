@@ -7,6 +7,7 @@ export const createCollectionSchema = z.object({
   cover: z.string().url(),
   description: z.string().optional(),
   status: collectionStatusEnum.optional(),
+  pinned: z.boolean().optional(),
   mangaIds: z.array(z.string().uuid()).optional(),
 });
 
@@ -16,6 +17,7 @@ export const updateCollectionSchema = z.object({
   cover: z.string().url().optional(),
   description: z.string().optional(),
   status: collectionStatusEnum.optional(),
+  pinned: z.boolean().optional(),
 });
 
 export const collectionIdSchema = z.object({

@@ -15,6 +15,8 @@ import {
   listPublicCollections,
   checkMangaInCollections,
   toggleMangaInCollection,
+  togglePinnedCollection,
+  searchCollectionsByName,
 } from "../handlers/CollectionHandler";
 
 /**
@@ -53,6 +55,10 @@ import {
  *           enum: [PRIVATE, PUBLIC]
  *           description: Status de visibilidade da coleção
  *           example: "PUBLIC"
+ *         pinned:
+ *           type: boolean
+ *           description: Indica se a coleção está fixada
+ *           example: true
  *         createdAt:
  *           type: string
  *           format: date-time
@@ -741,5 +747,155 @@ export const toggleCollection = async (req: Request, res: Response) => {
       }
     }
     handleZodError(err, res);
+  }
+};
+
+/**
+ * @swagger
+ * /api/collections/{id}/toggle-pinned:
+ *   put:
+ *     summary: Alterna o status de fixação de uma coleção
+ *     tags: [Collections]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: ID da coleção
+ *     responses:
+ *       200:
+ *         description: Status de fixação alternado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 pinned:
+ *                   type: boolean
+ *                   description: Novo status de fixação
+ *                   example: true
+ *       401:
+ *         description: Não autorizado
+ *       403:
+ *         description: Sem permissão para editar a coleção
+ *       404:
+ *         description: Coleção não encontrada
+ */
+export const togglePinned = async (req: Request, res: Response) => {
+  const userId = (req as any).user?.id;
+  if (!userId) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+
+  const parsed = collectionIdSchema.safeParse(req.params);
+  if (!parsed.success) {
+    res.status(400).json(parsed.error);
+    return;
+  }
+
+  try {
+    const result = await togglePinnedCollection(parsed.data.id, userId);
+    res.json(result);
+  } catch (err) {
+    if (err instanceof Error) {
+      if (err.message === "Coleção não encontrada.") {
+        res.status(404).json({ error: err.message });
+        return;
+      }
+      if (err.message === "Você não tem permissão para editar esta coleção.") {
+        res.status(403).json({ error: err.message });
+        return;
+      }
+    }
+    res.status(500).json({ error: "Erro ao alternar status de fixação da coleção." });
+  }
+};
+
+/**
+ * @swagger
+ * /api/collections/search:
+ *   get:
+ *     summary: Pesquisa coleções pelo nome
+ *     tags: [Collections]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Termo de pesquisa
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Número da página
+ *       - in: query
+ *         name: take
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 50
+ *           default: 10
+ *         description: Número de itens por página
+ *     responses:
+ *       200:
+ *         description: Lista de coleções encontradas
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 collections:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Collection'
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     total:
+ *                       type: integer
+ *                       description: Total de coleções encontradas
+ *                     page:
+ *                       type: integer
+ *                       description: Página atual
+ *                     take:
+ *                       type: integer
+ *                       description: Itens por página
+ *                     pages:
+ *                       type: integer
+ *                       description: Total de páginas
+ *       401:
+ *         description: Não autorizado
+ */
+export const searchByName = async (req: Request, res: Response) => {
+  const userId = (req as any).user?.id;
+  if (!userId) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+
+  const query = req.query.q as string;
+  if (!query || query.trim() === "") {
+    res.status(400).json({ error: "Termo de pesquisa é obrigatório" });
+    return;
+  }
+
+  const { page, take } = getPaginationParams(req);
+
+  try {
+    const result = await searchCollectionsByName(query, userId, page, take);
+    res.json(result);
+  } catch (err) {
+    console.log(err)
+    res.status(500).json({ error: "Erro ao pesquisar coleções." });
   }
 };

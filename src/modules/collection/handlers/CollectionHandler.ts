@@ -7,9 +7,10 @@ export const createCollection = async (data: {
     cover?: string;
     description?: string;
     status: 'PRIVATE' | 'PUBLIC';
+    pinned?: boolean;
     mangaIds?: string[];
 }) => {
-    const { userId, name, cover, description, status, mangaIds } = data;
+    const { userId, name, cover, description, status, pinned, mangaIds } = data;
 
     return await prisma.collection.create({
         data: {
@@ -18,6 +19,7 @@ export const createCollection = async (data: {
             cover: cover ?? '',
             description,
             status,
+            pinned: pinned ?? false,
             collectionMangas: mangaIds && mangaIds.length > 0
                 ? {
                     create: mangaIds.map((mangaId: string) => ({
@@ -95,7 +97,10 @@ export const listCollections = async (userId: string, page: number, take: number
             },
             skip,
             take,
-            orderBy: { createdAt: "desc" },
+            orderBy: [
+                { pinned: "desc" },
+                { createdAt: "desc" }
+            ],
         }),
         prisma.collection.count({
             where: {
@@ -213,6 +218,7 @@ export const updateCollection = async (id: string, userId: string, data: {
     cover?: string;
     description?: string;
     status?: 'PRIVATE' | 'PUBLIC';
+    pinned?: boolean;
 }) => {
     // Verificar permissões de edição
     await checkUserCanEdit(id, userId);
@@ -266,7 +272,10 @@ export const listPublicCollections = async (page: number, take: number) => {
                 },
                 _count: { select: { likes: true } },
             },
-            orderBy: { createdAt: "desc" },
+            orderBy: [
+                { pinned: "desc" },
+                { createdAt: "desc" }
+            ],
             skip,
             take,
         }),
@@ -439,4 +448,109 @@ export const toggleMangaInCollection = async (collectionId: string, mangaId: str
         ...updatedCollection,
         action: isMangaInCollection ? 'removed' : 'added'
     };
-}; 
+};
+
+export const togglePinnedCollection = async (id: string, userId: string) => {
+    // Verificar se a coleção existe e se o usuário tem permissão para editá-la
+    const canEdit = await checkUserCanEdit(id, userId);
+    if (!canEdit) {
+        throw new Error('Você não tem permissão para editar esta coleção.');
+    }
+
+    // Buscar a coleção atual para obter o valor atual de pinned
+    const collection = await prisma.collection.findUnique({
+        where: { id },
+        select: { pinned: true }
+    });
+
+    if (!collection) {
+        throw new Error('Coleção não encontrada.');
+    }
+
+    // Alternar o valor de pinned
+    const updatedCollection = await prisma.collection.update({
+        where: { id },
+        data: { pinned: !collection.pinned },
+        select: { pinned: true }
+    });
+
+    return updatedCollection;
+};
+
+export const searchCollectionsByName = async (query: string, userId: string, page = 1, take = 10) => {
+    const skip = (page - 1) * take;
+
+    // Buscar coleções públicas ou coleções onde o usuário é dono/colaborador
+    const collections = await prisma.collection.findMany({
+        where: {
+            name: {
+                contains: query,
+                mode: 'insensitive'
+            },
+            OR: [
+                { status: 'PUBLIC' },
+                { userId },
+                {
+                    collaborators: {
+                        some: {
+                            userId
+                        }
+                    }
+                }
+            ]
+        },
+        orderBy: [
+            { pinned: 'desc' },
+            { createdAt: 'desc' }
+        ],
+        skip,
+        take,
+        include: {
+            user: {
+                select: {
+                    id: true,
+                    name: true,
+                    username: true,
+                    avatar: true,
+                }
+            },
+            _count: {
+                select: {
+                    likes: true,
+                    collectionMangas: true,
+                    collaborators: true
+                }
+            }
+        }
+    });
+
+    const total = await prisma.collection.count({
+        where: {
+            name: {
+                contains: query,
+                mode: 'insensitive'
+            },
+            OR: [
+                { status: 'PUBLIC' },
+                { userId },
+                {
+                    collaborators: {
+                        some: {
+                            userId
+                        }
+                    }
+                }
+            ]
+        }
+    });
+
+    return {
+        collections,
+        pagination: {
+            total,
+            page,
+            take,
+            pages: Math.ceil(total / take)
+        }
+    };
+};
