@@ -10,24 +10,24 @@ import {
   healthCheck,
 } from "../controllers/DiscoverController";
 import { requireAuth } from "@/middlewares/auth";
-import { smartCacheMiddleware } from "@/middlewares/smartCache";
+import { cacheMiddleware } from "@/middlewares/cache";
 
 const DiscoverRouter = Router();
 const AdminDiscoverRouter = Router();
 
 // DiscoverRouter.use(requireAuth);
 
-DiscoverRouter.get("/recents", getRecent);
+DiscoverRouter.get("/recents", cacheMiddleware('discover'), getRecent);
 
-DiscoverRouter.get("/views", getMostViewed);
+DiscoverRouter.get("/views", cacheMiddleware('discover'), getMostViewed);
 
-DiscoverRouter.get("/likes", getMostLiked);
+DiscoverRouter.get("/likes", cacheMiddleware('discover'), getMostLiked);
 
-DiscoverRouter.get("/feed", getFeed);
+DiscoverRouter.get("/feed", cacheMiddleware('discover'), getFeed);
 
-DiscoverRouter.get("/ia", getIA);
+DiscoverRouter.get("/ia", cacheMiddleware('discover'), getIA);
 
-DiscoverRouter.get("/categories/:categoryIds", getMangasByCategories);
+DiscoverRouter.get("/categories/:categoryIds", cacheMiddleware('discover'), getMangasByCategories);
 
 DiscoverRouter.get("/health", healthCheck);
 

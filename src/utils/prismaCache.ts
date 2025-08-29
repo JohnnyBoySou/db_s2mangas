@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import * as advancedCache from './advancedCache';
+import * as basicCache from './basicCache';
 import { logger } from './logger';
 import crypto from 'crypto';
 
@@ -153,12 +153,12 @@ function createExtension() {
             if (tags.length > 0) {
               setImmediate(async () => {
                 try {
-                  await advancedCache.invalidateByTags(tags);
-                  cacheStats.invalidations++;
-                  logger.debug(`Cache invalidado para ${modelName}:${operation}, tags: ${tags.join(', ')}`);
-                } catch (error) {
-                  logger.error('Erro ao invalidar cache do Prisma:', error);
-                }
+                await basicCache.invalidateByTags(tags);
+                cacheStats.invalidations++;
+                logger.debug(`Cache invalidado para ${modelName}:${operation}, tags: ${tags.join(', ')}`);
+              } catch (error) {
+                logger.error('Erro ao invalidar cache do Prisma:', error);
+              }
               });
             }
 
@@ -175,7 +175,7 @@ function createExtension() {
 
           try {
             // Tentar obter do cache
-            const cachedResult = await advancedCache.get(cacheKey);
+            const cachedResult = await basicCache.get(cacheKey);
 
             if (cachedResult !== null) {
               cacheStats.hits++;
@@ -190,11 +190,9 @@ function createExtension() {
             // Salvar no cache de forma assíncrona
             setImmediate(async () => {
               try {
-                await advancedCache.set(cacheKey, result, {
+                await basicCache.set(cacheKey, result, {
                   ttl: config.ttl,
-                  tags: config.tags,
-                  compression: config.compression,
-                  l2Cache: config.l2Cache
+                  tags: config.tags
                 });
                 logger.debug(`Prisma cache set: ${modelName}:${operation}`);
               } catch (error) {
@@ -238,7 +236,7 @@ function resetStats() {
 async function invalidateModel(model: string) {
   const config = PRISMA_CACHE_CONFIG[model];
   if (config && config.tags.length > 0) {
-    await advancedCache.invalidateByTags(config.tags);
+    await basicCache.invalidateByTags(config.tags);
     logger.info(`Cache invalidado para modelo: ${model}`);
   }
 }
@@ -356,7 +354,7 @@ export function CacheQuery(config: { ttl: number; tags: string[]; compression?: 
       const cacheKey = `method:${target.constructor.name}:${propertyName}:${crypto.createHash('md5').update(JSON.stringify(args)).digest('hex')}`;
 
       // Tentar obter do cache
-      const cached = await advancedCache.get(cacheKey);
+      const cached = await basicCache.get(cacheKey);
       if (cached !== null) {
         return cached;
       }
@@ -365,10 +363,9 @@ export function CacheQuery(config: { ttl: number; tags: string[]; compression?: 
       const result = await method.apply(this, args);
 
       // Salvar no cache
-      await advancedCache.set(cacheKey, result, {
+      await basicCache.set(cacheKey, result, {
         ttl: config.ttl,
-        tags: config.tags,
-        compression: config.compression ?? true
+        tags: config.tags
       });
 
       return result;
