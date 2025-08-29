@@ -1,30 +1,49 @@
 import { Router } from "express";
 import { requireAuth } from "@/middlewares/auth";
-import { create, list, get, update, remove, listPublic, checkInCollections, toggleCollection, togglePinned, searchByName } from "../controllers/CollectionController";
-import { 
-  addCollaboratorToCollection, 
-  listCollectionCollaborators, 
-  updateCollaboratorRoleInCollection, 
-  removeCollaboratorFromCollection 
+import {
+  create,
+  list,
+  get,
+  update,
+  remove,
+  listPublic,
+  checkInCollections,
+  toggleCollection,
+  togglePinned,
+  searchByName,
+} from "../controllers/CollectionController";
+import {
+  addCollaboratorToCollection,
+  listCollectionCollaborators,
+  updateCollaboratorRoleInCollection,
+  removeCollaboratorFromCollection,
 } from "../controllers/CollaboratorController";
 
 const CollectionRouter = Router();
 
-CollectionRouter.post('/', requireAuth, create);
-CollectionRouter.get('/', requireAuth, list);
-CollectionRouter.get('/search', requireAuth, searchByName);
-CollectionRouter.get('/public', requireAuth, listPublic);
-CollectionRouter.get('/:id', requireAuth, get);
-CollectionRouter.put('/:id', requireAuth, update);
-CollectionRouter.put('/:id/toggle-pinned', requireAuth, togglePinned);
-CollectionRouter.delete('/:id', requireAuth, remove);
-CollectionRouter.get('/check/:mangaId', requireAuth, checkInCollections)
-CollectionRouter.post('/:id/toggle/:mangaId', requireAuth, toggleCollection)
+CollectionRouter.use(requireAuth);
+
+CollectionRouter.post("/", create);
+CollectionRouter.get("/", list);
+CollectionRouter.get("/search", searchByName);
+CollectionRouter.get("/public", listPublic);
+CollectionRouter.get("/:id", get);
+CollectionRouter.put("/:id", update);
+CollectionRouter.put("/:id/toggle-pinned", togglePinned);
+CollectionRouter.delete("/:id", remove);
+CollectionRouter.get("/check/:mangaId", checkInCollections);
+CollectionRouter.post("/:id/toggle/:mangaId", toggleCollection);
 
 // Rotas de colaboração
-CollectionRouter.post('/:id/collaborators', requireAuth, addCollaboratorToCollection);
-CollectionRouter.get('/:id/collaborators', requireAuth, listCollectionCollaborators);
-CollectionRouter.put('/:id/collaborators/:userId', requireAuth, updateCollaboratorRoleInCollection);
-CollectionRouter.delete('/:id/collaborators/:userId', requireAuth, removeCollaboratorFromCollection);
+CollectionRouter.post("/:id/collaborators", addCollaboratorToCollection);
+CollectionRouter.get("/:id/collaborators", listCollectionCollaborators);
+CollectionRouter.put(
+  "/:id/collaborators/:userId",
+  updateCollaboratorRoleInCollection
+);
+CollectionRouter.delete(
+  "/:id/collaborators/:userId",
+  removeCollaboratorFromCollection
+);
 
 export { CollectionRouter };
