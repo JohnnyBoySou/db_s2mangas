@@ -1,7 +1,7 @@
-import { PrismaClient } from '@prisma/client';
-import * as basicCache from './basicCache';
-import { logger } from './logger';
-import crypto from 'crypto';
+import { PrismaClient } from "@prisma/client";
+import * as basicCache from "./basicCache";
+import { logger } from "./logger";
+import crypto from "crypto";
 
 interface PrismaCacheConfig {
   ttl: number;
@@ -14,91 +14,91 @@ interface PrismaCacheConfig {
 const PRISMA_CACHE_CONFIG: Record<string, PrismaCacheConfig> = {
   manga: {
     ttl: 3600, // 1 hora
-    tags: ['manga'],
+    tags: ["manga"],
     enabled: true,
     compression: true,
-    l2Cache: true
+    l2Cache: true,
   },
   chapter: {
     ttl: 1800, // 30 minutos
-    tags: ['chapter', 'manga'],
+    tags: ["chapter", "manga"],
     enabled: true,
     compression: true,
-    l2Cache: false
+    l2Cache: false,
   },
   user: {
     ttl: 900, // 15 minutos
-    tags: ['user'],
+    tags: ["user"],
     enabled: true,
     compression: true,
-    l2Cache: false
+    l2Cache: false,
   },
   category: {
     ttl: 86400, // 24 horas
-    tags: ['category'],
+    tags: ["category"],
     enabled: true,
     compression: false,
-    l2Cache: true
+    l2Cache: true,
   },
   collection: {
     ttl: 1800, // 30 minutos
-    tags: ['collection', 'user'],
-    enabled: true,
+    tags: ["collection", "user"],
+    enabled: false,
     compression: true,
-    l2Cache: false
+    l2Cache: false,
   },
   library: {
     ttl: 600, // 10 minutos
-    tags: ['library', 'user'],
+    tags: ["library", "user"],
     enabled: true,
     compression: true,
-    l2Cache: false
+    l2Cache: false,
   },
   comment: {
     ttl: 300, // 5 minutos
-    tags: ['comment'],
+    tags: ["comment"],
     enabled: true,
     compression: true,
-    l2Cache: false
+    l2Cache: false,
   },
   notification: {
     ttl: 180, // 3 minutos
-    tags: ['notification', 'user'],
+    tags: ["notification", "user"],
     enabled: true,
     compression: true,
-    l2Cache: false
+    l2Cache: false,
   },
   review: {
     ttl: 1800, // 30 minutos
-    tags: ['review', 'manga'],
+    tags: ["review", "manga"],
     enabled: true,
     compression: true,
-    l2Cache: false
+    l2Cache: false,
   },
   playlist: {
     ttl: 900, // 15 minutos
-    tags: ['playlist', 'user'],
+    tags: ["playlist", "user"],
     enabled: true,
     compression: true,
-    l2Cache: false
-  }
+    l2Cache: false,
+  },
 };
 
 const INVALIDATION_OPERATIONS = {
-  create: ['create', 'createMany'],
-  update: ['update', 'updateMany', 'upsert'],
-  delete: ['delete', 'deleteMany']
+  create: ["create", "createMany"],
+  update: ["update", "updateMany", "upsert"],
+  delete: ["delete", "deleteMany"],
 };
 
 let cacheStats = {
   hits: 0,
   misses: 0,
-  invalidations: 0
+  invalidations: 0,
 };
 
 function generateQueryKey(model: string, operation: string, args: any): string {
   const argsString = JSON.stringify(args, Object.keys(args || {}).sort());
-  const hash = crypto.createHash('md5').update(argsString).digest('hex');
+  const hash = crypto.createHash("md5").update(argsString).digest("hex");
   return `prisma:${model}:${operation}:${hash}`;
 }
 
@@ -107,7 +107,14 @@ function shouldCache(model: string, operation: string): boolean {
   if (!config || !config.enabled) return false;
 
   // Só cachear operações de leitura
-  const readOperations = ['findFirst', 'findMany', 'findUnique', 'count', 'aggregate', 'groupBy'];
+  const readOperations = [
+    "findFirst",
+    "findMany",
+    "findUnique",
+    "count",
+    "aggregate",
+    "groupBy",
+  ];
   return readOperations.includes(operation);
 }
 
@@ -136,7 +143,7 @@ function getInvalidationTags(model: string, operation: string): string[] {
 
 function createExtension() {
   return {
-    name: 'cache-extension',
+    name: "cache-extension",
     query: {
       $allModels: {
         async $allOperations({ model, operation, args, query }: any) {
@@ -153,12 +160,16 @@ function createExtension() {
             if (tags.length > 0) {
               setImmediate(async () => {
                 try {
-                await basicCache.invalidateByTags(tags);
-                cacheStats.invalidations++;
-                logger.debug(`Cache invalidado para ${modelName}:${operation}, tags: ${tags.join(', ')}`);
-              } catch (error) {
-                logger.error('Erro ao invalidar cache do Prisma:', error);
-              }
+                  await basicCache.invalidateByTags(tags);
+                  cacheStats.invalidations++;
+                  logger.debug(
+                    `Cache invalidado para ${modelName}:${operation}, tags: ${tags.join(
+                      ", "
+                    )}`
+                  );
+                } catch (error) {
+                  logger.error("Erro ao invalidar cache do Prisma:", error);
+                }
               });
             }
 
@@ -192,34 +203,35 @@ function createExtension() {
               try {
                 await basicCache.set(cacheKey, result, {
                   ttl: config.ttl,
-                  tags: config.tags
+                  tags: config.tags,
                 });
                 logger.debug(`Prisma cache set: ${modelName}:${operation}`);
               } catch (error) {
-                logger.error('Erro ao salvar cache do Prisma:', error);
+                logger.error("Erro ao salvar cache do Prisma:", error);
               }
             });
 
             return result;
           } catch (error) {
-            logger.error('Erro no cache do Prisma:', error);
+            logger.error("Erro no cache do Prisma:", error);
             return query(args);
           }
-        }
-      }
-    }
+        },
+      },
+    },
   };
 }
 
 // Obter estatísticas do cache
 function getStats() {
   const total = cacheStats.hits + cacheStats.misses;
-  const hitRate = total > 0 ? (cacheStats.hits / total * 100).toFixed(2) : '0.00';
+  const hitRate =
+    total > 0 ? ((cacheStats.hits / total) * 100).toFixed(2) : "0.00";
 
   return {
     ...cacheStats,
     hitRate: `${hitRate}%`,
-    total
+    total,
   };
 }
 
@@ -228,7 +240,7 @@ function resetStats() {
   cacheStats = {
     hits: 0,
     misses: 0,
-    invalidations: 0
+    invalidations: 0,
   };
 }
 
@@ -248,56 +260,55 @@ async function warmupCommonQueries(prisma: PrismaClient) {
   try {
     // Pré-aquecer categorias
     await prisma.category.findMany();
-    logger.debug('Cache pré-aquecido: categorias');
+    logger.debug("Cache pré-aquecido: categorias");
 
     // Pré-aquecer mangás mais populares
     await prisma.manga.findMany({
       take: 20,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       include: {
         categories: true,
         _count: {
           select: {
             chapters: true,
             likes: true,
-            comments: true
-          }
-        }
-      }
+            comments: true,
+          },
+        },
+      },
     });
-    logger.debug('Cache pré-aquecido: mangás populares');
+    logger.debug("Cache pré-aquecido: mangás populares");
 
     // Pré-aquecer mangás recentes
     await prisma.manga.findMany({
       take: 20,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       include: {
-        categories: true
-      }
+        categories: true,
+      },
     });
-    logger.debug('Cache pré-aquecido: mangás recentes');
+    logger.debug("Cache pré-aquecido: mangás recentes");
 
-    logger.info('Pré-aquecimento do cache do Prisma concluído');
+    logger.info("Pré-aquecimento do cache do Prisma concluído");
   } catch (error) {
-    logger.error('Erro no pré-aquecimento do cache do Prisma:', error);
+    logger.error("Erro no pré-aquecimento do cache do Prisma:", error);
   }
 }
 
 // Função para criar Prisma client com cache
 export function createCachedPrismaClient(): PrismaClient {
   const prisma = new PrismaClient({
-    log: process.env.NODE_ENV === 'development'
-      ? ['query', 'info', 'warn', 'error']
-      : ['error'],
+    log:
+      process.env.NODE_ENV === "development"
+        ? ["query", "info", "warn", "error"]
+        : ["error"],
 
-    errorFormat: process.env.NODE_ENV === 'production'
-      ? 'minimal'
-      : 'pretty',
+    errorFormat: process.env.NODE_ENV === "production" ? "minimal" : "pretty",
 
     datasources: {
       db: {
-        url: process.env.DATABASE_URL
-      }
+        url: process.env.DATABASE_URL,
+      },
     },
   });
 
@@ -308,50 +319,64 @@ export function createCachedPrismaClient(): PrismaClient {
 export const prismaCacheStats = () => getStats();
 export const resetPrismaCacheStats = () => resetStats();
 export const invalidatePrismaModel = (model: string) => invalidateModel(model);
-export const warmupPrismaCache = (prisma: PrismaClient) => warmupCommonQueries(prisma);
+export const warmupPrismaCache = (prisma: PrismaClient) =>
+  warmupCommonQueries(prisma);
 
 // Configurações específicas para diferentes tipos de query
 export const QUERY_CACHE_CONFIGS = {
   // Queries de descoberta - cache curto
   discover: {
     ttl: 300, // 5 minutos
-    tags: ['discover', 'manga'],
+    tags: ["discover", "manga"],
     compression: true,
-    l2Cache: false
+    l2Cache: false,
   },
 
   // Queries de busca - cache médio
   search: {
     ttl: 600, // 10 minutos
-    tags: ['search'],
+    tags: ["search"],
     compression: true,
-    l2Cache: true
+    l2Cache: true,
   },
 
   // Queries de estatísticas - cache longo
   analytics: {
     ttl: 3600, // 1 hora
-    tags: ['analytics'],
+    tags: ["analytics"],
     compression: true,
-    l2Cache: true
+    l2Cache: true,
   },
 
   // Queries de configuração - cache muito longo
   config: {
     ttl: 86400, // 24 horas
-    tags: ['config'],
+    tags: ["config"],
     compression: false,
-    l2Cache: true
-  }
+    l2Cache: true,
+  },
 };
 
 // Decorator para cachear métodos específicos
-export function CacheQuery(config: { ttl: number; tags: string[]; compression?: boolean }) {
-  return function (target: any, propertyName: string, descriptor: PropertyDescriptor) {
+export function CacheQuery(config: {
+  ttl: number;
+  tags: string[];
+  compression?: boolean;
+}) {
+  return function (
+    target: any,
+    propertyName: string,
+    descriptor: PropertyDescriptor
+  ) {
     const method = descriptor.value;
 
     descriptor.value = async function (...args: any[]) {
-      const cacheKey = `method:${target.constructor.name}:${propertyName}:${crypto.createHash('md5').update(JSON.stringify(args)).digest('hex')}`;
+      const cacheKey = `method:${
+        target.constructor.name
+      }:${propertyName}:${crypto
+        .createHash("md5")
+        .update(JSON.stringify(args))
+        .digest("hex")}`;
 
       // Tentar obter do cache
       const cached = await basicCache.get(cacheKey);
@@ -365,7 +390,7 @@ export function CacheQuery(config: { ttl: number; tags: string[]; compression?: 
       // Salvar no cache
       await basicCache.set(cacheKey, result, {
         ttl: config.ttl,
-        tags: config.tags
+        tags: config.tags,
       });
 
       return result;
