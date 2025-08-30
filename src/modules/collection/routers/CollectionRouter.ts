@@ -25,9 +25,9 @@ CollectionRouter.use(requireAuth);
 
 CollectionRouter.post("/", create);
 CollectionRouter.get("/", list);
-CollectionRouter.get("/search", searchByName);
 CollectionRouter.get("/public", listPublic);
 CollectionRouter.get("/:id", get);
+CollectionRouter.get("/search", searchByName);
 CollectionRouter.put("/:id", update);
 CollectionRouter.put("/:id/toggle-pinned", togglePinned);
 CollectionRouter.delete("/:id", remove);
