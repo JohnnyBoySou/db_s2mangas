@@ -17,10 +17,9 @@ export interface DiscoverOptions {
 }
 
 export const getRecentMangas = async (options: DiscoverOptions = {}) => {
-  const { page = 1, take = 10 } = options;
+  const { page = 1, take = 10,  language = "pt-BR" } = options;
   const skip = (page - 1) * take;
 
-  const { language = "pt-BR" } = options;
   const [mangas, total] = await Promise.all([
     prisma.manga.findMany({
       include: {
@@ -100,14 +99,14 @@ export const getMostViewedMangas = async (options: DiscoverOptions = {}) => {
     take,
   });
 
-  // Depois, buscar os dados completos dos mangás
+  console.log(mangasWithViews)
+
   const mangaIds = mangasWithViews.map((m) => m.id);
 
   const [mangas, total] = await Promise.all([
     prisma.manga.findMany({
       where: {
         id: { in: mangaIds },
-        status: "ACTIVE",
       },
       include: {
         translations: {
@@ -135,11 +134,7 @@ export const getMostViewedMangas = async (options: DiscoverOptions = {}) => {
         },
       },
     }),
-    prisma.manga.count({
-      where: {
-        status: "ACTIVE",
-      },
-    }),
+    prisma.manga.count(),
   ]);
 
   // Ordenar os mangás pela ordem original (mais vistos primeiro)
@@ -209,7 +204,6 @@ export const getMostLikedMangas = async (options: DiscoverOptions = {}) => {
     prisma.manga.findMany({
       where: {
         id: { in: mangaIds },
-        status: "ACTIVE",
       },
       include: {
         translations: {
@@ -237,11 +231,7 @@ export const getMostLikedMangas = async (options: DiscoverOptions = {}) => {
         },
       },
     }),
-    prisma.manga.count({
-      where: {
-        status: "ACTIVE",
-      },
-    }),
+    prisma.manga.count(),
   ]);
 
   // Ordenar os mangás pela ordem original (mais curtidos primeiro)
@@ -331,11 +321,7 @@ export const getFeedForUser = async (
       skip,
       take,
     }),
-    prisma.manga.count({
-      where: {
-        status: "ACTIVE",
-      },
-    }),
+    prisma.manga.count(),
   ]);
 
   const totalPages = Math.ceil(total / take);
@@ -418,11 +404,7 @@ export const getIARecommendations = async (
       skip,
       take,
     }),
-    prisma.manga.count({
-      where: {
-        status: "ACTIVE",
-      },
-    }),
+    prisma.manga.count(),
   ]);
 
   const totalPages = Math.ceil(total / take);
@@ -508,7 +490,6 @@ export const getMangasByCategories = async (
     }),
     prisma.manga.count({
       where: {
-        status: "ACTIVE",
         categories: {
           some: {
             id: {

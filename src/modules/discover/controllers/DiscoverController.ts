@@ -543,7 +543,6 @@ class DiscoverController {
    */
   static getRecent: RequestHandler = async (req, res) => {
     try {
-      console.log("controller recents");
       const { page, take } = getPaginationParams(req);
       const language = (req.query.lg as string) || "pt-BR";
 
@@ -553,7 +552,6 @@ class DiscoverController {
         language,
       });
 
-      console.log(result);
 
       res.status(200).json(result);
     } catch (error) {
