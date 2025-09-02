@@ -9,12 +9,10 @@ const AdminMangaRouter = Router();
 AdminMangaRouter.use(requireAuth, requireAdmin);
 
 MangaRouter.get("/", list);
-MangaRouter.get("/:id/covers", cacheMiddleware('manga', { ttl: 86400 }), covers);
-MangaRouter.get('/category', cacheMiddleware('categories'), category);
-MangaRouter.get("/:id", cacheMiddleware('manga'), get);
-MangaRouter.get("/chapters/:chapterID/pages", cacheMiddleware('manga', { ttl: 3600, tags: ['chapter'] }), pages);
-MangaRouter.get("/:id/chapters", cacheMiddleware('manga', { varyBy: ['id', 'lg'] }), chapters);
-MangaRouter.get("/:id/similar", cacheMiddleware('discover', { ttl: 1800 }), similar);
+MangaRouter.get("/:id/covers", covers);
+MangaRouter.get('/category', category);
+MangaRouter.get("/:id", get);
+MangaRouter.get("/:id/similar", similar);
 
 //ADMIN
 AdminMangaRouter.get("/", list);

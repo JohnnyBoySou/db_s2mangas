@@ -1,8 +1,12 @@
 import { Router } from 'express';
-import { list, getPages } from '../controllers/ChaptersController';
+import  { ChapterController } from '../controllers/ChaptersController';
+import { requireAuth } from '@/middlewares/auth';
 
 const ChaptersRouter = Router();
-ChaptersRouter.get('/:id', list);
-ChaptersRouter.get('/:id/pages', getPages);
+
+ChaptersRouter.use(requireAuth)
+
+ChaptersRouter.get('/:id', ChapterController.list);
+ChaptersRouter.get('/:id/pages', ChapterController.pages);
 
 export { ChaptersRouter }; 

@@ -4,129 +4,6 @@ import * as chapterHandlers from "../handlers/ChaptersHandler";
 
 /**
  * @swagger
- * components:
- *   schemas:
- *     Chapter:
- *       type: object
- *       properties:
- *         id:
- *           type: string
- *           description: ID único do capítulo
- *           example: "123e4567-e89b-12d3-a456-426614174000"
- *         title:
- *           type: string
- *           description: Título do capítulo
- *           example: "Capítulo 1 - O Início"
- *         chapter:
- *           type: number
- *           format: float
- *           description: Número do capítulo
- *           example: 1.0
- *         volume:
- *           type: number
- *           format: float
- *           nullable: true
- *           description: Número do volume
- *           example: 1.0
- *         language:
- *           type: array
- *           items:
- *             type: string
- *           description: Idiomas disponíveis
- *           example: ["pt-br"]
- *         publish_date:
- *           type: string
- *           description: Data de publicação formatada
- *           example: "15 jan 2024"
- *         pages:
- *           type: number
- *           description: Número de páginas do capítulo
- *           example: 20
- *     ChapterListResponse:
- *       type: object
- *       properties:
- *         current_page:
- *           type: number
- *           description: Página atual
- *           example: 1
- *         data:
- *           type: array
- *           items:
- *             $ref: '#/components/schemas/Chapter'
- *           description: Lista de capítulos
- *         first_page_url:
- *           type: string
- *           description: URL da primeira página
- *           example: "http://localhost:3000/chapters/manga/123?page=1&limit=20&lang=pt-br&order=desc"
- *         from:
- *           type: number
- *           description: Índice do primeiro item da página
- *           example: 1
- *         last_page:
- *           type: number
- *           description: Número da última página
- *           example: 5
- *         last_page_url:
- *           type: string
- *           description: URL da última página
- *           example: "http://localhost:3000/chapters/manga/123?page=5&limit=20&lang=pt-br&order=desc"
- *         next_page_url:
- *           type: string
- *           nullable: true
- *           description: URL da próxima página
- *           example: "http://localhost:3000/chapters/manga/123?page=2&limit=20&lang=pt-br&order=desc"
- *         path:
- *           type: string
- *           description: URL base da paginação
- *           example: "http://localhost:3000/chapters/manga/123"
- *         per_page:
- *           type: number
- *           description: Itens por página
- *           example: 20
- *         prev_page_url:
- *           type: string
- *           nullable: true
- *           description: URL da página anterior
- *           example: null
- *         to:
- *           type: number
- *           description: Índice do último item da página
- *           example: 20
- *         total:
- *           type: number
- *           description: Total de capítulos
- *           example: 100
- *     ChapterPagesResponse:
- *       type: object
- *       properties:
- *         pages:
- *           type: array
- *           items:
- *             type: string
- *           description: URLs das páginas do capítulo
- *           example: [
- *             "https://uploads.mangadex.org/data/abc123/page1.jpg",
- *             "https://uploads.mangadex.org/data/abc123/page2.jpg"
- *           ]
- *         total:
- *           type: number
- *           description: Total de páginas
- *           example: 20
- *         chapter_id:
- *           type: string
- *           description: ID do capítulo
- *           example: "123e4567-e89b-12d3-a456-426614174000"
- *     Error:
- *       type: object
- *       properties:
- *         error:
- *           type: string
- *           description: Mensagem de erro
- *           example: "Erro ao buscar capítulos"
- */
-
-/**
- * @swagger
  * /chapters/manga/{id}:
  *   get:
  *     summary: Listar capítulos de um mangá
@@ -140,12 +17,11 @@ import * as chapterHandlers from "../handlers/ChaptersHandler";
  *           type: string
  *         description: ID do mangá
  *       - in: query
- *         name: lang
+ *         name: lg
  *         schema:
  *           type: string
  *           default: "pt-br"
  *         description: Idioma dos capítulos
- *         example: "pt-br"
  *       - in: query
  *         name: order
  *         schema:
@@ -153,7 +29,6 @@ import * as chapterHandlers from "../handlers/ChaptersHandler";
  *           enum: [asc, desc]
  *           default: "desc"
  *         description: Ordem dos capítulos
- *         example: "desc"
  *       - in: query
  *         name: page
  *         schema:
@@ -161,16 +36,14 @@ import * as chapterHandlers from "../handlers/ChaptersHandler";
  *           minimum: 1
  *           default: 1
  *         description: Número da página
- *         example: 1
  *       - in: query
  *         name: limit
  *         schema:
  *           type: integer
  *           minimum: 1
  *           maximum: 100
- *           default: 20
- *         description: Número de capítulos por página
- *         example: 20
+ *           default: 10
+ *         description: Número de itens por página
  *     responses:
  *       200:
  *         description: Lista de capítulos retornada com sucesso
@@ -178,35 +51,12 @@ import * as chapterHandlers from "../handlers/ChaptersHandler";
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ChapterListResponse'
- *       500:
- *         description: Erro interno do servidor
+ *       404:
+ *         description: Mangá não encontrado
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
- */
-
-/**
- * @swagger
- * /chapters/{chapterID}/pages:
- *   get:
- *     summary: Obter páginas de um capítulo
- *     description: Retorna as URLs das páginas de um capítulo específico
- *     tags: [Capítulos]
- *     parameters:
- *       - in: path
- *         name: chapterID
- *         required: true
- *         schema:
- *           type: string
- *         description: ID do capítulo
- *     responses:
- *       200:
- *         description: Páginas do capítulo retornadas com sucesso
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ChapterPagesResponse'
  *       500:
  *         description: Erro interno do servidor
  *         content:
@@ -217,38 +67,97 @@ import * as chapterHandlers from "../handlers/ChaptersHandler";
 
 export const list: RequestHandler = async (req, res) => {
     const { id } = req.params;
-    const lg = req.query.lang as string || 'pt-br';
+    const lg = req.query.lg as string || 'pt-br';
     const order = req.query.order as string || 'desc';
     const { skip, take, page } = getPaginationParams(req);
-    const baseUrl = `${req.protocol}://${req.get('host')}${req.originalUrl.split('?')[0]}`;
 
     try {
-        const result = await chapterHandlers.listChapters({ id, lg, order, page, limit: take, offset: skip });
-        
-        const response = {
-            ...result,
-            first_page_url: baseUrl + result.first_page_url,
-            last_page_url: baseUrl + result.last_page_url,
-            next_page_url: result.next_page_url ? baseUrl + result.next_page_url : null,
-            prev_page_url: result.prev_page_url ? baseUrl + result.prev_page_url : null,
-            path: baseUrl
-        };
-
-        res.json(response);
+        const result = await chapterHandlers.getMangaChapters(id, lg, order, page, take);
+        res.json(result);
     } catch (error) {
+        if (error instanceof Error && error.message === 'Mangá não encontrado ou UUID não disponível') {
+            res.status(404).json({ error: error.message });
+            return;
+        }
         console.error('Erro ao buscar capítulos:', error);
         res.status(500).json({ error: error instanceof Error ? error.message : 'Erro desconhecido' });
     }
 };
 
-export const getPages: RequestHandler = async (req, res) => {
+/**
+ * @swagger
+ * /chapters/pages/{chapterID}:
+ *   get:
+ *     summary: Buscar páginas de um capítulo
+ *     description: Retorna as páginas de um capítulo específico com opções de qualidade
+ *     tags: [Capítulos]
+ *     parameters:
+ *       - in: path
+ *         name: chapterID
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID do capítulo
+ *       - in: query
+ *         name: quality
+ *         schema:
+ *           type: string
+ *           enum: [high, low]
+ *           default: "high"
+ *         description: Qualidade das imagens
+ *     responses:
+ *       200:
+ *         description: Páginas do capítulo retornadas com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 pages:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                   description: URLs das páginas
+ *                 total:
+ *                   type: number
+ *                   description: Total de páginas
+ *                 chapter_id:
+ *                   type: string
+ *                   description: ID do capítulo
+ *                 base_url:
+ *                   type: string
+ *                   description: URL base das imagens
+ *                 quality:
+ *                   type: string
+ *                   description: Qualidade das imagens
+ *                 hash:
+ *                   type: string
+ *                   description: Hash do capítulo
+ *       500:
+ *         description: Erro interno do servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+
+export const pages: RequestHandler = async (req, res) => {
     const { id } = req.params;
+    const quality = req.query.quality as string || 'high';
 
     try {
-        const result = await chapterHandlers.getChapterPages(id);
+        const result = await chapterHandlers.getChapterPagesEnhanced(id, quality);
         res.json(result);
     } catch (error) {
         console.error('Erro ao buscar páginas:', error);
-        res.status(500).json({ error: error instanceof Error ? error.message : 'Erro desconhecido' });
+        res.status(500).json({ 
+            error: error instanceof Error ? error.message : 'Erro desconhecido',
+            details: error instanceof Error ? error.stack : undefined
+        });
     }
 }; 
+
+export const ChapterController = {
+    list,
+    pages
+};
