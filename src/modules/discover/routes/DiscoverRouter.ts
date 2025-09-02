@@ -23,9 +23,9 @@ DiscoverRouter.get("/views", getMostViewed);
 
 DiscoverRouter.get("/likes", getMostLiked);
 
-DiscoverRouter.get("/feed", getFeed);
+DiscoverRouter.get("/feed", requireAuth, getFeed);
 
-DiscoverRouter.get("/ia", getIA);
+DiscoverRouter.get("/ia", requireAuth, getIA);
 
 DiscoverRouter.get("/categories/:categoryIds", getMangasByCategories);
 
