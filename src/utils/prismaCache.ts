@@ -15,28 +15,28 @@ const PRISMA_CACHE_CONFIG: Record<string, PrismaCacheConfig> = {
   manga: {
     ttl: 3600, // 1 hora
     tags: ["manga"],
-    enabled: true,
+    enabled: false,
     compression: true,
     l2Cache: true,
   },
   chapter: {
     ttl: 1800, // 30 minutos
     tags: ["chapter", "manga"],
-    enabled: true,
+    enabled: false,
     compression: true,
     l2Cache: false,
   },
   user: {
     ttl: 900, // 15 minutos
     tags: ["user"],
-    enabled: true,
+    enabled: false,
     compression: true,
     l2Cache: false,
   },
   category: {
     ttl: 86400, // 24 horas
     tags: ["category"],
-    enabled: true,
+    enabled: false,
     compression: false,
     l2Cache: true,
   },
@@ -50,35 +50,35 @@ const PRISMA_CACHE_CONFIG: Record<string, PrismaCacheConfig> = {
   library: {
     ttl: 600, // 10 minutos
     tags: ["library", "user"],
-    enabled: true,
+    enabled: false,
     compression: true,
     l2Cache: false,
   },
   comment: {
     ttl: 300, // 5 minutos
     tags: ["comment"],
-    enabled: true,
+    enabled: false,
     compression: true,
     l2Cache: false,
   },
   notification: {
     ttl: 180, // 3 minutos
     tags: ["notification", "user"],
-    enabled: true,
+    enabled: false,
     compression: true,
     l2Cache: false,
   },
   review: {
     ttl: 1800, // 30 minutos
     tags: ["review", "manga"],
-    enabled: true,
+    enabled: false,
     compression: true,
     l2Cache: false,
   },
   playlist: {
     ttl: 900, // 15 minutos
     tags: ["playlist", "user"],
-    enabled: true,
+    enabled: false,
     compression: true,
     l2Cache: false,
   },
