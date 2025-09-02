@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { list, getPages } from '../controllers/ChaptersController';
 
 const ChaptersRouter = Router();
-ChaptersRouter.get('/manga/:id', list);
-ChaptersRouter.get('/:chapterID/pages', getPages);
+ChaptersRouter.get('/:id', list);
+ChaptersRouter.get('/:id/pages', getPages);
 
 export { ChaptersRouter }; 

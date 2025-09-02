@@ -225,7 +225,6 @@ export const list: RequestHandler = async (req, res) => {
     try {
         const result = await chapterHandlers.listChapters({ id, lg, order, page, limit: take, offset: skip });
         
-        // Adiciona o baseUrl aos links de paginação
         const response = {
             ...result,
             first_page_url: baseUrl + result.first_page_url,
@@ -243,10 +242,10 @@ export const list: RequestHandler = async (req, res) => {
 };
 
 export const getPages: RequestHandler = async (req, res) => {
-    const { chapterID } = req.params;
+    const { id } = req.params;
 
     try {
-        const result = await chapterHandlers.getChapterPages(chapterID);
+        const result = await chapterHandlers.getChapterPages(id);
         res.json(result);
     } catch (error) {
         console.error('Erro ao buscar páginas:', error);
