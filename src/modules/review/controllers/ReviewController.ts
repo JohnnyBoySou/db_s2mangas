@@ -838,3 +838,94 @@ export const getReview: RequestHandler = async (req, res) => {
         handleZodError(error, res);
     }
 };
+
+/**
+ * @swagger
+ * /mangas/{mangaId}/reviews/stats:
+ *   get:
+ *     summary: Obter overview das reviews de um mangá
+ *     description: Retorna estatísticas e médias de todas as avaliações de um mangá específico
+ *     tags: [Reviews]
+ *     parameters:
+ *       - in: path
+ *         name: mangaId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: ID do mangá
+ *     responses:
+ *       200:
+ *         description: Overview das reviews retornado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 totalReviews:
+ *                   type: number
+ *                   description: Número total de reviews
+ *                   example: 25
+ *                 averages:
+ *                   type: object
+ *                   properties:
+ *                     rating:
+ *                       type: number
+ *                       description: Média da avaliação geral
+ *                       example: 8.5
+ *                     art:
+ *                       type: number
+ *                       description: Média da avaliação da arte
+ *                       example: 8.2
+ *                     story:
+ *                       type: number
+ *                       description: Média da avaliação da história
+ *                       example: 8.8
+ *                     characters:
+ *                       type: number
+ *                       description: Média da avaliação dos personagens
+ *                       example: 8.3
+ *                     worldbuilding:
+ *                       type: number
+ *                       description: Média da avaliação do worldbuilding
+ *                       example: 7.9
+ *                     pacing:
+ *                       type: number
+ *                       description: Média da avaliação do ritmo
+ *                       example: 8.1
+ *                     emotion:
+ *                       type: number
+ *                       description: Média da avaliação emocional
+ *                       example: 8.7
+ *                     originality:
+ *                       type: number
+ *                       description: Média da avaliação da originalidade
+ *                       example: 7.8
+ *                     dialogues:
+ *                       type: number
+ *                       description: Média da avaliação dos diálogos
+ *                       example: 8.4
+ *       404:
+ *         description: Mangá não encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Erro interno do servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+export const getReviewOverview: RequestHandler = async (req, res) => {
+    try {
+        const { mangaId } = req.params;
+
+        const overview = await reviewHandlers.getReviewOverview(mangaId);
+
+        res.json(overview);
+    } catch (error) {
+        handleZodError(error, res);
+    }
+};

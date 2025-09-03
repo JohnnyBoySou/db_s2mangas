@@ -625,4 +625,148 @@ describe('ReviewHandler', () => {
       expect(result).toEqual(mockReview);
     });
   });
+
+  describe('getReviewOverview', () => {
+    it('deve retornar overview com médias calculadas corretamente', async () => {
+      const mangaId = 'manga-id';
+      const mockReviews = [
+        {
+          rating: 8,
+          art: 7,
+          story: 9,
+          characters: 8,
+          worldbuilding: 6,
+          pacing: 8,
+          emotion: 9,
+          originality: 7,
+          dialogues: 8,
+        },
+        {
+          rating: 9,
+          art: 8,
+          story: 10,
+          characters: 9,
+          worldbuilding: 7,
+          pacing: 9,
+          emotion: 10,
+          originality: 8,
+          dialogues: 9,
+        },
+        {
+          rating: 7,
+          art: 6,
+          story: 8,
+          characters: 7,
+          worldbuilding: 5,
+          pacing: 7,
+          emotion: 8,
+          originality: 6,
+          dialogues: 7,
+        },
+      ];
+
+      mockPrisma.review.findMany.mockResolvedValue(mockReviews);
+
+      const result = await reviewHandlers.getReviewOverview(mangaId);
+
+      expect(mockPrisma.review.findMany).toHaveBeenCalledWith({
+        where: { mangaId },
+        select: {
+          rating: true,
+          art: true,
+          story: true,
+          characters: true,
+          worldbuilding: true,
+          pacing: true,
+          emotion: true,
+          originality: true,
+          dialogues: true,
+        }
+      });
+
+      expect(result).toEqual({
+        totalReviews: 3,
+        averages: {
+          rating: 8,
+          art: 7,
+          story: 9,
+          characters: 8,
+          worldbuilding: 6,
+          pacing: 8,
+          emotion: 9,
+          originality: 7,
+          dialogues: 8,
+        }
+      });
+    });
+
+    it('deve retornar zeros quando não há reviews', async () => {
+      const mangaId = 'manga-id';
+      mockPrisma.review.findMany.mockResolvedValue([]);
+
+      const result = await reviewHandlers.getReviewOverview(mangaId);
+
+      expect(result).toEqual({
+        totalReviews: 0,
+        averages: {
+          rating: 0,
+          art: 0,
+          story: 0,
+          characters: 0,
+          worldbuilding: 0,
+          pacing: 0,
+          emotion: 0,
+          originality: 0,
+          dialogues: 0,
+        }
+      });
+    });
+
+    it('deve calcular médias com decimais corretamente', async () => {
+      const mangaId = 'manga-id';
+      const mockReviews = [
+        {
+          rating: 8.5,
+          art: 7.3,
+          story: 9.1,
+          characters: 8.7,
+          worldbuilding: 6.2,
+          pacing: 8.4,
+          emotion: 9.6,
+          originality: 7.8,
+          dialogues: 8.1,
+        },
+        {
+          rating: 9.2,
+          art: 8.7,
+          story: 9.8,
+          characters: 9.3,
+          worldbuilding: 7.1,
+          pacing: 9.0,
+          emotion: 9.9,
+          originality: 8.5,
+          dialogues: 9.2,
+        },
+      ];
+
+      mockPrisma.review.findMany.mockResolvedValue(mockReviews);
+
+      const result = await reviewHandlers.getReviewOverview(mangaId);
+
+      expect(result).toEqual({
+        totalReviews: 2,
+        averages: {
+          rating: 8.85,
+          art: 8,
+          story: 9.45,
+          characters: 9,
+          worldbuilding: 6.65,
+          pacing: 8.7,
+          emotion: 9.75,
+          originality: 8.15,
+          dialogues: 8.65,
+        }
+      });
+    });
+  });
 });

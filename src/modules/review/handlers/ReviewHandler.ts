@@ -356,3 +356,78 @@ export const getReview = async (id: string) => {
 
     return review;
 };
+
+export const getReviewOverview = async (mangaId: string) => {
+    const reviews = await prisma.review.findMany({
+        where: { mangaId },
+        select: {
+            rating: true,
+            art: true,
+            story: true,
+            characters: true,
+            worldbuilding: true,
+            pacing: true,
+            emotion: true,
+            originality: true,
+            dialogues: true,
+        }
+    });
+
+    if (reviews.length === 0) {
+        return {
+            totalReviews: 0,
+            averages: {
+                rating: 0,
+                art: 0,
+                story: 0,
+                characters: 0,
+                worldbuilding: 0,
+                pacing: 0,
+                emotion: 0,
+                originality: 0,
+                dialogues: 0,
+            }
+        };
+    }
+
+    const totals = reviews.reduce((acc, review) => ({
+        rating: acc.rating + review.rating,
+        art: acc.art + review.art,
+        story: acc.story + review.story,
+        characters: acc.characters + review.characters,
+        worldbuilding: acc.worldbuilding + review.worldbuilding,
+        pacing: acc.pacing + review.pacing,
+        emotion: acc.emotion + review.emotion,
+        originality: acc.originality + review.originality,
+        dialogues: acc.dialogues + review.dialogues,
+    }), {
+        rating: 0,
+        art: 0,
+        story: 0,
+        characters: 0,
+        worldbuilding: 0,
+        pacing: 0,
+        emotion: 0,
+        originality: 0,
+        dialogues: 0,
+    });
+
+    const totalReviews = reviews.length;
+
+    const averages = {
+        rating: Number((totals.rating / totalReviews).toFixed(2)),
+        art: Number((totals.art / totalReviews).toFixed(2)),
+        story: Number((totals.story / totalReviews).toFixed(2)),
+        characters: Number((totals.characters / totalReviews).toFixed(2)),
+        worldbuilding: Number((totals.worldbuilding / totalReviews).toFixed(2)),
+        pacing: Number((totals.pacing / totalReviews).toFixed(2)),
+        emotion: Number((totals.emotion / totalReviews).toFixed(2)),
+        originality: Number((totals.originality / totalReviews).toFixed(2)),
+        dialogues: Number((totals.dialogues / totalReviews).toFixed(2)),
+    };
+
+    return {
+        totalReviews,
+        averages
+    };
+};

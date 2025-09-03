@@ -8,11 +8,13 @@ import {
     getUserReview,
     toggleUpvote,
     toggleDownvote,
-    getReview
+    getReview,
+    getReviewOverview
 } from "../controllers/ReviewController";
 
 const ReviewRouter = Router();
 
+ReviewRouter.get("/overview/:mangaId", getReviewOverview);
 ReviewRouter.get("/manga/:mangaId", getMangaReviews);
 ReviewRouter.post("/", requireAuth, createReview);
 ReviewRouter.get("/manga/:mangaId/user", requireAuth, getUserReview);

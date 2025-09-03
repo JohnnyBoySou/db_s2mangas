@@ -465,4 +465,41 @@ describe("ReviewController", () => {
       expect(mockHandleZodError).toHaveBeenCalledWith(handlerError, mockRes);
     });
   });
+
+  describe("getReviewOverview", () => {
+    it("deve retornar overview das reviews com sucesso", async () => {
+      const mockOverview = {
+        totalReviews: 10,
+        averages: {
+          rating: 8.5,
+          art: 8.2,
+          story: 8.8,
+          characters: 8.3,
+          worldbuilding: 7.9,
+          pacing: 8.1,
+          emotion: 8.7,
+          originality: 7.8,
+          dialogues: 8.4,
+        }
+      };
+
+      mockReq.params = { mangaId: "manga123" };
+      mockReviewHandlers.getReviewOverview.mockResolvedValue(mockOverview);
+
+      await reviewController.getReviewOverview(mockReq as Request, mockRes as Response, mockNext);
+
+      expect(mockReviewHandlers.getReviewOverview).toHaveBeenCalledWith("manga123");
+      expect(mockRes.json).toHaveBeenCalledWith(mockOverview);
+    });
+
+    it("deve lidar com erro no handler", async () => {
+      mockReq.params = { mangaId: "manga123" };
+      const handlerError = new Error("Handler error");
+      mockReviewHandlers.getReviewOverview.mockRejectedValue(handlerError);
+
+      await reviewController.getReviewOverview(mockReq as Request, mockRes as Response, mockNext);
+
+      expect(mockHandleZodError).toHaveBeenCalledWith(handlerError, mockRes);
+    });
+  });
 });
